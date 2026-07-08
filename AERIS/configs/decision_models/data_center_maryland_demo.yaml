@@ -1,0 +1,60 @@
+metadata:
+  title: Maryland Data Center Siting Demo
+  version: 0.1
+  author: AERIS
+  methodology:
+    - GIS-MCDA
+    - Analytic Hierarchy Process (AHP)
+    - Weighted Linear Combination (WLC)
+  reference: >
+    GIS-Driven Regional Assessment for Sustainable Data Center Siting
+name: data_center_maryland_demo
+
+study_area:
+  state: Maryland
+  county: Prince George's
+
+analysis:
+  type: GIS-MCDA
+  weighting: AHP
+  overlay: WLC
+  grid_resolution_m: 100
+
+criteria:
+  climate:
+    weight: 0.250
+
+  grid_infrastructure:
+    weight: 0.154
+
+  telecom_infrastructure:
+    weight: 0.154
+
+  protected_areas:
+    weight: 0.154
+
+  water_bodies:
+    weight: 0.0847
+
+  population_density:
+    weight: 0.0847
+
+  road_access:
+    weight: 0.0795
+
+  hydro_hazard:
+    weight: 0.0390
+
+hard_exclusions:
+  - flood_zones
+  - wetlands
+  - protected_areas
+
+preferred_distances:
+  substation_m: 4000
+  transmission_line_m: 4000
+  road_m: 800
+
+output:
+  suitability_scale: 0-1
+  rank_candidates: true
