@@ -12,6 +12,9 @@ def query_arcgis_geojson(
     result_record_count: int = 10,
     result_offset: int = 0,
     timeout: int = 30,
+    geometry: str | None = None,
+    geometry_type: str | None = None,
+    spatial_rel: str = "esriSpatialRelIntersects",
 ) -> dict[str, Any]:
     """
     Query an ArcGIS REST layer and return GeoJSON.
@@ -24,6 +27,16 @@ def query_arcgis_geojson(
         "resultRecordCount": result_record_count,
         "resultOffset": result_offset,
     }
+
+    if geometry:
+        params.update(
+            {
+                "geometry": geometry,
+                "geometryType": geometry_type or "esriGeometryEnvelope",
+                "inSR": 4326,
+                "spatialRel": spatial_rel,
+            }
+        )
 
     response = requests.get(
         f"{layer_url}/query",
@@ -73,6 +86,7 @@ def count_arcgis_features(
         raise RuntimeError(f"ArcGIS service error: {data['error']}")
 
     return int(data["count"])
+    
 def query_arcgis_geojson_paged(
     layer_url: str,
     where: str = "1=1",

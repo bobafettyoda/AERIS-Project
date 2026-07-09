@@ -16,6 +16,10 @@ ROADS_LAYER_URL = (
     "Transportation/MD_RoadCenterlinesComprehensive/MapServer/0"
 )
 
+TRANSMISSION_LINES_LAYER_URL = (
+    "https://services2.arcgis.com/LYMgRMwHfrWWEg3s/arcgis/rest/services/"
+    "HIFLD_US_Electric_Power_Transmission_Lines/FeatureServer/0"
+)
 
 @router.get("/roads/prince-georges")
 def get_prince_georges_roads():
@@ -145,4 +149,53 @@ def get_road_access_score_with_overlay(lat: float, lon: float):
         "road_access_score": road_score,
         "road_access_weight": contribution["weight"],
         "weighted_contribution": contribution["weighted_contribution"],
+    }
+@router.get("/power/transmission/access-score")
+def get_transmission_access_score(lat: float, lon: float):
+    # Rough bounding box around candidate point.
+    # 0.25 degrees is roughly 15-20 miles in Maryland.
+    delta = 0.25
+    envelope = f"{lon - delta},{lat - delta},{lon + delta},{lat + delta}"
+
+    lines_geojson = query_arcgis_geojson(
+        layer_url=TRANSMISSION_LINES_LAYER_URL,
+        where="1=1",
+        result_record_count=500,
+        geometry=envelope,
+        geometry_type="esriGeometryEnvelope",
+    )
+
+    distance_m = nearest_distance_to_features_m(
+        lon=lon,
+        lat=lat,
+        geojson=lines_geojson,
+    )
+
+    model = DecisionModel()
+    preferred_m = model.preferred_distance("transmission_line_m")
+
+    score = normalize_linear(
+        value=distance_m,
+        best=0,
+        worst=preferred_m,
+        higher_is_better=False,
+    )
+
+    contribution = model.contribution("grid_infrastructure", score)
+
+    return {
+        "criterion": "grid_infrastructure",
+        "source_layer": "HIFLD Electric Power Transmission Lines",
+        "input": {"lat": lat, "lon": lon},
+        "search_envelope": envelope,
+        "features_checked": len(lines_geojson.get("features", [])),
+        "nearest_transmission_line_distance_m": distance_m,
+        "normalized_score": score,
+        "weight": contribution["weight"],
+        "weighted_contribution": contribution["weighted_contribution"],
+        "normalization": {
+            "best_m": 0,
+            "worst_m": preferred_m,
+            "higher_is_better": False,
+        },
     }
