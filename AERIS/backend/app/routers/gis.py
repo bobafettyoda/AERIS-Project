@@ -5,6 +5,8 @@ from connectors.arcgis import (
     query_arcgis_geojson,
     query_arcgis_geojson_paged,
 )
+from analysis.distance import nearest_distance_to_features_m
+from analysis.normalization import normalize_linear
 
 router = APIRouter(prefix="/gis", tags=["gis"])
 
@@ -71,4 +73,72 @@ def get_prince_georges_roads_paged_sample(max_features: int = 25):
         "county_code": 16,
         "feature_count": len(geojson.get("features", [])),
         "geojson": geojson,
+    }
+@router.get("/roads/prince-georges/access-score")
+def get_prince_georges_road_access_score(lat: float, lon: float):
+    roads_geojson = query_arcgis_geojson_paged(
+        layer_url=ROADS_LAYER_URL,
+        where="COUNTY=16",
+        page_size=500,
+        max_features=5000,
+    )
+
+    distance_m = nearest_distance_to_features_m(
+        lon=lon,
+        lat=lat,
+        geojson=roads_geojson,
+    )
+
+    score = normalize_linear(
+        value=distance_m,
+        best=800,
+        worst=5000,
+        higher_is_better=False,
+    )
+
+    return {
+        "criterion": "road_access",
+        "study_area": "Prince George's County",
+        "input": {
+            "lat": lat,
+            "lon": lon,
+        },
+        "nearest_road_distance_m": distance_m,
+        "score": score,
+        "normalization": {
+            "best_m": 800,
+            "worst_m": 5000,
+            "higher_is_better": False,
+        },
+    }
+@router.get("/roads/prince-georges/access-score-with-overlay")
+def get_road_access_score_with_overlay(lat: float, lon: float):
+    roads_geojson = query_arcgis_geojson_paged(
+        layer_url=ROADS_LAYER_URL,
+        where="COUNTY=16",
+        page_size=500,
+        max_features=5000,
+    )
+
+    distance_m = nearest_distance_to_features_m(
+        lon=lon,
+        lat=lat,
+        geojson=roads_geojson,
+    )
+
+    road_score = normalize_linear(
+        value=distance_m,
+        best=800,
+        worst=5000,
+        higher_is_better=False,
+    )
+
+    return {
+        "criterion": "road_access",
+        "study_area": "Prince George's County",
+        "input": {"lat": lat, "lon": lon},
+        "nearest_road_distance_m": distance_m,
+        "road_access_score": road_score,
+        "weighted_contribution": round(road_score * 0.0795, 6),
+        "road_access_weight": 0.0795,
     }
