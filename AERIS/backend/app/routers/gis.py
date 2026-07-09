@@ -5,9 +5,7 @@ from connectors.arcgis import (
     query_arcgis_geojson,
     query_arcgis_geojson_paged,
 )
-from analysis.distance import nearest_distance_to_features_m
-from analysis.normalization import normalize_linear
-from analysis.decision_model import DecisionModel
+from analysis.distance_criterion import DistanceCriterion
 
 router = APIRouter(prefix="/gis", tags=["gis"])
 
@@ -19,6 +17,11 @@ ROADS_LAYER_URL = (
 TRANSMISSION_LINES_LAYER_URL = (
     "https://services2.arcgis.com/LYMgRMwHfrWWEg3s/arcgis/rest/services/"
     "HIFLD_US_Electric_Power_Transmission_Lines/FeatureServer/0"
+)
+
+SUBSTATIONS_LAYER_URL = (
+    "https://services5.arcgis.com/HDRa0B57OVrv2E1q/ArcGIS/rest/services/"
+    "Electric_Substations/FeatureServer/0"
 )
 
 @router.get("/roads/prince-georges")
@@ -81,121 +84,43 @@ def get_prince_georges_roads_paged_sample(max_features: int = 25):
     }
 @router.get("/roads/prince-georges/access-score")
 def get_prince_georges_road_access_score(lat: float, lon: float):
-    roads_geojson = query_arcgis_geojson_paged(
+    criterion = DistanceCriterion(
+        criterion_name="road_access",
+        source_layer="Maryland Road Centerlines - Comprehensive",
         layer_url=ROADS_LAYER_URL,
-        where="COUNTY=16",
-        page_size=500,
-        max_features=5000,
+        preferred_distance_key="road_m",
+        search_delta_degrees=0.10,
+        result_record_count=500,
     )
 
-    distance_m = nearest_distance_to_features_m(
-        lon=lon,
-        lat=lat,
-        geojson=roads_geojson,
-    )
+    result = criterion.evaluate(lat=lat, lon=lon)
+    result["study_area"] = "Prince George's County"
+    return result
 
-    score = normalize_linear(
-        value=distance_m,
-        best=800,
-        worst=5000,
-        higher_is_better=False,
-    )
 
-    return {
-        "criterion": "road_access",
-        "study_area": "Prince George's County",
-        "input": {
-            "lat": lat,
-            "lon": lon,
-        },
-        "nearest_road_distance_m": distance_m,
-        "score": score,
-        "normalization": {
-            "best_m": 800,
-            "worst_m": 5000,
-            "higher_is_better": False,
-        },
-    }
-@router.get("/roads/prince-georges/access-score-with-overlay")
-def get_road_access_score_with_overlay(lat: float, lon: float):
-    roads_geojson = query_arcgis_geojson_paged(
-        layer_url=ROADS_LAYER_URL,
-        where="COUNTY=16",
-        page_size=500,
-        max_features=5000,
-    )
-
-    distance_m = nearest_distance_to_features_m(
-        lon=lon,
-        lat=lat,
-        geojson=roads_geojson,
-    )
-
-    road_score = normalize_linear(
-        value=distance_m,
-        best=800,
-        worst=5000,
-        higher_is_better=False,
-    )
-
-    model = DecisionModel()
-    contribution = model.contribution("road_access", road_score)
-
-    return {
-        "criterion": "road_access",
-        "study_area": "Prince George's County",
-        "input": {"lat": lat, "lon": lon},
-        "nearest_road_distance_m": distance_m,
-        "road_access_score": road_score,
-        "road_access_weight": contribution["weight"],
-        "weighted_contribution": contribution["weighted_contribution"],
-    }
 @router.get("/power/transmission/access-score")
 def get_transmission_access_score(lat: float, lon: float):
-    # Rough bounding box around candidate point.
-    # 0.25 degrees is roughly 15-20 miles in Maryland.
-    delta = 0.25
-    envelope = f"{lon - delta},{lat - delta},{lon + delta},{lat + delta}"
-
-    lines_geojson = query_arcgis_geojson(
+    criterion = DistanceCriterion(
+        criterion_name="grid_infrastructure",
+        source_layer="HIFLD Electric Power Transmission Lines",
         layer_url=TRANSMISSION_LINES_LAYER_URL,
-        where="1=1",
+        preferred_distance_key="transmission_line_m",
+        search_delta_degrees=0.25,
         result_record_count=500,
-        geometry=envelope,
-        geometry_type="esriGeometryEnvelope",
     )
 
-    distance_m = nearest_distance_to_features_m(
-        lon=lon,
-        lat=lat,
-        geojson=lines_geojson,
+    return criterion.evaluate(lat=lat, lon=lon)
+
+
+@router.get("/power/substations/access-score")
+def get_substation_access_score(lat: float, lon: float):
+    criterion = DistanceCriterion(
+        criterion_name="grid_infrastructure",
+        source_layer="Electric Substations",
+        layer_url=SUBSTATIONS_LAYER_URL,
+        preferred_distance_key="substation_m",
+        search_delta_degrees=0.25,
+        result_record_count=500,
     )
 
-    model = DecisionModel()
-    preferred_m = model.preferred_distance("transmission_line_m")
-
-    score = normalize_linear(
-        value=distance_m,
-        best=0,
-        worst=preferred_m,
-        higher_is_better=False,
-    )
-
-    contribution = model.contribution("grid_infrastructure", score)
-
-    return {
-        "criterion": "grid_infrastructure",
-        "source_layer": "HIFLD Electric Power Transmission Lines",
-        "input": {"lat": lat, "lon": lon},
-        "search_envelope": envelope,
-        "features_checked": len(lines_geojson.get("features", [])),
-        "nearest_transmission_line_distance_m": distance_m,
-        "normalized_score": score,
-        "weight": contribution["weight"],
-        "weighted_contribution": contribution["weighted_contribution"],
-        "normalization": {
-            "best_m": 0,
-            "worst_m": preferred_m,
-            "higher_is_better": False,
-        },
-    }
+    return criterion.evaluate(lat=lat, lon=lon)
