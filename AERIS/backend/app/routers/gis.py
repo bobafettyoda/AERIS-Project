@@ -7,6 +7,7 @@ from connectors.arcgis import (
 )
 from analysis.distance import nearest_distance_to_features_m
 from analysis.normalization import normalize_linear
+from analysis.decision_model import DecisionModel
 
 router = APIRouter(prefix="/gis", tags=["gis"])
 
@@ -133,12 +134,15 @@ def get_road_access_score_with_overlay(lat: float, lon: float):
         higher_is_better=False,
     )
 
+    model = DecisionModel()
+    contribution = model.contribution("road_access", road_score)
+
     return {
         "criterion": "road_access",
         "study_area": "Prince George's County",
         "input": {"lat": lat, "lon": lon},
         "nearest_road_distance_m": distance_m,
         "road_access_score": road_score,
-        "weighted_contribution": round(road_score * 0.0795, 6),
-        "road_access_weight": 0.0795,
+        "road_access_weight": contribution["weight"],
+        "weighted_contribution": contribution["weighted_contribution"],
     }
