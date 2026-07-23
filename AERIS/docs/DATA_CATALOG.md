@@ -85,3 +85,34 @@ https://services2.arcgis.com/LYMgRMwHfrWWEg3s/arcgis/rest/services/HIFLD_US_Elec
 
 **Decision Model Weight**
 - `grid_infrastructure`: `0.154`
+---
+
+## FEMA National Flood Hazard Layer
+
+**Criterion**
+- Hydro Hazard
+
+**Purpose**
+- Identify whether a candidate site intersects mapped FEMA flood hazard zones.
+- Support flood-risk scoring and future hard-exclusion screening.
+
+**Source**
+- FEMA National Flood Hazard Layer (NFHL)
+
+**Access Method**
+- ArcGIS REST Feature Service
+
+**REST Endpoint**
+https://services.arcgis.com/2gdL2gxYNFY2TOUb/ArcGIS/rest/services/FEMA_National_Flood_Hazard_Layer/FeatureServer/0
+
+**Geometry**
+- Polygon
+
+**Study Area**
+- United States
+- Queried around candidate point during analysis
+
+**Status**
+- 🔄 Connector pending
+- 🔄 Point-in-polygon analysis pending
+- 🔄 Hydro hazard scoring pending

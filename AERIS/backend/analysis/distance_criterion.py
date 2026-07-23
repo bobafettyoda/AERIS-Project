@@ -44,10 +44,17 @@ class DistanceCriterion:
 
         preferred_m = self.model.preferred_distance(self.preferred_distance_key)
 
+        if self.criterion_name == "road_access":
+            best_m = preferred_m
+            worst_m = 5000
+        else:
+            best_m = 0
+            worst_m = preferred_m
+
         score = normalize_linear(
             value=distance_m,
-            best=0,
-            worst=preferred_m,
+            best=best_m,
+            worst=worst_m,
             higher_is_better=False,
         )
 
@@ -64,8 +71,8 @@ class DistanceCriterion:
             "weight": contribution["weight"],
             "weighted_contribution": contribution["weighted_contribution"],
             "normalization": {
-                "best_m": 0,
-                "worst_m": preferred_m,
+                "best_m": best_m,
+                "worst_m": worst_m,
                 "higher_is_better": False,
             },
         }
