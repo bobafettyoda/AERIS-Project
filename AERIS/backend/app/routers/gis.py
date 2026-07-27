@@ -6,6 +6,7 @@ from connectors.arcgis import (
     query_arcgis_geojson_paged,
 )
 from analysis.distance_criterion import DistanceCriterion
+from analysis.flood_hazard import FloodHazardCriterion
 
 router = APIRouter(prefix="/gis", tags=["gis"])
 
@@ -22,6 +23,16 @@ TRANSMISSION_LINES_LAYER_URL = (
 SUBSTATIONS_LAYER_URL = (
     "https://services5.arcgis.com/HDRa0B57OVrv2E1q/ArcGIS/rest/services/"
     "Electric_Substations/FeatureServer/0"
+)
+
+FEMA_FLOODPLAIN_URL = (
+    "https://mdgeodata.md.gov/imap/rest/services/"
+    "Hydrology/MD_Floodplain/FeatureServer/1"
+)
+
+flood_hazard_criterion = FloodHazardCriterion(
+    layer_url=FEMA_FLOODPLAIN_URL,
+    buffer_m=91.0,
 )
 
 @router.get("/roads/prince-georges")
@@ -124,3 +135,13 @@ def get_substation_access_score(lat: float, lon: float):
     )
 
     return criterion.evaluate(lat=lat, lon=lon)
+
+@router.get("/flood/fema/hazard-score")
+def fema_flood_hazard_score(
+    lat: float,
+    lon: float,
+) -> dict:
+    return flood_hazard_criterion.evaluate(
+        lat=lat,
+        lon=lon,
+    )
