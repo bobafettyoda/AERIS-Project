@@ -58,3 +58,24 @@ preferred_distances:
 output:
   suitability_scale: 0-1
   rank_candidates: true
+
+population_density_scoring:
+  method: local_tract_provisional
+  description: >
+    Uses the population density of the census tract containing the
+    candidate point. Neighboring tracts are not yet included.
+  acs_year: 2024
+  units: people_per_sq_km
+  points:
+    - density: 0
+      score: 0.30
+    - density: 250
+      score: 0.30
+    - density: 1000
+      score: 0.80
+    - density: 3000
+      score: 1.00
+    - density: 6000
+      score: 0.50
+    - density: 12000
+      score: 0.20

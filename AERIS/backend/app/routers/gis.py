@@ -9,6 +9,7 @@ from analysis.distance_criterion import DistanceCriterion
 from analysis.flood_hazard import FloodHazardCriterion
 from analysis.protected_areas import ProtectedAreasCriterion
 from analysis.water_bodies import WaterBodiesCriterion
+from analysis.population_density import PopulationDensityCriterion
 
 router = APIRouter(prefix="/gis", tags=["gis"])
 
@@ -55,6 +56,8 @@ water_bodies_criterion = WaterBodiesCriterion(
     service_url=WATERBODIES_URL,
     search_radius_m=5000.0,
 )
+
+population_density_criterion = PopulationDensityCriterion()
 
 @router.get("/roads/prince-georges")
 def get_prince_georges_roads():
@@ -183,6 +186,16 @@ def water_bodies_proximity(
     lon: float,
 ) -> dict:
     return water_bodies_criterion.evaluate(
+        lat=lat,
+        lon=lon,
+    )
+
+@router.get("/population-density/local-tract-score")
+def population_density_score(
+    lat: float,
+    lon: float,
+) -> dict:
+    return population_density_criterion.evaluate(
         lat=lat,
         lon=lon,
     )
