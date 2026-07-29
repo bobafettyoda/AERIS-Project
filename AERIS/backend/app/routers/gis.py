@@ -7,6 +7,7 @@ from connectors.arcgis import (
 )
 from analysis.distance_criterion import DistanceCriterion
 from analysis.flood_hazard import FloodHazardCriterion
+from analysis.protected_areas import ProtectedAreasCriterion
 
 router = APIRouter(prefix="/gis", tags=["gis"])
 
@@ -30,9 +31,18 @@ FEMA_FLOODPLAIN_URL = (
     "Hydrology/MD_Floodplain/FeatureServer/1"
 )
 
+PROTECTED_LANDS_URL = (
+    "https://mdgeodata.md.gov/imap/rest/services/"
+    "Environment/MD_ProtectedLands/FeatureServer"
+)
+
 flood_hazard_criterion = FloodHazardCriterion(
     layer_url=FEMA_FLOODPLAIN_URL,
     buffer_m=91.0,
+)
+
+protected_areas_criterion = ProtectedAreasCriterion(
+    service_url=PROTECTED_LANDS_URL
 )
 
 @router.get("/roads/prince-georges")
@@ -142,6 +152,16 @@ def fema_flood_hazard_score(
     lon: float,
 ) -> dict:
     return flood_hazard_criterion.evaluate(
+        lat=lat,
+        lon=lon,
+    )
+
+@router.get("/protected-areas/hazard-score")
+def protected_areas_score(
+    lat: float,
+    lon: float,
+) -> dict:
+    return protected_areas_criterion.evaluate(
         lat=lat,
         lon=lon,
     )
