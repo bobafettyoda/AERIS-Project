@@ -1,3 +1,12 @@
+from app.routers.gis import (
+    FEMA_FLOODPLAIN_URL,
+    PROTECTED_LANDS_URL,
+    ROADS_LAYER_URL,
+    SUBSTATIONS_LAYER_URL,
+    TRANSMISSION_LINES_LAYER_URL,
+    WATERBODIES_URL,
+)
+from analysis.candidate_site import CandidateSiteEvaluator
 from pathlib import Path
 
 import yaml
@@ -78,3 +87,24 @@ def normalize_road_distance(distance_m: float):
         "worst_m": 5000,
         "score": score,
     }
+
+candidate_site_evaluator = CandidateSiteEvaluator(
+    roads_layer_url=ROADS_LAYER_URL,
+    transmission_layer_url=TRANSMISSION_LINES_LAYER_URL,
+    substation_layer_url=SUBSTATIONS_LAYER_URL,
+    floodplain_layer_url=FEMA_FLOODPLAIN_URL,
+    protected_lands_service_url=PROTECTED_LANDS_URL,
+    waterbodies_service_url=WATERBODIES_URL,
+)
+
+
+@router.get("/data-center-demo/candidate-site")
+def evaluate_candidate_site(
+    lat: float,
+    lon: float,
+) -> dict:
+    return candidate_site_evaluator.evaluate(
+        lat=lat,
+        lon=lon,
+    )
+
