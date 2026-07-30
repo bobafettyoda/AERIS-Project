@@ -67,3 +67,10 @@ MD_ENVIROSCREEN_URL = (
     "Environment/MD_EnviroScreen/FeatureServer/0"
 )
 
+
+
+MARYLAND_LAND_BOUNDARIES_URL = (
+    "https://mdgeodata.md.gov/imap/rest/services/"
+    "Boundaries/MD_PhysicalBoundaries/FeatureServer/1"
+)
+

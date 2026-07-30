@@ -33,11 +33,11 @@ def main() -> None:
     )
 
     result = build_from_config(
-        config_path=config_path,
+        config_path
     )
 
     print(
-        "Maryland statewide grid created"
+        "Maryland statewide land grid created"
     )
 
     print(
@@ -51,7 +51,15 @@ def main() -> None:
     )
 
     print(
-        "Clipped area:",
+        "Physical land boundary:",
+        (
+            f"{result.physical_land_boundary_area_sq_km:,.1f} "
+            "sq km"
+        ),
+    )
+
+    print(
+        "Retained grid area:",
         (
             f"{result.total_clipped_area_sq_km:,.1f} "
             "sq km"

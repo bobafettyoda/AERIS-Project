@@ -8,13 +8,15 @@ from pathlib import Path
 from typing import Any
 
 import geopandas as gpd
+import requests
 import yaml
 from pyproj import Transformer
-from shapely.geometry import box, shape
+from shapely.geometry import box
 from shapely.ops import unary_union
 
-from analysis.study_area import MarylandStudyArea
-from app.config import MARYLAND_BOUNDARY_URL
+from app.config import (
+    MARYLAND_LAND_BOUNDARIES_URL,
+)
 
 
 @dataclass(frozen=True)
@@ -23,93 +25,163 @@ class GridBuildResult:
     manifest_path: Path
     cell_count: int
     cell_size_m: float
+    physical_land_boundary_area_sq_km: float
     total_clipped_area_sq_km: float
 
 
-def load_statewide_config(
+def load_config(
     config_path: Path,
 ) -> dict[str, Any]:
-    with config_path.open(
-        "r",
-        encoding="utf-8",
-    ) as file:
-        config = yaml.safe_load(file)
+    config = yaml.safe_load(
+        config_path.read_text(
+            encoding="utf-8"
+        )
+    )
 
-    required_sections = (
+    for section in (
         "study_area",
         "grid",
         "output",
-        "equity",
-    )
-
-    missing = [
-        section
-        for section in required_sections
-        if section not in config
-    ]
-
-    if missing:
-        raise RuntimeError(
-            "Statewide configuration is missing: "
-            + ", ".join(missing)
-        )
+    ):
+        if section not in config:
+            raise RuntimeError(
+                f"Missing configuration section: {section}"
+            )
 
     return config
 
 
-def load_maryland_boundary(
+def load_land_boundary(
     target_crs: str,
-) -> gpd.GeoDataFrame:
-    service = MarylandStudyArea(
-        layer_url=MARYLAND_BOUNDARY_URL,
+) -> tuple[
+    gpd.GeoDataFrame,
+    str,
+    int,
+]:
+    feature_url = (
+        MARYLAND_LAND_BOUNDARIES_URL
+        .rstrip("/")
     )
 
-    geojson = service.boundary_geojson()
-
-    geometries = [
-        shape(feature["geometry"])
-        for feature in geojson.get(
-            "features",
-            [],
-        )
-        if feature.get("geometry")
+    layer_urls = [
+        feature_url,
+        feature_url.replace(
+            "/FeatureServer/1",
+            "/MapServer/1",
+        ),
     ]
 
-    if not geometries:
-        raise RuntimeError(
-            "Maryland boundary service returned "
-            "no usable geometry."
-        )
+    errors: list[str] = []
 
-    merged = unary_union(geometries)
+    for layer_url in layer_urls:
+        try:
+            response = requests.post(
+                f"{layer_url}/query",
+                data={
+                    "f": "geojson",
+                    "where": "1=1",
+                    "outFields": "*",
+                    "returnGeometry": "true",
+                    "returnTrueCurves": "false",
+                    "outSR": "4326",
+                    "resultRecordCount": "50",
+                },
+                headers={
+                    "User-Agent": "AERIS/0.2",
+                },
+                timeout=180,
+            )
 
-    boundary = gpd.GeoDataFrame(
-        {
-            "study_area": ["Maryland"],
-        },
-        geometry=[merged],
-        crs="EPSG:4326",
+            if response.status_code >= 500:
+                errors.append(
+                    f"{layer_url}: "
+                    f"HTTP {response.status_code}"
+                )
+                continue
+
+            response.raise_for_status()
+            payload = response.json()
+
+            if "error" in payload:
+                errors.append(
+                    f"{layer_url}: "
+                    f"{payload['error']}"
+                )
+                continue
+
+            features = payload.get(
+                "features",
+                [],
+            )
+
+            if not features:
+                errors.append(
+                    f"{layer_url}: no features"
+                )
+                continue
+
+            counties = (
+                gpd.GeoDataFrame
+                .from_features(
+                    features,
+                    crs="EPSG:4326",
+                )
+            )
+
+            usable = [
+                geometry
+                for geometry
+                in counties.geometry
+                if geometry is not None
+                and not geometry.is_empty
+            ]
+
+            if not usable:
+                errors.append(
+                    f"{layer_url}: "
+                    "no usable geometry"
+                )
+                continue
+
+            merged = unary_union(usable)
+
+            if not merged.is_valid:
+                merged = merged.buffer(0)
+
+            boundary = gpd.GeoDataFrame(
+                {
+                    "study_area": [
+                        "Maryland land area"
+                    ],
+                },
+                geometry=[merged],
+                crs="EPSG:4326",
+            ).to_crs(target_crs)
+
+            return (
+                boundary,
+                layer_url,
+                len(features),
+            )
+
+        except Exception as error:
+            errors.append(
+                f"{layer_url}: "
+                f"{type(error).__name__}: "
+                f"{error}"
+            )
+
+    raise RuntimeError(
+        "Unable to load Maryland land boundary. "
+        + " | ".join(errors)
     )
 
-    return boundary.to_crs(target_crs)
 
-
-def build_square_grid(
+def build_grid(
     boundary: gpd.GeoDataFrame,
     cell_size_m: float,
     minimum_land_fraction: float,
 ) -> gpd.GeoDataFrame:
-    if cell_size_m <= 0:
-        raise ValueError(
-            "cell_size_m must be positive."
-        )
-
-    if not 0 <= minimum_land_fraction <= 1:
-        raise ValueError(
-            "minimum_land_fraction must be "
-            "between 0 and 1."
-        )
-
     boundary_geometry = (
         boundary.geometry.iloc[0]
     )
@@ -138,6 +210,18 @@ def build_square_grid(
         * cell_size_m
     )
 
+    row_count = int(
+        (end_y - start_y)
+        / cell_size_m
+    )
+
+    column_count = int(
+        (end_x - start_x)
+        / cell_size_m
+    )
+
+    full_cell_area = cell_size_m**2
+
     to_wgs84 = Transformer.from_crs(
         boundary.crs,
         "EPSG:4326",
@@ -147,42 +231,25 @@ def build_square_grid(
     records: list[dict[str, Any]] = []
     geometries = []
 
-    row_count = int(
-        round(
-            (end_y - start_y)
-            / cell_size_m
-        )
-    )
-
-    column_count = int(
-        round(
-            (end_x - start_x)
-            / cell_size_m
-        )
-    )
-
-    full_cell_area = cell_size_m**2
-
     for row in range(row_count):
         y_min = (
-            start_y + row * cell_size_m
+            start_y
+            + row * cell_size_m
         )
 
-        y_max = y_min + cell_size_m
-
-        for column in range(column_count):
+        for column in range(
+            column_count
+        ):
             x_min = (
                 start_x
                 + column * cell_size_m
             )
 
-            x_max = x_min + cell_size_m
-
             full_cell = box(
                 x_min,
                 y_min,
-                x_max,
-                y_max,
+                x_min + cell_size_m,
+                y_min + cell_size_m,
             )
 
             if not full_cell.intersects(
@@ -219,27 +286,25 @@ def build_square_grid(
                 )
             )
 
-            cell_id = (
-                f"MD1K-R{row:03d}-"
-                f"C{column:03d}"
-            )
-
             records.append(
                 {
-                    "cell_id": cell_id,
+                    "cell_id": (
+                        f"MD1K-R{row:03d}-"
+                        f"C{column:03d}"
+                    ),
                     "row": row,
                     "column": column,
-                    "cell_size_m": cell_size_m,
+                    "cell_size_m": (
+                        cell_size_m
+                    ),
                     "land_fraction": round(
                         land_fraction,
                         6,
                     ),
-                    "clipped_area_sq_km": (
-                        round(
-                            clipped.area
-                            / 1_000_000,
-                            6,
-                        )
+                    "clipped_area_sq_km": round(
+                        clipped.area
+                        / 1_000_000,
+                        6,
                     ),
                     "analysis_x_m": round(
                         analysis_point.x,
@@ -264,8 +329,7 @@ def build_square_grid(
 
     if not records:
         raise RuntimeError(
-            "No statewide grid cells were "
-            "generated."
+            "No Maryland grid cells were generated."
         )
 
     grid = gpd.GeoDataFrame(
@@ -274,18 +338,19 @@ def build_square_grid(
         crs=boundary.crs,
     )
 
-    return grid.sort_values(
-        ["row", "column"]
-    ).reset_index(drop=True)
+    return (
+        grid.sort_values(
+            ["row", "column"]
+        )
+        .reset_index(drop=True)
+    )
 
 
 def build_from_config(
     config_path: Path,
 ) -> GridBuildResult:
     config_path = config_path.resolve()
-    config = load_statewide_config(
-        config_path
-    )
+    config = load_config(config_path)
 
     project_directory = (
         config_path.parents[2]
@@ -308,11 +373,20 @@ def build_from_config(
         ]
     )
 
-    boundary = load_maryland_boundary(
-        target_crs=target_crs,
+    (
+        boundary,
+        source_url,
+        source_feature_count,
+    ) = load_land_boundary(
+        target_crs
     )
 
-    grid = build_square_grid(
+    physical_area = float(
+        boundary.geometry.iloc[0].area
+        / 1_000_000
+    )
+
+    grid = build_grid(
         boundary=boundary,
         cell_size_m=cell_size_m,
         minimum_land_fraction=(
@@ -349,6 +423,12 @@ def build_from_config(
         index=False,
     )
 
+    retained_area = float(
+        grid[
+            "clipped_area_sq_km"
+        ].sum()
+    )
+
     manifest = {
         "name": config["name"],
         "version": config["version"],
@@ -358,8 +438,15 @@ def build_from_config(
             ).isoformat()
         ),
         "study_area": "Maryland",
-        "boundary_service": (
-            MARYLAND_BOUNDARY_URL
+        "boundary_type": "land_only",
+        "land_boundary_service": (
+            source_url
+        ),
+        "boundary_source_feature_count": (
+            source_feature_count
+        ),
+        "physical_land_boundary_area_sq_km": (
+            round(physical_area, 3)
         ),
         "crs": target_crs,
         "cell_size_m": cell_size_m,
@@ -368,11 +455,14 @@ def build_from_config(
         ),
         "cell_count": len(grid),
         "total_clipped_area_sq_km": (
+            round(retained_area, 3)
+        ),
+        "omitted_sliver_area_sq_km": (
             round(
-                float(
-                    grid[
-                        "clipped_area_sq_km"
-                    ].sum()
+                max(
+                    0.0,
+                    physical_area
+                    - retained_area,
                 ),
                 3,
             )
@@ -384,11 +474,6 @@ def build_from_config(
         ),
         "layer": layer_name,
     }
-
-    manifest_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
 
     manifest_path.write_text(
         json.dumps(
@@ -404,9 +489,10 @@ def build_from_config(
         manifest_path=manifest_path,
         cell_count=len(grid),
         cell_size_m=cell_size_m,
+        physical_land_boundary_area_sq_km=(
+            round(physical_area, 3)
+        ),
         total_clipped_area_sq_km=(
-            manifest[
-                "total_clipped_area_sq_km"
-            ]
+            round(retained_area, 3)
         ),
     )

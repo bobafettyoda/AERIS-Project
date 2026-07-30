@@ -1,61 +1,50 @@
 name: maryland_statewide_1km
 version: 0.2.0
-
 study_area:
   name: Maryland
-  boundary_source: Maryland iMAP Political Boundaries
-
+  boundary_source: Maryland iMAP Physical Boundaries - County Boundaries Generalized
+  boundary_type: land_only
+  boundary_layer: 1
 grid:
   crs: EPSG:26985
   cell_size_m: 1000
   minimum_land_fraction: 0.05
   analysis_point: representative_point
-
 output:
   geopackage: data/derived/maryland_grid_1km.gpkg
   layer: cells
   manifest: data/derived/maryland_grid_1km.manifest.json
-
 score_bands:
-  - id: emerging_opportunity
-    label: Emerging opportunity
-    minimum: 0.70
-    maximum: 0.75
-
-  - id: moderate_suitability
-    label: Moderate suitability
-    minimum: 0.75
-    maximum: 0.80
-
-  - id: strong_suitability
-    label: Strong suitability
-    minimum: 0.80
-    maximum: 0.85
-
-  - id: very_strong_suitability
-    label: Very strong suitability
-    minimum: 0.85
-    maximum: 0.90
-
-  - id: premium_technical
-    label: Premium technical suitability
-    minimum: 0.90
-    maximum: 1.00
-
+- id: emerging_opportunity
+  label: Emerging opportunity
+  minimum: 0.7
+  maximum: 0.75
+- id: moderate_suitability
+  label: Moderate suitability
+  minimum: 0.75
+  maximum: 0.8
+- id: strong_suitability
+  label: Strong suitability
+  minimum: 0.8
+  maximum: 0.85
+- id: very_strong_suitability
+  label: Very strong suitability
+  minimum: 0.85
+  maximum: 0.9
+- id: premium_technical
+  label: Premium technical suitability
+  minimum: 0.9
+  maximum: 1.0
 candidate_selection:
   default_top_n: 5
   minimum_spacing_m: 10000
-
 equity:
   auto_recommendation_gate_statuses:
-    - PASS
-
+  - PASS
   exploration_gate_statuses:
-    - PASS
-    - CAUTION
-
+  - PASS
+  - CAUTION
   blocked_gate_statuses:
-    - HIGH_BURDEN
-    - INSUFFICIENT_DATA
-
+  - HIGH_BURDEN
+  - INSUFFICIENT_DATA
   demographic_fields_used_in_technical_score: false
