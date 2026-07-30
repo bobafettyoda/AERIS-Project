@@ -1,3 +1,4 @@
+from analysis.map_evidence import SiteMapEvidence
 from analysis.study_area import MarylandStudyArea
 from app.config import (
     MARYLAND_BOUNDARY_URL,
@@ -240,4 +241,36 @@ maryland_study_area = MarylandStudyArea(
 @router.get("/study-area/maryland")
 def get_maryland_study_area() -> dict:
     return maryland_study_area.boundary_geojson()
+
+
+site_map_evidence = SiteMapEvidence(
+    roads_layer_url=ROADS_LAYER_URL,
+    transmission_layer_url=(
+        TRANSMISSION_LINES_LAYER_URL
+    ),
+    substation_layer_url=(
+        SUBSTATIONS_LAYER_URL
+    ),
+    floodplain_layer_url=(
+        FEMA_FLOODPLAIN_URL
+    ),
+    protected_lands_service_url=(
+        PROTECTED_LANDS_URL
+    ),
+    waterbodies_service_url=(
+        WATERBODIES_URL
+    ),
+    search_radius_m=5000.0,
+)
+
+
+@router.get("/site-evidence")
+def get_site_map_evidence(
+    lat: float,
+    lon: float,
+) -> dict:
+    return site_map_evidence.evaluate(
+        lat=lat,
+        lon=lon,
+    )
 

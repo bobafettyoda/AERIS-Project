@@ -5,7 +5,10 @@ import {
   useState,
 } from "react";
 
-import type { Geometry } from "geojson";
+import type {
+  Geometry,
+} from "geojson";
+
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -14,10 +17,40 @@ import {
   evaluateCandidateSite,
   evaluateEquityScreen,
   fetchMarylandBoundary,
+  fetchSiteMapEvidence,
   type CandidatePoint,
   type EquityScreenResult,
   type SiteEvaluation,
+  type SiteMapEvidence,
 } from "./api";
+
+import {
+  loadSavedCandidates,
+  nextCandidateLabel,
+  storeSavedCandidates,
+  type SavedCandidate,
+} from "./candidates";
+
+import {
+  addEvidenceLayers,
+  applyEvidenceVisibility,
+  DEFAULT_VISIBILITY,
+  updateEvidenceSources,
+  type EvidenceGroup,
+  type EvidenceVisibility,
+} from "./mapEvidence";
+
+import {
+  ComparisonPanel,
+} from "./components/ComparisonPanel";
+
+import {
+  CriterionCard,
+} from "./components/CriterionCard";
+
+import {
+  LayerControl,
+} from "./components/LayerControl";
 
 import "./App.css";
 
@@ -40,7 +73,19 @@ const CRITERIA = [
 ];
 
 
-function formatLabel(value: string): string {
+const CRITERION_LAYER_GROUP:
+Partial<Record<string, EvidenceGroup>> = {
+  grid_infrastructure: "grid",
+  protected_areas: "protected",
+  water_bodies: "water",
+  road_access: "roads",
+  hydro_hazard: "flood",
+};
+
+
+function formatLabel(
+  value: string,
+): string {
   return value
     .split("_")
     .map(
@@ -52,21 +97,13 @@ function formatLabel(value: string): string {
 }
 
 
-function formatScore(
-  score: number | null | undefined,
-): string {
-  if (score === null || score === undefined) {
-    return "Not scored";
-  }
-
-  return `${Math.round(score * 100)}%`;
-}
-
-
 function formatPercent(
   value: number | null | undefined,
 ): string {
-  if (value === null || value === undefined) {
+  if (
+    value === null ||
+    value === undefined
+  ) {
     return "Not available";
   }
 
@@ -75,7 +112,8 @@ function formatPercent(
 
 
 function extendCoordinateBounds(
-  bounds: maplibregl.LngLatBounds,
+  bounds:
+    maplibregl.LngLatBounds,
   coordinates: unknown,
 ): void {
   if (!Array.isArray(coordinates)) {
@@ -84,8 +122,10 @@ function extendCoordinateBounds(
 
   if (
     coordinates.length >= 2 &&
-    typeof coordinates[0] === "number" &&
-    typeof coordinates[1] === "number"
+    typeof coordinates[0] ===
+      "number" &&
+    typeof coordinates[1] ===
+      "number"
   ) {
     bounds.extend([
       coordinates[0],
@@ -95,7 +135,10 @@ function extendCoordinateBounds(
     return;
   }
 
-  for (const coordinate of coordinates) {
+  for (
+    const coordinate
+    of coordinates
+  ) {
     extendCoordinateBounds(
       bounds,
       coordinate,
@@ -105,12 +148,22 @@ function extendCoordinateBounds(
 
 
 function extendGeometryBounds(
-  bounds: maplibregl.LngLatBounds,
+  bounds:
+    maplibregl.LngLatBounds,
   geometry: Geometry,
 ): void {
-  if (geometry.type === "GeometryCollection") {
-    for (const child of geometry.geometries) {
-      extendGeometryBounds(bounds, child);
+  if (
+    geometry.type ===
+    "GeometryCollection"
+  ) {
+    for (
+      const child
+      of geometry.geometries
+    ) {
+      extendGeometryBounds(
+        bounds,
+        child,
+      );
     }
 
     return;
@@ -124,7 +177,10 @@ function extendGeometryBounds(
 
 
 function equityBadgeClass(
-  status: EquityScreenResult["gate_status"],
+  status:
+    EquityScreenResult[
+      "gate_status"
+    ],
 ): string {
   switch (status) {
     case "PASS":
@@ -134,51 +190,146 @@ function equityBadgeClass(
       return "equity-badge caution";
 
     case "HIGH_BURDEN":
-      return "equity-badge high-burden";
+      return (
+        "equity-badge high-burden"
+      );
 
     default:
-      return "equity-badge insufficient";
+      return (
+        "equity-badge insufficient"
+      );
   }
 }
 
 
 function App() {
   const mapContainerRef =
-    useRef<HTMLDivElement | null>(null);
+    useRef<HTMLDivElement | null>(
+      null
+    );
 
   const mapRef =
-    useRef<maplibregl.Map | null>(null);
+    useRef<maplibregl.Map | null>(
+      null
+    );
 
   const markerRef =
-    useRef<maplibregl.Marker | null>(null);
+    useRef<maplibregl.Marker | null>(
+      null
+    );
+
+  const savedMarkersRef =
+    useRef<
+      Map<string, maplibregl.Marker>
+    >(
+      new Map()
+    );
 
   const requestRef =
-    useRef<AbortController | null>(null);
+    useRef<AbortController | null>(
+      null
+    );
+
+  const evidenceRequestRef =
+    useRef<AbortController | null>(
+      null
+    );
 
   const boundaryRequestRef =
-    useRef<AbortController | null>(null);
+    useRef<AbortController | null>(
+      null
+    );
 
-  const [selectedPoint, setSelectedPoint] =
-    useState<CandidatePoint>(INITIAL_POINT);
+  const [
+    selectedPoint,
+    setSelectedPoint,
+  ] = useState<CandidatePoint>(
+    INITIAL_POINT
+  );
 
-  const [evaluation, setEvaluation] =
-    useState<SiteEvaluation | null>(null);
+  const [
+    evaluation,
+    setEvaluation,
+  ] = useState<
+    SiteEvaluation | null
+  >(null);
 
-  const [equity, setEquity] =
-    useState<EquityScreenResult | null>(null);
+  const [
+    equity,
+    setEquity,
+  ] = useState<
+    EquityScreenResult | null
+  >(null);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [
+    mapEvidence,
+    setMapEvidence,
+  ] = useState<
+    SiteMapEvidence | null
+  >(null);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [
+    savedCandidates,
+    setSavedCandidates,
+  ] = useState<SavedCandidate[]>(
+    () => loadSavedCandidates()
+  );
 
-  const [equityError, setEquityError] =
-    useState<string | null>(null);
+  const [
+    visibility,
+    setVisibility,
+  ] = useState<EvidenceVisibility>(
+    DEFAULT_VISIBILITY
+  );
+
+  const [
+    mapReady,
+    setMapReady,
+  ] = useState(false);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
+
+  const [
+    evidenceLoading,
+    setEvidenceLoading,
+  ] = useState(false);
+
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(
+    null
+  );
+
+  const [
+    equityError,
+    setEquityError,
+  ] = useState<string | null>(
+    null
+  );
+
+  const [
+    evidenceError,
+    setEvidenceError,
+  ] = useState<string | null>(
+    null
+  );
+
+
+  useEffect(() => {
+    storeSavedCandidates(
+      savedCandidates
+    );
+  }, [savedCandidates]);
 
 
   const placeMarker = useCallback(
-    (point: CandidatePoint) => {
+    (
+      point: CandidatePoint
+    ) => {
       const map = mapRef.current;
 
       if (!map) {
@@ -206,18 +357,85 @@ function App() {
   );
 
 
-  const evaluatePoint = useCallback(
-    async (point: CandidatePoint) => {
-      requestRef.current?.abort();
+  const loadEvidenceOnly =
+    useCallback(
+      async (
+        point: CandidatePoint
+      ) => {
+        evidenceRequestRef.current
+          ?.abort();
 
-      const controller = new AbortController();
-      requestRef.current = controller;
+        const controller =
+          new AbortController();
+
+        evidenceRequestRef.current =
+          controller;
+
+        setEvidenceLoading(true);
+        setEvidenceError(null);
+
+        try {
+          const result =
+            await fetchSiteMapEvidence(
+              point,
+              controller.signal,
+            );
+
+          setMapEvidence(result);
+        } catch (caughtError) {
+          if (
+            caughtError instanceof
+              DOMException &&
+            caughtError.name ===
+              "AbortError"
+          ) {
+            return;
+          }
+
+          setMapEvidence(null);
+
+          setEvidenceError(
+            caughtError instanceof Error
+              ? caughtError.message
+              : "Map evidence failed."
+          );
+        } finally {
+          if (
+            evidenceRequestRef.current ===
+            controller
+          ) {
+            evidenceRequestRef.current =
+              null;
+
+            setEvidenceLoading(false);
+          }
+        }
+      },
+      [],
+    );
+
+
+  const evaluatePoint = useCallback(
+    async (
+      point: CandidatePoint
+    ) => {
+      requestRef.current?.abort();
+      evidenceRequestRef.current
+        ?.abort();
+
+      const controller =
+        new AbortController();
+
+      requestRef.current =
+        controller;
 
       setSelectedPoint(point);
       setLoading(true);
       setError(null);
       setEquityError(null);
+      setEvidenceError(null);
       setEquity(null);
+      setMapEvidence(null);
 
       try {
         const technicalResult =
@@ -226,67 +444,257 @@ function App() {
             controller.signal,
           );
 
-        setEvaluation(technicalResult);
+        setEvaluation(
+          technicalResult
+        );
 
         if (
-          technicalResult.decision.status ===
+          technicalResult.decision
+            .status ===
             "outside_study_area" ||
           technicalResult.study_area
-            ?.inside_study_area === false
+            ?.inside_study_area ===
+            false
         ) {
           return;
         }
 
-        try {
-          const equityResult =
-            await evaluateEquityScreen(
-              point,
-              controller.signal,
-            );
+        const [
+          equityResult,
+          evidenceResult,
+        ] = await Promise.allSettled([
+          evaluateEquityScreen(
+            point,
+            controller.signal,
+          ),
+          fetchSiteMapEvidence(
+            point,
+            controller.signal,
+          ),
+        ]);
 
-          setEquity(equityResult);
-        } catch (caughtEquityError) {
-          if (
-            caughtEquityError instanceof DOMException &&
-            caughtEquityError.name === "AbortError"
-          ) {
-            return;
-          }
+        if (
+          equityResult.status ===
+          "fulfilled"
+        ) {
+          setEquity(
+            equityResult.value
+          );
+        } else {
+          setEquityError(
+            equityResult.reason
+              instanceof Error
+              ? equityResult.reason
+                  .message
+              : "Equity screen failed."
+          );
+        }
 
-          const message =
-            caughtEquityError instanceof Error
-              ? caughtEquityError.message
-              : "The equity screen failed.";
-
-          setEquityError(message);
+        if (
+          evidenceResult.status ===
+          "fulfilled"
+        ) {
+          setMapEvidence(
+            evidenceResult.value
+          );
+        } else {
+          setEvidenceError(
+            evidenceResult.reason
+              instanceof Error
+              ? evidenceResult.reason
+                  .message
+              : "Map evidence failed."
+          );
         }
       } catch (caughtError) {
         if (
-          caughtError instanceof DOMException &&
-          caughtError.name === "AbortError"
+          caughtError instanceof
+            DOMException &&
+          caughtError.name ===
+            "AbortError"
         ) {
           return;
         }
 
-        const message =
-          caughtError instanceof Error
-            ? caughtError.message
-            : "The candidate-site evaluation failed.";
-
         setEvaluation(null);
         setEquity(null);
-        setError(message);
+        setMapEvidence(null);
+
+        setError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : (
+              "Candidate-site " +
+              "evaluation failed."
+            )
+        );
       } finally {
         if (
-          requestRef.current === controller
+          requestRef.current ===
+          controller
         ) {
-          requestRef.current = null;
+          requestRef.current =
+            null;
+
           setLoading(false);
         }
       }
     },
     [],
   );
+
+
+  const showSavedCandidate =
+    useCallback(
+      (
+        candidate:
+          SavedCandidate
+      ) => {
+        setSelectedPoint(
+          candidate.point
+        );
+
+        setEvaluation(
+          candidate.evaluation
+        );
+
+        setEquity(
+          candidate.equity
+        );
+
+        setError(null);
+        setEquityError(null);
+
+        placeMarker(
+          candidate.point
+        );
+
+        mapRef.current?.flyTo({
+          center: [
+            candidate.point.lon,
+            candidate.point.lat,
+          ],
+          zoom: 12.5,
+          essential: true,
+        });
+
+        void loadEvidenceOnly(
+          candidate.point
+        );
+      },
+      [
+        loadEvidenceOnly,
+        placeMarker,
+      ],
+    );
+
+
+  useEffect(() => {
+    for (
+      const marker
+      of savedMarkersRef.current
+        .values()
+    ) {
+      marker.remove();
+    }
+
+    savedMarkersRef.current.clear();
+
+    const map = mapRef.current;
+
+    if (!mapReady || !map) {
+      return;
+    }
+
+    for (
+      const candidate
+      of savedCandidates
+    ) {
+      const element =
+        document.createElement(
+          "button"
+        );
+
+      element.type = "button";
+      element.className =
+        "saved-candidate-marker";
+      element.textContent =
+        candidate.label;
+      element.title =
+        candidate.name;
+
+      element.addEventListener(
+        "click",
+        (event) => {
+          event.stopPropagation();
+
+          showSavedCandidate(
+            candidate
+          );
+        },
+      );
+
+      const marker =
+        new maplibregl.Marker({
+          element,
+          anchor: "center",
+        })
+          .setLngLat([
+            candidate.point.lon,
+            candidate.point.lat,
+          ])
+          .addTo(map);
+
+      savedMarkersRef.current.set(
+        candidate.id,
+        marker
+      );
+    }
+  }, [
+    mapReady,
+    savedCandidates,
+    showSavedCandidate,
+  ]);
+
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (
+      !mapReady ||
+      !map
+    ) {
+      return;
+    }
+
+    updateEvidenceSources(
+      map,
+      mapEvidence
+    );
+  }, [
+    mapEvidence,
+    mapReady,
+  ]);
+
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (
+      !mapReady ||
+      !map
+    ) {
+      return;
+    }
+
+    applyEvidenceVisibility(
+      map,
+      visibility
+    );
+  }, [
+    mapReady,
+    visibility,
+  ]);
 
 
   useEffect(() => {
@@ -297,21 +705,28 @@ function App() {
       return;
     }
 
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style:
-        "https://tiles.openfreemap.org/styles/liberty",
-      center: [
-        INITIAL_POINT.lon,
-        INITIAL_POINT.lat,
-      ],
-      zoom: 8,
-    });
+    const map =
+      new maplibregl.Map({
+        container:
+          mapContainerRef.current,
+
+        style:
+          "https://tiles.openfreemap.org/" +
+          "styles/liberty",
+
+        center: [
+          INITIAL_POINT.lon,
+          INITIAL_POINT.lat,
+        ],
+
+        zoom: 8,
+      });
 
     mapRef.current = map;
 
     map.addControl(
-      new maplibregl.NavigationControl(),
+      new maplibregl
+        .NavigationControl(),
       "top-right",
     );
 
@@ -321,16 +736,29 @@ function App() {
     boundaryRequestRef.current =
       boundaryController;
 
-    map.on("load", async () => {
-      placeMarker(INITIAL_POINT);
+    map.on(
+      "load",
+      async () => {
+        addEvidenceLayers(map);
 
-      try {
-        const boundary =
-          await fetchMarylandBoundary(
-            boundaryController.signal,
-          );
+        applyEvidenceVisibility(
+          map,
+          visibility
+        );
 
-        if (!map.getSource("maryland-boundary")) {
+        placeMarker(
+          INITIAL_POINT
+        );
+
+        setMapReady(true);
+
+        try {
+          const boundary =
+            await fetchMarylandBoundary(
+              boundaryController
+                .signal,
+            );
+
           map.addSource(
             "maryland-boundary",
             {
@@ -340,82 +768,127 @@ function App() {
           );
 
           map.addLayer({
-            id: "maryland-boundary-fill",
+            id:
+              "maryland-boundary-fill",
             type: "fill",
-            source: "maryland-boundary",
+            source:
+              "maryland-boundary",
             paint: {
-              "fill-color": "#147d7f",
+              "fill-color":
+                "#147d7f",
               "fill-opacity": 0.035,
             },
           });
 
           map.addLayer({
-            id: "maryland-boundary-line",
+            id:
+              "maryland-boundary-line",
             type: "line",
-            source: "maryland-boundary",
+            source:
+              "maryland-boundary",
             paint: {
-              "line-color": "#d97706",
+              "line-color":
+                "#d97706",
               "line-width": 3,
               "line-opacity": 0.95,
             },
           });
-        }
 
-        const bounds =
-          new maplibregl.LngLatBounds();
+          const bounds =
+            new maplibregl
+              .LngLatBounds();
 
-        for (const feature of boundary.features) {
-          if (feature.geometry) {
-            extendGeometryBounds(
+          for (
+            const feature
+            of boundary.features
+          ) {
+            if (feature.geometry) {
+              extendGeometryBounds(
+                bounds,
+                feature.geometry,
+              );
+            }
+          }
+
+          if (!bounds.isEmpty()) {
+            map.fitBounds(
               bounds,
-              feature.geometry,
+              {
+                padding: 42,
+                duration: 0,
+              },
             );
           }
-        }
-
-        if (!bounds.isEmpty()) {
-          map.fitBounds(bounds, {
-            padding: 42,
-            duration: 0,
-          });
-        }
-      } catch (boundaryError) {
-        if (
-          boundaryError instanceof DOMException &&
-          boundaryError.name === "AbortError"
+        } catch (
+          boundaryError
         ) {
-          return;
-        }
+          if (
+            boundaryError
+              instanceof
+                DOMException &&
+            boundaryError.name ===
+              "AbortError"
+          ) {
+            return;
+          }
 
-        console.error(
-          "Maryland boundary failed to load:",
-          boundaryError,
-        );
-      }
-    });
+          console.error(
+            "Maryland boundary " +
+            "failed to load:",
+            boundaryError,
+          );
+        }
+      },
+    );
 
     map.on(
       "click",
       (
-        event: maplibregl.MapMouseEvent,
+        event:
+          maplibregl
+            .MapMouseEvent
       ) => {
-        const point: CandidatePoint = {
+        const point:
+        CandidatePoint = {
           lat: Number(
-            event.lngLat.lat.toFixed(6),
+            event.lngLat.lat
+              .toFixed(6),
           ),
+
           lon: Number(
-            event.lngLat.lng.toFixed(6),
+            event.lngLat.lng
+              .toFixed(6),
           ),
         };
 
         placeMarker(point);
-        void evaluatePoint(point);
+
+        void evaluatePoint(
+          point
+        );
       },
     );
 
     return () => {
-      requestRef.current?.abort();
-      boundaryRequestRef.current?.abort();
+      requestRef.current
+        ?.abort();
+
+      evidenceRequestRef.current
+        ?.abort();
+
+      boundaryRequestRef.current
+        ?.abort();
+
+      for (
+        const marker
+        of savedMarkersRef.current
+          .values()
+      ) {
+        marker.remove();
+      }
+
+      savedMarkersRef.current
+        .clear();
 
       markerRef.current?.remove();
       markerRef.current = null;
@@ -423,7 +896,157 @@ function App() {
       map.remove();
       mapRef.current = null;
     };
-  }, [evaluatePoint, placeMarker]);
+  }, [
+    evaluatePoint,
+    placeMarker,
+  ]);
+
+
+  const saveCurrentCandidate =
+    useCallback(() => {
+      if (
+        !evaluation ||
+        evaluation.decision
+          .status ===
+          "outside_study_area"
+      ) {
+        return;
+      }
+
+      const duplicate =
+        savedCandidates.some(
+          (candidate) =>
+            Math.abs(
+              candidate.point.lat -
+              selectedPoint.lat
+            ) < 0.000001 &&
+            Math.abs(
+              candidate.point.lon -
+              selectedPoint.lon
+            ) < 0.000001
+        );
+
+      if (
+        duplicate ||
+        savedCandidates.length >= 5
+      ) {
+        return;
+      }
+
+      const label =
+        nextCandidateLabel(
+          savedCandidates
+        );
+
+      const id =
+        typeof crypto
+          .randomUUID ===
+          "function"
+          ? crypto.randomUUID()
+          : (
+            `${Date.now()}-` +
+            label
+          );
+
+      const candidate:
+      SavedCandidate = {
+        id,
+        label,
+        name:
+          `Candidate ${label}`,
+        point: selectedPoint,
+        evaluation,
+        equity,
+        savedAt:
+          new Date()
+            .toISOString(),
+      };
+
+      setSavedCandidates(
+        (current) => [
+          ...current,
+          candidate,
+        ]
+      );
+    }, [
+      equity,
+      evaluation,
+      savedCandidates,
+      selectedPoint,
+    ]);
+
+
+  const removeCandidate =
+    useCallback(
+      (
+        candidateId: string
+      ) => {
+        setSavedCandidates(
+          (current) =>
+            current.filter(
+              (candidate) =>
+                candidate.id !==
+                candidateId
+            )
+        );
+      },
+      [],
+    );
+
+
+  const clearCandidates =
+    useCallback(() => {
+      setSavedCandidates([]);
+    }, []);
+
+
+  const updateLayerVisibility =
+    useCallback(
+      (
+        group: EvidenceGroup,
+        visible: boolean,
+      ) => {
+        setVisibility(
+          (current) => ({
+            ...current,
+            [group]: visible,
+          })
+        );
+      },
+      [],
+    );
+
+
+  const showCriterionEvidence =
+    useCallback(
+      (
+        criterionName: string
+      ) => {
+        const group =
+          CRITERION_LAYER_GROUP[
+            criterionName
+          ];
+
+        if (group) {
+          setVisibility(
+            (current) => ({
+              ...current,
+              [group]: true,
+            })
+          );
+        }
+
+        mapRef.current?.flyTo({
+          center: [
+            selectedPoint.lon,
+            selectedPoint.lat,
+          ],
+          zoom: 13,
+          essential: true,
+        });
+      },
+      [selectedPoint],
+    );
 
 
   const suitabilityScore =
@@ -437,12 +1060,33 @@ function App() {
     suitabilityScore === null
       ? null
       : Math.round(
-          suitabilityScore * 100,
+          suitabilityScore *
+            100
         );
 
   const outsideStudyArea =
-    evaluation?.decision.status ===
+    evaluation?.decision
+      .status ===
     "outside_study_area";
+
+  const alreadySaved =
+    savedCandidates.some(
+      (candidate) =>
+        Math.abs(
+          candidate.point.lat -
+          selectedPoint.lat
+        ) < 0.000001 &&
+        Math.abs(
+          candidate.point.lon -
+          selectedPoint.lon
+        ) < 0.000001
+    );
+
+  const canSave =
+    Boolean(evaluation) &&
+    !outsideStudyArea &&
+    !alreadySaved &&
+    savedCandidates.length < 5;
 
 
   return (
@@ -450,8 +1094,8 @@ function App() {
       <header className="topbar">
         <div>
           <p className="eyebrow">
-            Maryland Data Center Siting
-            Screening Tool
+            Maryland Data Center
+            Siting Screening Tool
           </p>
 
           <h1>AERIS</h1>
@@ -474,10 +1118,23 @@ function App() {
             Maryland study area
           </div>
 
+          <LayerControl
+            visibility={visibility}
+            onChange={
+              updateLayerVisibility
+            }
+          />
+
           <div className="map-message">
-            Click inside Maryland to evaluate a
-            candidate location.
+            Click inside Maryland to
+            evaluate a candidate location.
           </div>
+
+          {evidenceLoading && (
+            <div className="map-loading-chip">
+              Loading map evidence…
+            </div>
+          )}
         </section>
 
         <aside className="results-panel">
@@ -488,26 +1145,56 @@ function App() {
               </p>
 
               <strong>
-                {selectedPoint.lat.toFixed(5)},{" "}
-                {selectedPoint.lon.toFixed(5)}
+                {selectedPoint.lat
+                  .toFixed(5)}
+                ,{" "}
+                {selectedPoint.lon
+                  .toFixed(5)}
               </strong>
+
+              <small className="saved-count">
+                {
+                  savedCandidates.length
+                }
+                /5 candidates saved
+              </small>
             </div>
 
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => {
-                placeMarker(selectedPoint);
+            <div className="location-actions">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => {
+                  placeMarker(
+                    selectedPoint
+                  );
 
-                void evaluatePoint(
-                  selectedPoint,
-                );
-              }}
-            >
-              {loading
-                ? "Evaluating..."
-                : "Evaluate site"}
-            </button>
+                  void evaluatePoint(
+                    selectedPoint
+                  );
+                }}
+              >
+                {loading
+                  ? "Evaluating..."
+                  : "Evaluate site"}
+              </button>
+
+              <button
+                type="button"
+                className="secondary-button"
+                disabled={!canSave}
+                onClick={
+                  saveCurrentCandidate
+                }
+              >
+                {alreadySaved
+                  ? "Candidate saved"
+                  : savedCandidates
+                      .length >= 5
+                    ? "Maximum saved"
+                    : "Save candidate"}
+              </button>
+            </div>
           </section>
 
           {loading && (
@@ -520,9 +1207,9 @@ function App() {
                 </strong>
 
                 <p>
-                  Evaluating technical criteria
-                  and the separate community-impact
-                  safeguard.
+                  Evaluating technical
+                  criteria, equity safeguards,
+                  and nearby GIS evidence.
                 </p>
               </div>
             </section>
@@ -540,17 +1227,31 @@ function App() {
             </section>
           )}
 
+          {evidenceError && (
+            <section className="notice warning">
+              <div>
+                <strong>
+                  Map evidence incomplete
+                </strong>
+
+                <p>
+                  {evidenceError}
+                </p>
+              </div>
+            </section>
+          )}
+
           {!loading &&
             !error &&
             !evaluation && (
               <section className="empty-state">
                 <h2>
-                  Evaluate the test location
+                  Evaluate a Maryland site
                 </h2>
 
                 <p>
-                  Select the button above or click
-                  another Maryland location.
+                  Click the map or evaluate
+                  the selected location.
                 </p>
               </section>
             )}
@@ -561,12 +1262,15 @@ function App() {
               <section className="notice error">
                 <div>
                   <strong>
-                    Outside the Maryland study area
+                    Outside the Maryland
+                    study area
                   </strong>
 
                   <p>
-                    {evaluation.decision.message ??
-                      "Select a location within Maryland."}
+                    {
+                      evaluation.decision
+                        .message
+                    }
                   </p>
                 </div>
               </section>
@@ -592,14 +1296,21 @@ function App() {
                     className={
                       evaluation.decision
                         .hard_excluded
-                        ? "decision-badge excluded"
-                        : "decision-badge complete"
+                        ? (
+                          "decision-badge " +
+                          "excluded"
+                        )
+                        : (
+                          "decision-badge " +
+                          "complete"
+                        )
                     }
                   >
                     {evaluation.decision
                       .hard_excluded
                       ? "Excluded"
-                      : evaluation.decision.status}
+                      : evaluation.decision
+                          .status}
                   </span>
 
                   <div className="score-track">
@@ -607,50 +1318,37 @@ function App() {
                       className="score-fill"
                       style={{
                         width:
-                          `${scorePercent ?? 0}%`,
+                          `${
+                            scorePercent ??
+                            0
+                          }%`,
                       }}
                     />
                   </div>
 
                   <p className="score-caption">
-                    Technical model completion:{" "}
+                    Technical model completion:
+                    {" "}
                     {
                       evaluation.score_summary
                         .model_completion_percent
                     }
-                    %. Community burden is evaluated
-                    separately and cannot improve this
-                    score.
+                    %. Community burden is
+                    evaluated separately.
                   </p>
                 </section>
-
-                {evaluation.decision
-                  .hard_excluded && (
-                    <section className="notice error">
-                      <div>
-                        <strong>
-                          Technical hard exclusion
-                        </strong>
-
-                        <p>
-                          {evaluation.decision
-                            .hard_exclusion_reasons
-                            .map(formatLabel)
-                            .join(", ")}
-                        </p>
-                      </div>
-                    </section>
-                  )}
 
                 {equityError && (
                   <section className="notice error">
                     <div>
                       <strong>
-                        Community-impact data
-                        unavailable
+                        Community-impact
+                        data unavailable
                       </strong>
 
-                      <p>{equityError}</p>
+                      <p>
+                        {equityError}
+                      </p>
                     </div>
                   </section>
                 )}
@@ -660,27 +1358,34 @@ function App() {
                     <div className="equity-heading">
                       <div>
                         <p className="section-label">
-                          Community impact and equity
+                          Community impact
+                          and equity
                         </p>
 
                         <h2>
-                          Environmental-justice gate
+                          Environmental-
+                          justice gate
                         </h2>
                       </div>
 
                       <span
-                        className={equityBadgeClass(
-                          equity.gate_status,
-                        )}
+                        className={
+                          equityBadgeClass(
+                            equity
+                              .gate_status
+                          )
+                        }
                       >
                         {formatLabel(
-                          equity.gate_status,
+                          equity
+                            .gate_status
                         )}
                       </span>
                     </div>
 
                     <p className="equity-summary">
-                      {equity.interpretation ??
+                      {equity
+                        .interpretation ??
                         equity.message}
                     </p>
 
@@ -688,15 +1393,15 @@ function App() {
                       .auto_recommendation_eligible && (
                       <div className="recommendation-block">
                         <strong>
-                          Automatic recommendation
-                          blocked
+                          Automatic
+                          recommendation blocked
                         </strong>
 
                         <p>
-                          This location requires
-                          enhanced community-impact,
-                          public-health, and
-                          environmental review.
+                          Enhanced community-
+                          impact, public-health,
+                          and environmental review
+                          is required.
                         </p>
                       </div>
                     )}
@@ -708,7 +1413,8 @@ function App() {
                         </span>
 
                         <strong>
-                          {equity.overburdened
+                          {equity
+                            .overburdened
                             ? "Yes"
                             : "No"}
                         </strong>
@@ -720,7 +1426,8 @@ function App() {
                         </span>
 
                         <strong>
-                          {equity.underserved
+                          {equity
+                            .underserved
                             ? "Yes"
                             : "No"}
                         </strong>
@@ -745,8 +1452,11 @@ function App() {
                         </span>
 
                         <strong>
-                          {equity.tract_geoid ??
-                            "Unavailable"}
+                          {
+                            equity
+                              .tract_geoid ??
+                            "Unavailable"
+                          }
                         </strong>
                       </div>
                     </div>
@@ -759,8 +1469,9 @@ function App() {
 
                         <strong>
                           {formatPercent(
-                            equity.percentiles
-                              ?.pollution_burden,
+                            equity
+                              .percentiles
+                              ?.pollution_burden
                           )}
                         </strong>
                       </div>
@@ -772,8 +1483,9 @@ function App() {
 
                         <strong>
                           {formatPercent(
-                            equity.percentiles
-                              ?.environmental_effects,
+                            equity
+                              .percentiles
+                              ?.environmental_effects
                           )}
                         </strong>
                       </div>
@@ -785,8 +1497,9 @@ function App() {
 
                         <strong>
                           {formatPercent(
-                            equity.percentiles
-                              ?.sensitive_populations,
+                            equity
+                              .percentiles
+                              ?.sensitive_populations
                           )}
                         </strong>
                       </div>
@@ -798,29 +1511,13 @@ function App() {
 
                         <strong>
                           {formatPercent(
-                            equity.percentiles
-                              ?.environmental_justice,
+                            equity
+                              .percentiles
+                              ?.environmental_justice
                           )}
                         </strong>
                       </div>
                     </div>
-
-                    {equity.elevated_categories &&
-                      equity.elevated_categories
-                        .length > 0 && (
-                        <div className="elevated-list">
-                          <span>
-                            Elevated indicators
-                          </span>
-
-                          <p>
-                            {equity
-                              .elevated_categories
-                              .map(formatLabel)
-                              .join(", ")}
-                          </p>
-                        </div>
-                      )}
 
                     <details className="audit-details">
                       <summary>
@@ -828,9 +1525,9 @@ function App() {
                       </summary>
 
                       <p>
-                        These fields are used only
-                        to audit disparate outcomes.
-                        They never increase technical
+                        These fields audit
+                        disparate outcomes. They
+                        never increase technical
                         suitability.
                       </p>
 
@@ -844,7 +1541,7 @@ function App() {
                             {formatPercent(
                               equity
                                 .demographic_audit
-                                ?.minority_or_hispanic_pct,
+                                ?.minority_or_hispanic_pct
                             )}
                           </strong>
                         </div>
@@ -858,7 +1555,7 @@ function App() {
                             {formatPercent(
                               equity
                                 .demographic_audit
-                                ?.low_income_pct,
+                                ?.low_income_pct
                             )}
                           </strong>
                         </div>
@@ -872,7 +1569,7 @@ function App() {
                             {formatPercent(
                               equity
                                 .demographic_audit
-                                ?.limited_english_pct,
+                                ?.limited_english_pct
                             )}
                           </strong>
                         </div>
@@ -880,6 +1577,21 @@ function App() {
                     </details>
                   </section>
                 )}
+
+                <ComparisonPanel
+                  candidates={
+                    savedCandidates
+                  }
+                  onSelect={
+                    showSavedCandidate
+                  }
+                  onRemove={
+                    removeCandidate
+                  }
+                  onClear={
+                    clearCandidates
+                  }
+                />
 
                 <section className="criteria-section">
                   <div className="criteria-heading">
@@ -894,85 +1606,41 @@ function App() {
                     </div>
 
                     <span>
-                      {CRITERIA.length} variables
+                      {CRITERIA.length}
+                      {" "}
+                      variables
                     </span>
                   </div>
 
                   <div className="criteria-grid">
                     {CRITERIA.map(
-                      (criterionName) => {
-                        const criterion =
-                          evaluation.criteria[
+                      (
+                        criterionName
+                      ) => (
+                        <CriterionCard
+                          key={
                             criterionName
-                          ];
-
-                        const score =
-                          criterion
-                            ?.normalized_score;
-
-                        const numericScore =
-                          typeof score === "number"
-                            ? score
-                            : null;
-
-                        return (
-                          <article
-                            className="criterion-card"
-                            key={criterionName}
-                          >
-                            <div className="criterion-header">
-                              <h3>
-                                {formatLabel(
-                                  criterionName,
-                                )}
-                              </h3>
-
-                              <span
-                                className={
-                                  criterion
-                                    ?.excluded
-                                    ? "criterion-state excluded"
-                                    : "criterion-state"
-                                }
-                              >
-                                {criterion
-                                  ?.excluded
-                                  ? "Excluded"
-                                  : criterion
-                                      ?.status ??
-                                    "Unknown"}
-                              </span>
-                            </div>
-
-                            <div className="criterion-score">
-                              {formatScore(
-                                numericScore,
-                              )}
-                            </div>
-
-                            <div className="mini-track">
-                              <div
-                                style={{
-                                  width:
-                                    numericScore ===
-                                    null
-                                      ? "0%"
-                                      : `${Math.round(
-                                          numericScore *
-                                            100,
-                                        )}%`,
-                                }}
-                              />
-                            </div>
-
-                            <p>
-                              {criterion
-                                ?.source_layer ??
-                                "Source unavailable"}
-                            </p>
-                          </article>
-                        );
-                      },
+                          }
+                          criterionName={
+                            criterionName
+                          }
+                          criterion={
+                            evaluation
+                              .criteria[
+                                criterionName
+                              ]
+                          }
+                          canShowOnMap={
+                            criterionName in
+                            CRITERION_LAYER_GROUP
+                          }
+                          onShowOnMap={() => {
+                            showCriterionEvidence(
+                              criterionName
+                            );
+                          }}
+                        />
+                      ),
                     )}
                   </div>
                 </section>

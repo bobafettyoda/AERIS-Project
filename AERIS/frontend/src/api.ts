@@ -1,4 +1,6 @@
-import type { FeatureCollection } from "geojson";
+import type {
+  FeatureCollection,
+} from "geojson";
 
 
 export const API_BASE_URL =
@@ -19,14 +21,15 @@ export type CriterionResult = {
   status?: string;
   excluded?: boolean | null;
   normalized_score?: number | null;
+  weight?: number | null;
   weighted_contribution?: number | null;
+  limitations?: string[];
   [key: string]: unknown;
 };
 
 
 export type SiteEvaluation = {
   analysis: string;
-
   input: CandidatePoint;
 
   study_area?: {
@@ -57,15 +60,16 @@ export type SiteEvaluation = {
     final_suitability_score: number | null;
   };
 
-  criteria: Record<string, CriterionResult>;
+  criteria: Record<
+    string,
+    CriterionResult
+  >;
 };
 
 
 export type EquityScreenResult = {
   source_layer: string;
-
   input: CandidatePoint;
-
   tract_geoid?: string | null;
 
   gate_status:
@@ -83,7 +87,6 @@ export type EquityScreenResult = {
 
   underserved?: boolean;
   underserved_reasons?: string[];
-
   elevated_categories?: string[];
 
   percentiles?: {
@@ -105,18 +108,39 @@ export type EquityScreenResult = {
 };
 
 
-export async function evaluateCandidateSite(
-  point: CandidatePoint,
-  signal?: AbortSignal,
-): Promise<SiteEvaluation> {
-  const parameters = new URLSearchParams({
-    lat: point.lat.toString(),
-    lon: point.lon.toString(),
-  });
+export type EvidenceLayerBundle = {
+  status: "ok" | "error";
+  error?: string;
+  error_type?: string;
+  distance_m?: number | null;
+  nearby?: FeatureCollection;
+  nearest?: FeatureCollection;
+  connector?: FeatureCollection;
+};
 
+
+export type SiteMapEvidence = {
+  input: CandidatePoint;
+  search_radius_m: number;
+
+  layers: {
+    road: EvidenceLayerBundle;
+    transmission: EvidenceLayerBundle;
+    substation: EvidenceLayerBundle;
+    stream: EvidenceLayerBundle;
+    lake: EvidenceLayerBundle;
+    flood: EvidenceLayerBundle;
+    protected: EvidenceLayerBundle;
+  };
+};
+
+
+async function getJson<T>(
+  url: string,
+  signal?: AbortSignal,
+): Promise<T> {
   const response = await fetch(
-    `${API_BASE_URL}/analysis/` +
-      `data-center-demo/candidate-site?${parameters}`,
+    url,
     {
       signal,
     },
@@ -124,11 +148,34 @@ export async function evaluateCandidateSite(
 
   if (!response.ok) {
     throw new Error(
-      `AERIS backend returned HTTP ${response.status}.`,
+      `AERIS returned HTTP ${response.status}.`,
     );
   }
 
-  return (await response.json()) as SiteEvaluation;
+  return (await response.json()) as T;
+}
+
+
+function pointParameters(
+  point: CandidatePoint,
+): URLSearchParams {
+  return new URLSearchParams({
+    lat: point.lat.toString(),
+    lon: point.lon.toString(),
+  });
+}
+
+
+export async function evaluateCandidateSite(
+  point: CandidatePoint,
+  signal?: AbortSignal,
+): Promise<SiteEvaluation> {
+  return getJson<SiteEvaluation>(
+    `${API_BASE_URL}/analysis/` +
+      "data-center-demo/candidate-site?" +
+      pointParameters(point),
+    signal,
+  );
 }
 
 
@@ -136,44 +183,32 @@ export async function evaluateEquityScreen(
   point: CandidatePoint,
   signal?: AbortSignal,
 ): Promise<EquityScreenResult> {
-  const parameters = new URLSearchParams({
-    lat: point.lat.toString(),
-    lon: point.lon.toString(),
-  });
-
-  const response = await fetch(
+  return getJson<EquityScreenResult>(
     `${API_BASE_URL}/analysis/` +
-      `data-center-demo/equity-screen?${parameters}`,
-    {
-      signal,
-    },
+      "data-center-demo/equity-screen?" +
+      pointParameters(point),
+    signal,
   );
+}
 
-  if (!response.ok) {
-    throw new Error(
-      `Equity screen returned HTTP ${response.status}.`,
-    );
-  }
 
-  return (await response.json()) as EquityScreenResult;
+export async function fetchSiteMapEvidence(
+  point: CandidatePoint,
+  signal?: AbortSignal,
+): Promise<SiteMapEvidence> {
+  return getJson<SiteMapEvidence>(
+    `${API_BASE_URL}/gis/site-evidence?` +
+      pointParameters(point),
+    signal,
+  );
 }
 
 
 export async function fetchMarylandBoundary(
   signal?: AbortSignal,
 ): Promise<FeatureCollection> {
-  const response = await fetch(
+  return getJson<FeatureCollection>(
     `${API_BASE_URL}/gis/study-area/maryland`,
-    {
-      signal,
-    },
+    signal,
   );
-
-  if (!response.ok) {
-    throw new Error(
-      "Maryland boundary could not be loaded.",
-    );
-  }
-
-  return (await response.json()) as FeatureCollection;
 }
