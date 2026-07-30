@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "pipeline": "statewide_foundation_join",
+  "generated_at_utc": "2026-07-30T22:39:27.316645+00:00",
+  "target_crs": "EPSG:26985",
+  "join_method": {
+    "primary": "grid representative point within TIGER tract",
+    "fallback": "nearest TIGER tract within 100 meters"
+  },
+  "population_density_method": {
+    "source_population": "ACS 2024 5-year B01003_001E",
+    "source_land_area": "TIGER 2024 ALAND",
+    "formula": "population / tract_land_area_sq_km",
+    "score_formula": "clip(0.7 + density * 0.0001, 0.0, 1.0)",
+    "known_point_calibration": {
+      "density_people_sq_km": 2752.72,
+      "expected_score": 0.975272
+    }
+  },
+  "equity_gate_method": {
+    "HIGH_BURDEN": "Official OVERBURDENED flag is true",
+    "CAUTION": "Official UNDERSERVED flag is true and OVERBURDENED is not true",
+    "PASS": "Official flags are available and neither condition applies",
+    "INSUFFICIENT_DATA": "No matching EnviroScreen record or flags unavailable",
+    "used_in_technical_score": false
+  },
+  "counts": {
+    "tiger_tracts": 1475,
+    "acs_records": 1475,
+    "acs_missing_tracts": 0,
+    "enviroscreen_records": 1463,
+    "enviroscreen_matched_tracts": 1463,
+    "enviroscreen_unmatched_tracts": 12,
+    "enviroscreen_extra_geoids": 0,
+    "grid_cells": 27596,
+    "grid_primary_join_duplicates": 0,
+    "grid_nearest_fallbacks": 1,
+    "grid_unmatched_cells": 1,
+    "foundation_complete_cells": 0,
+    "regional_land_threshold_cells": 26415,
+    "foundation_screen_ready_cells": 0
+  },
+  "equity_gate_counts_by_tract": {
+    "INSUFFICIENT_DATA": 1475
+  },
+  "population_statistics": {
+    "minimum_density_people_sq_km": 0.0,
+    "median_density_people_sq_km": 1330.572,
+    "maximum_density_people_sq_km": 21730.064,
+    "statewide_population": 6206011
+  },
+  "source_snapshot_checksums": {
+    "tiger_tracts": "2024640aeb94cf9cc999cb611e8493a2e58562d0e2df413fde46d6b85d3fda51",
+    "acs_population": "ad1f56b373735927faba0bac93fe018fab6628b8e19d2ed11ccd36c8ac1b01e7",
+    "md_enviroscreen": "2d4d41705f2f27db03d1b9f045e034ff59d1835972487570881cc071965caf62"
+  },
+  "outputs": {
+    "standardized_tracts": "data/interim/statewide/maryland_foundation_tracts.gpkg",
+    "enriched_grid": "data/derived/maryland_grid_1km_foundation.gpkg",
+    "unmatched_enviroscreen": "data/interim/statewide/enviroscreen_unmatched_tracts.csv"
+  },
+  "output_checksums": {
+    "standardized_tracts": "b017b5feb4f5ab8ff6277ec6532e52241e10397ee10bb0fef6356251fe635a6d",
+    "enriched_grid": "783a7bdee1110ec6b297db36a4c6a24484fb3eb1b18155472966c32a36bc60a8"
+  }
+}
