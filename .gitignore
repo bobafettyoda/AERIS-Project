@@ -3,3 +3,9 @@
 .venv/
 __pycache__/
 *.pyc
+
+# AERIS statewide generated data
+AERIS/data/derived/*.gpkg
+AERIS/data/derived/*.parquet
+AERIS/data/derived/*.geojson
+AERIS/data/derived/*.pmtiles

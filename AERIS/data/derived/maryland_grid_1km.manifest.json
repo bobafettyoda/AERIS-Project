@@ -1,0 +1,14 @@
+{
+  "name": "maryland_statewide_1km",
+  "version": "0.2.0",
+  "generated_at_utc": "2026-07-30T18:40:50.705649+00:00",
+  "study_area": "Maryland",
+  "boundary_service": "https://mdgeodata.md.gov/imap/rest/services/Boundaries/MD_PoliticalBoundaries/FeatureServer/0",
+  "crs": "EPSG:26985",
+  "cell_size_m": 1000.0,
+  "minimum_land_fraction": 0.05,
+  "cell_count": 32460,
+  "total_clipped_area_sq_km": 31845.16,
+  "output": "data/derived/maryland_grid_1km.gpkg",
+  "layer": "cells"
+}
