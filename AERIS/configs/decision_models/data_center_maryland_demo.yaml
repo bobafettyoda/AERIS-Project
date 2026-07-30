@@ -110,3 +110,43 @@ telecom_infrastructure_scoring:
     - Reported coverage does not identify the exact physical fiber route.
     - Multiple providers do not guarantee physically independent routes.
     - Enterprise capacity and service-level agreements require provider verification.
+
+climate_scoring:
+  method: nasa_power_temperature_proxy
+  description: >
+    Uses NASA POWER climatology at the candidate coordinate as a
+    screening proxy for data-center cooling burden. The score combines
+    annual mean temperature and July mean temperature. Humidity and
+    climatological extremes are reported but are not scored in this version.
+
+  annual_temperature_component_weight: 0.60
+  july_temperature_component_weight: 0.40
+
+  annual_mean_temperature_points:
+    - temperature_c: 8
+      score: 1.00
+    - temperature_c: 12
+      score: 0.90
+    - temperature_c: 16
+      score: 0.70
+    - temperature_c: 20
+      score: 0.40
+    - temperature_c: 24
+      score: 0.10
+
+  july_mean_temperature_points:
+    - temperature_c: 18
+      score: 1.00
+    - temperature_c: 22
+      score: 0.85
+    - temperature_c: 26
+      score: 0.65
+    - temperature_c: 30
+      score: 0.35
+    - temperature_c: 34
+      score: 0.10
+
+  limitations:
+    - NASA POWER values are regional climatology estimates, not parcel-level weather observations.
+    - Relative humidity is reported but is not included in the first scoring method.
+    - Final cooling-system design requires engineering-grade weather analysis.

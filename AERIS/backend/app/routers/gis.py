@@ -1,3 +1,4 @@
+from analysis.climate import ClimateCriterion
 from analysis.telecom_infrastructure import TelecomInfrastructureCriterion
 from fastapi import APIRouter
 
@@ -210,6 +211,19 @@ def telecom_fiber_availability_score(
     lon: float,
 ) -> dict:
     return telecom_infrastructure_criterion.evaluate(
+        lat=lat,
+        lon=lon,
+    )
+
+climate_criterion = ClimateCriterion()
+
+
+@router.get("/climate/cooling-burden-score")
+def climate_cooling_burden_score(
+    lat: float,
+    lon: float,
+) -> dict:
+    return climate_criterion.evaluate(
         lat=lat,
         lon=lon,
     )
