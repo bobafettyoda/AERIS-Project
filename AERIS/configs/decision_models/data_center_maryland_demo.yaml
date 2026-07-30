@@ -79,3 +79,34 @@ population_density_scoring:
       score: 0.50
     - density: 12000
       score: 0.20
+
+telecom_infrastructure_scoring:
+  method: public_fiber_coverage_proxy
+  description: >
+    Uses reported fiber service coverage as a public-data proxy for
+    telecom accessibility. It does not verify physical cable routes,
+    available enterprise capacity, latency, or route diversity.
+
+  proximity_component_weight: 0.70
+  diversity_component_weight: 0.30
+  diversity_search_radius_m: 5000
+
+  proximity_scores:
+    direct_coverage: 1.00
+    within_500_m: 0.90
+    within_1000_m: 0.80
+    within_2000_m: 0.65
+    within_5000_m: 0.40
+    beyond_5000_m: 0.10
+
+  provider_diversity_scores:
+    zero_providers: 0.00
+    one_provider: 0.30
+    two_providers: 0.55
+    three_providers: 0.75
+    four_or_more_providers: 1.00
+
+  limitations:
+    - Reported coverage does not identify the exact physical fiber route.
+    - Multiple providers do not guarantee physically independent routes.
+    - Enterprise capacity and service-level agreements require provider verification.

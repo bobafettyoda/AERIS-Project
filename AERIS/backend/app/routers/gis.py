@@ -1,3 +1,4 @@
+from analysis.telecom_infrastructure import TelecomInfrastructureCriterion
 from fastapi import APIRouter
 
 from connectors.arcgis import (
@@ -199,3 +200,17 @@ def population_density_score(
         lat=lat,
         lon=lon,
     )
+
+telecom_infrastructure_criterion = TelecomInfrastructureCriterion()
+
+
+@router.get("/telecom/fiber-availability-score")
+def telecom_fiber_availability_score(
+    lat: float,
+    lon: float,
+) -> dict:
+    return telecom_infrastructure_criterion.evaluate(
+        lat=lat,
+        lon=lon,
+    )
+
