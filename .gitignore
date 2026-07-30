@@ -9,3 +9,12 @@ AERIS/data/derived/*.gpkg
 AERIS/data/derived/*.parquet
 AERIS/data/derived/*.geojson
 AERIS/data/derived/*.pmtiles
+
+# AERIS downloaded statewide source data
+AERIS/data/raw/
+AERIS/data/cache/
+AERIS/data/interim/
+
+# Partial and temporary data files
+*.part
+*.tmp

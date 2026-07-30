@@ -1,0 +1,48 @@
+version: 1
+
+manifest:
+  path: data/manifests/statewide_foundations.json
+
+sources:
+  tiger_tracts:
+    title: 2024 TIGER/Line Maryland Census Tracts
+    vintage: 2024
+    url: https://www2.census.gov/geo/tiger/TIGER2024/TRACT/tl_2024_24_tract.zip
+    output: data/raw/census/2024/tl_2024_24_tract.zip
+    expected_state_fips: "24"
+
+  acs_population:
+    title: 2024 ACS 5-Year Maryland Tract Population
+    vintage: 2024
+    url: https://api.census.gov/data/2024/acs/acs5
+    output: data/raw/census/2024/acs5_md_tract_population.csv
+    geography:
+      state_fips: "24"
+      for: "tract:*"
+      in: "state:24 county:*"
+    variables:
+      NAME: tract_name
+      B01003_001E: population
+      B01003_001M: population_moe
+
+  md_enviroscreen:
+    title: Maryland EJ Score V3
+    source_last_updated: "2025-07-24"
+    layer_url: https://mdgeodata.md.gov/imap/rest/services/Environment/MD_EnviroScreen/FeatureServer/0
+    output: data/raw/md_enviroscreen/2025-07-24/md_enviroscreen_v3.geojson
+    page_directory: data/cache/statewide/md_enviroscreen_pages
+    page_size: 500
+    fields:
+      - OBJECTID
+      - GEOID20
+      - P_EJ
+      - OVERBURDENED
+      - OVERBURDENED_SUM
+      - UNDERSERVED
+      - P_UNDERSERVED
+      - P_POLLUTIONBURDEN
+      - P_POLLUTIONENVIRONMENTAL
+      - P_SENSITIVEPOPULATIONS
+      - MINORPCT
+      - LWINCPCT
+      - LINGISOPCT
