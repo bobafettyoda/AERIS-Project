@@ -1,4 +1,4 @@
-from app.routers.gis import (
+from app.config import (
     FEMA_FLOODPLAIN_URL,
     PROTECTED_LANDS_URL,
     ROADS_LAYER_URL,

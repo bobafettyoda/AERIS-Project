@@ -1,3 +1,11 @@
+from app.config import (
+    FEMA_FLOODPLAIN_URL,
+    PROTECTED_LANDS_URL,
+    ROADS_LAYER_URL,
+    SUBSTATIONS_LAYER_URL,
+    TRANSMISSION_LINES_LAYER_URL,
+    WATERBODIES_URL,
+)
 from analysis.grid_infrastructure import GridInfrastructureCriterion
 from analysis.climate import ClimateCriterion
 from analysis.telecom_infrastructure import TelecomInfrastructureCriterion
@@ -16,35 +24,11 @@ from analysis.population_density import PopulationDensityCriterion
 
 router = APIRouter(prefix="/gis", tags=["gis"])
 
-ROADS_LAYER_URL = (
-    "https://mdgeodata.md.gov/imap/rest/services/"
-    "Transportation/MD_RoadCenterlinesComprehensive/MapServer/0"
-)
 
-TRANSMISSION_LINES_LAYER_URL = (
-    "https://services2.arcgis.com/LYMgRMwHfrWWEg3s/arcgis/rest/services/"
-    "HIFLD_US_Electric_Power_Transmission_Lines/FeatureServer/0"
-)
 
-SUBSTATIONS_LAYER_URL = (
-    "https://services5.arcgis.com/HDRa0B57OVrv2E1q/ArcGIS/rest/services/"
-    "Electric_Substations/FeatureServer/0"
-)
 
-FEMA_FLOODPLAIN_URL = (
-    "https://mdgeodata.md.gov/imap/rest/services/"
-    "Hydrology/MD_Floodplain/FeatureServer/1"
-)
 
-PROTECTED_LANDS_URL = (
-    "https://mdgeodata.md.gov/imap/rest/services/"
-    "Environment/MD_ProtectedLands/FeatureServer"
-)
 
-WATERBODIES_URL = (
-    "https://mdgeodata.md.gov/imap/rest/services/"
-    "Hydrology/MD_Waterbodies/FeatureServer"
-)
 
 flood_hazard_criterion = FloodHazardCriterion(
     layer_url=FEMA_FLOODPLAIN_URL,

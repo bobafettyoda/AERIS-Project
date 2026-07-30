@@ -305,6 +305,18 @@ class CandidateSiteEvaluator:
             else provisional_normalized_score
         )
 
+        if (
+            model_scoring_complete
+            and exclusion_checks_complete
+        ):
+            final_suitability_score = (
+                0.0
+                if hard_excluded
+                else provisional_normalized_score
+            )
+        else:
+            final_suitability_score = None
+
         return {
             "analysis": (
                 "AERIS Maryland data center "
@@ -363,6 +375,12 @@ class CandidateSiteEvaluator:
                 "effective_score_after_exclusions": (
                     round(effective_score, 6)
                     if effective_score is not None
+                    else None
+                ),
+                "final_suitability_score": (
+                    round(final_suitability_score, 6)
+                    if final_suitability_score
+                    is not None
                     else None
                 ),
             },
