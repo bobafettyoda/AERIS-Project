@@ -26,6 +26,7 @@ class CandidateSiteEvaluator:
     HARD_EXCLUSION_CRITERIA = (
         "hydro_hazard",
         "protected_areas",
+        "water_bodies",
     )
 
     def __init__(

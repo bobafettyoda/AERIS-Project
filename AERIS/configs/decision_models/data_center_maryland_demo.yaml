@@ -165,3 +165,35 @@ grid_infrastructure_scoring:
     - Proximity does not confirm available electrical capacity.
     - Proximity does not confirm that interconnection is technically or financially feasible.
     - Utility studies and interconnection-queue review are required during due diligence.
+
+water_bodies_scoring:
+  method: nearest_surface_water_balanced_setback
+  description: >
+    Uses the distance to the nearest mapped stream or lake as a
+    first-pass surface-water siting measure. Immediate proximity is
+    penalized for environmental and permitting concerns, while a
+    moderate setback receives the strongest score. This method does
+    not verify water-supply capacity or withdrawal rights.
+
+  inside_waterbody_exclusion: true
+  beyond_search_radius_score: 0.70
+
+  distance_points:
+    - distance_m: 0
+      score: 0.25
+    - distance_m: 100
+      score: 0.25
+    - distance_m: 300
+      score: 0.65
+    - distance_m: 1000
+      score: 1.00
+    - distance_m: 3000
+      score: 0.90
+    - distance_m: 5000
+      score: 0.80
+
+  limitations:
+    - The score uses mapped surface-water proximity, not verified water availability.
+    - The score does not confirm withdrawal rights, treatment capacity, or cooling suitability.
+    - Small streams and mapped water boundaries may require field verification.
+    - Environmental review and permitting remain necessary.
