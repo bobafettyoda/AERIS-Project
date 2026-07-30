@@ -150,3 +150,18 @@ climate_scoring:
     - NASA POWER values are regional climatology estimates, not parcel-level weather observations.
     - Relative humidity is reported but is not included in the first scoring method.
     - Final cooling-system design requires engineering-grade weather analysis.
+
+grid_infrastructure_scoring:
+  method: composite_substation_transmission_proximity
+  description: >
+    Combines proximity to an electric substation and proximity to a
+    transmission line into one grid-infrastructure score. The overall
+    grid criterion weight is applied once to the combined score.
+
+  substation_component_weight: 0.60
+  transmission_component_weight: 0.40
+
+  limitations:
+    - Proximity does not confirm available electrical capacity.
+    - Proximity does not confirm that interconnection is technically or financially feasible.
+    - Utility studies and interconnection-queue review are required during due diligence.

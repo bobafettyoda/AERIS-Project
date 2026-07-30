@@ -1,3 +1,4 @@
+from analysis.grid_infrastructure import GridInfrastructureCriterion
 from analysis.climate import ClimateCriterion
 from analysis.telecom_infrastructure import TelecomInfrastructureCriterion
 from fastapi import APIRouter
@@ -224,6 +225,22 @@ def climate_cooling_burden_score(
     lon: float,
 ) -> dict:
     return climate_criterion.evaluate(
+        lat=lat,
+        lon=lon,
+    )
+
+grid_infrastructure_criterion = GridInfrastructureCriterion(
+    transmission_layer_url=TRANSMISSION_LINES_LAYER_URL,
+    substation_layer_url=SUBSTATIONS_LAYER_URL,
+)
+
+
+@router.get("/power/grid-infrastructure-score")
+def get_grid_infrastructure_score(
+    lat: float,
+    lon: float,
+) -> dict:
+    return grid_infrastructure_criterion.evaluate(
         lat=lat,
         lon=lon,
     )
