@@ -1,4 +1,8 @@
+from analysis.equity_screen import EquityScreen
+from analysis.study_area import MarylandStudyArea
 from app.config import (
+    MD_ENVIROSCREEN_URL,
+    MARYLAND_BOUNDARY_URL,
     FEMA_FLOODPLAIN_URL,
     PROTECTED_LANDS_URL,
     ROADS_LAYER_URL,
@@ -88,6 +92,11 @@ def normalize_road_distance(distance_m: float):
         "score": score,
     }
 
+maryland_study_area = MarylandStudyArea(
+    layer_url=MARYLAND_BOUNDARY_URL,
+)
+
+
 candidate_site_evaluator = CandidateSiteEvaluator(
     roads_layer_url=ROADS_LAYER_URL,
     transmission_layer_url=TRANSMISSION_LINES_LAYER_URL,
@@ -103,7 +112,112 @@ def evaluate_candidate_site(
     lat: float,
     lon: float,
 ) -> dict:
-    return candidate_site_evaluator.evaluate(
+    try:
+        study_area = maryland_study_area.evaluate(
+            lat=lat,
+            lon=lon,
+        )
+    except Exception as error:
+        return {
+            "analysis": (
+                "AERIS Maryland data center "
+                "candidate-site evaluation"
+            ),
+            "input": {
+                "lat": lat,
+                "lon": lon,
+            },
+            "study_area": {
+                "name": "Maryland",
+                "inside_study_area": None,
+                "error": str(error),
+            },
+            "decision": {
+                "status": (
+                    "study_area_check_failed"
+                ),
+                "hard_excluded": False,
+                "hard_exclusion_reasons": [],
+                "exclusion_checks_complete": False,
+                "provisional_ranking_eligible": False,
+                "final_ranking_eligible": False,
+                "message": (
+                    "AERIS could not verify whether "
+                    "the location is inside Maryland."
+                ),
+            },
+            "score_summary": {
+                "configured_weight_total": 0.9999,
+                "scored_weight": 0.0,
+                "unscored_weight": 0.9999,
+                "model_completion_percent": 0.0,
+                "partial_weighted_score": 0.0,
+                "provisional_normalized_score": None,
+                "effective_score_after_exclusions": None,
+                "final_suitability_score": None,
+            },
+            "unscored_criteria": {},
+            "criteria": {},
+        }
+
+    if not study_area["inside_study_area"]:
+        return {
+            "analysis": (
+                "AERIS Maryland data center "
+                "candidate-site evaluation"
+            ),
+            "input": {
+                "lat": lat,
+                "lon": lon,
+            },
+            "study_area": study_area,
+            "decision": {
+                "status": "outside_study_area",
+                "hard_excluded": False,
+                "hard_exclusion_reasons": [],
+                "exclusion_checks_complete": False,
+                "provisional_ranking_eligible": False,
+                "final_ranking_eligible": False,
+                "message": (
+                    "The Maryland pilot evaluates "
+                    "locations only within Maryland."
+                ),
+            },
+            "score_summary": {
+                "configured_weight_total": 0.9999,
+                "scored_weight": 0.0,
+                "unscored_weight": 0.9999,
+                "model_completion_percent": 0.0,
+                "partial_weighted_score": 0.0,
+                "provisional_normalized_score": None,
+                "effective_score_after_exclusions": None,
+                "final_suitability_score": None,
+            },
+            "unscored_criteria": {},
+            "criteria": {},
+        }
+
+    result = candidate_site_evaluator.evaluate(
+        lat=lat,
+        lon=lon,
+    )
+
+    result["study_area"] = study_area
+
+    return result
+
+
+equity_screen = EquityScreen(
+    layer_url=MD_ENVIROSCREEN_URL,
+)
+
+
+@router.get("/data-center-demo/equity-screen")
+def evaluate_equity_screen(
+    lat: float,
+    lon: float,
+) -> dict:
+    return equity_screen.evaluate(
         lat=lat,
         lon=lon,
     )

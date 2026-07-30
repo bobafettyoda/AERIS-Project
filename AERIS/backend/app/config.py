@@ -56,3 +56,14 @@ def get_cors_origins() -> list[str]:
         for origin in configured.split(",")
         if origin.strip()
     ]
+
+MARYLAND_BOUNDARY_URL = (
+    "https://mdgeodata.md.gov/imap/rest/services/"
+    "Boundaries/MD_PoliticalBoundaries/FeatureServer/0"
+)
+
+MD_ENVIROSCREEN_URL = (
+    "https://mdgeodata.md.gov/imap/rest/services/"
+    "Environment/MD_EnviroScreen/FeatureServer/0"
+)
+

@@ -1,4 +1,6 @@
+from analysis.study_area import MarylandStudyArea
 from app.config import (
+    MARYLAND_BOUNDARY_URL,
     FEMA_FLOODPLAIN_URL,
     PROTECTED_LANDS_URL,
     ROADS_LAYER_URL,
@@ -228,4 +230,14 @@ def get_grid_infrastructure_score(
         lat=lat,
         lon=lon,
     )
+
+
+maryland_study_area = MarylandStudyArea(
+    layer_url=MARYLAND_BOUNDARY_URL,
+)
+
+
+@router.get("/study-area/maryland")
+def get_maryland_study_area() -> dict:
+    return maryland_study_area.boundary_geojson()
 

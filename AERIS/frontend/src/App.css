@@ -363,3 +363,166 @@
     border-top: 1px solid var(--line);
   }
 }
+
+.study-area-chip {
+  position: absolute;
+  z-index: 2;
+  top: 18px;
+  left: 18px;
+  padding: 8px 11px;
+  color: #11283c;
+  background: rgb(255 255 255 / 94%);
+  border: 1px solid #d97706;
+  border-radius: 999px;
+  box-shadow:
+    0 8px 24px rgb(17 40 60 / 14%);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.equity-card {
+  margin-top: 14px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #d5dfe4;
+  border-radius: 12px;
+  box-shadow:
+    0 6px 20px rgb(17 40 60 / 6%);
+}
+
+.equity-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.equity-heading h2 {
+  margin: 4px 0 0;
+  font-size: 1.1rem;
+}
+
+.equity-badge {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.equity-badge.pass {
+  color: #075c46;
+  background: #dff5ec;
+}
+
+.equity-badge.caution {
+  color: #7a4b00;
+  background: #fff0c7;
+}
+
+.equity-badge.high-burden {
+  color: #8f1f17;
+  background: #fee4e2;
+}
+
+.equity-badge.insufficient {
+  color: #4f5e68;
+  background: #e8eef1;
+}
+
+.equity-summary {
+  margin: 12px 0 0;
+  color: #687986;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.recommendation-block {
+  margin-top: 14px;
+  padding: 13px;
+  color: #8f1f17;
+  background: #fff6f5;
+  border: 1px solid #efb8b3;
+  border-radius: 9px;
+}
+
+.recommendation-block p {
+  margin: 5px 0 0;
+  font-size: 0.79rem;
+  line-height: 1.45;
+}
+
+.equity-facts,
+.percentile-grid,
+.audit-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.equity-facts > div,
+.percentile-grid > div,
+.audit-grid > div {
+  padding: 11px;
+  background: #f5f8f9;
+  border: 1px solid #e0e7ea;
+  border-radius: 8px;
+}
+
+.equity-facts span,
+.percentile-grid span,
+.audit-grid span {
+  display: block;
+  color: #687986;
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
+
+.equity-facts strong,
+.percentile-grid strong,
+.audit-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.88rem;
+}
+
+.elevated-list {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e7ea;
+}
+
+.elevated-list span {
+  color: #687986;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.elevated-list p {
+  margin: 5px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.audit-details {
+  margin-top: 14px;
+  border-top: 1px solid #e0e7ea;
+  padding-top: 12px;
+}
+
+.audit-details summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.audit-details > p {
+  margin: 9px 0 0;
+  color: #687986;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
