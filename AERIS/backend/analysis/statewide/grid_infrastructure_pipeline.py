@@ -375,46 +375,66 @@ def envelope_wgs84(
 def object_ids_in_envelope(
     session: requests.Session,
     layer_url: str,
-    envelope: dict[str, float],
+    envelope: dict[str, float] | None,
+    where: str = "1=1",
 ) -> list[int]:
+    data = {
+        "where": where,
+        "returnIdsOnly": "true",
+        "f": "json",
+    }
+
+    # Some statewide ArcGIS layers become
+    # unstable when an attribute filter and a
+    # statewide spatial envelope are evaluated
+    # together. Passing envelope=None performs
+    # an attribute-only object-ID query.
+    if envelope is not None:
+        data.update(
+            {
+                "geometry": json.dumps(
+                    {
+                        **envelope,
+                        "spatialReference": {
+                            "wkid": 4326,
+                        },
+                    }
+                ),
+                "geometryType": (
+                    "esriGeometryEnvelope"
+                ),
+                "inSR": "4326",
+                "spatialRel": (
+                    "esriSpatialRelIntersects"
+                ),
+            }
+        )
+
     payload = request_json(
         session,
         f"{layer_url.rstrip('/')}/query",
-        data={
-            "where": "1=1",
-            "geometry": json.dumps(
-                {
-                    **envelope,
-                    "spatialReference": {
-                        "wkid": 4326,
-                    },
-                }
-            ),
-            "geometryType": (
-                "esriGeometryEnvelope"
-            ),
-            "inSR": "4326",
-            "spatialRel": (
-                "esriSpatialRelIntersects"
-            ),
-            "returnIdsOnly": "true",
-            "f": "json",
-        },
+        data=data,
     )
 
     object_ids = sorted(
         int(value)
-        for value
-        in (
+        for value in (
             payload.get("objectIds")
             or []
         )
     )
 
     if not object_ids:
+        query_type = (
+            "attribute-only"
+            if envelope is None
+            else "spatial"
+        )
+
         raise RuntimeError(
-            "ArcGIS envelope query returned "
-            "no object IDs."
+            "ArcGIS "
+            f"{query_type} query returned "
+            f"no object IDs for where={where!r}."
         )
 
     return object_ids
@@ -511,13 +531,210 @@ class StageReporter:
         )
 
 
+
+def query_feature_batch(
+    *,
+    session: requests.Session,
+    layer_url: str,
+    object_ids: Sequence[int],
+    output_fields: Sequence[str],
+    name: str,
+    depth: int = 0,
+) -> list[dict[str, Any]]:
+    ids = [
+        int(value)
+        for value in object_ids
+    ]
+
+    if not ids:
+        return []
+
+    try:
+        payload = request_json(
+            session,
+            (
+                f"{layer_url.rstrip('/')}"
+                "/query"
+            ),
+            data={
+                "objectIds": ",".join(
+                    str(value)
+                    for value in ids
+                ),
+                "outFields": ",".join(
+                    output_fields
+                ),
+                "returnGeometry": "true",
+                "returnTrueCurves": "false",
+                "outSR": "4326",
+                "geometryPrecision": "5",
+                "f": "geojson",
+            },
+        )
+
+        features = payload.get(
+            "features"
+        )
+
+        if not isinstance(
+            features,
+            list,
+        ):
+            raise RuntimeError(
+                "ArcGIS response does not "
+                "contain a feature list."
+            )
+
+        if len(features) != len(ids):
+            raise RuntimeError(
+                f"Requested {len(ids):,} "
+                f"object IDs but received "
+                f"{len(features):,} features."
+            )
+
+        return features
+
+    except (
+        requests.RequestException,
+        RuntimeError,
+    ) as error:
+        if len(ids) == 1:
+            raise RuntimeError(
+                f"{name}: ArcGIS failed for "
+                f"object ID {ids[0]} even after "
+                "adaptive batch splitting."
+            ) from error
+
+        midpoint = len(ids) // 2
+
+        left_ids = ids[:midpoint]
+        right_ids = ids[midpoint:]
+
+        indentation = (
+            "      "
+            + "  " * depth
+        )
+
+        print(
+            (
+                f"{indentation}[{name}] "
+                f"batch of {len(ids):,} failed; "
+                f"splitting into "
+                f"{len(left_ids):,} + "
+                f"{len(right_ids):,}"
+            ),
+            flush=True,
+        )
+
+        left_features = query_feature_batch(
+            session=session,
+            layer_url=layer_url,
+            object_ids=left_ids,
+            output_fields=output_fields,
+            name=name,
+            depth=depth + 1,
+        )
+
+        right_features = query_feature_batch(
+            session=session,
+            layer_url=layer_url,
+            object_ids=right_ids,
+            output_fields=output_fields,
+            name=name,
+            depth=depth + 1,
+        )
+
+        return (
+            left_features
+            + right_features
+        )
+
+
+def repair_invalid_geometries(
+    frame: gpd.GeoDataFrame,
+    *,
+    name: str,
+) -> gpd.GeoDataFrame:
+    repaired = frame.loc[
+        frame.geometry.notna()
+    ].copy()
+
+    repaired = repaired.loc[
+        ~repaired.geometry.is_empty
+    ].copy()
+
+    invalid_mask = (
+        ~repaired.geometry.is_valid
+    )
+
+    invalid_count = int(
+        invalid_mask.sum()
+    )
+
+    if invalid_count:
+        print(
+            (
+                f"      [{name}] repairing "
+                f"{invalid_count:,} invalid "
+                "geometries before clipping"
+            ),
+            flush=True,
+        )
+
+        invalid_geometries = (
+            repaired.loc[
+                invalid_mask
+            ].geometry
+        )
+
+        try:
+            fixed_geometries = (
+                invalid_geometries.make_valid()
+            )
+        except AttributeError:
+            from shapely import make_valid
+
+            fixed_geometries = (
+                invalid_geometries.map(
+                    make_valid
+                )
+            )
+
+        repaired.loc[
+            invalid_mask,
+            "geometry",
+        ] = fixed_geometries
+
+        repaired = repaired.loc[
+            repaired.geometry.notna()
+        ].copy()
+
+        repaired = repaired.loc[
+            ~repaired.geometry.is_empty
+        ].copy()
+
+    remaining_invalid = int(
+        (
+            ~repaired.geometry.is_valid
+        ).sum()
+    )
+
+    if remaining_invalid:
+        raise RuntimeError(
+            f"{name}: "
+            f"{remaining_invalid:,} geometries "
+            "remain invalid after make_valid()."
+        )
+
+    return repaired
+
 def download_snapshot(
     *,
     name: str,
     session: requests.Session,
     layer_url: str,
     desired_fields: Sequence[str],
-    envelope: dict[str, float],
+    envelope: dict[str, float] | None,
     analysis_buffer,
     target_crs: str,
     output_path: Path,
@@ -526,6 +743,7 @@ def download_snapshot(
     page_size: int,
     refresh: bool,
     resume: bool,
+    where: str = "1=1",
 ) -> SnapshotResult:
     if refresh:
         output_path.unlink(
@@ -583,10 +801,35 @@ def download_snapshot(
             used_cache=True,
         )
 
+    query_description = (
+        "attribute-only"
+        if envelope is None
+        else "spatial"
+    )
+
+    print(
+        (
+            f"      [{name}] requesting "
+            f"{query_description} object IDs "
+            f"for where={where!r}"
+        ),
+        flush=True,
+    )
+
     object_ids = object_ids_in_envelope(
         session,
         layer_url,
         envelope,
+        where=where,
+    )
+
+    print(
+        (
+            f"      [{name}] "
+            f"{len(object_ids):,} object IDs "
+            "returned"
+        ),
+        flush=True,
     )
 
     pages = chunks(
@@ -625,32 +868,24 @@ def download_snapshot(
                 )
             )
         else:
-            page_payload = request_json(
-                session,
-                (
-                    f"{layer_url.rstrip('/')}"
-                    "/query"
-                ),
-                data={
-                    "objectIds": ",".join(
-                        str(value)
-                        for value
-                        in page_ids
-                    ),
-                    "outFields": ",".join(
-                        output_fields
-                    ),
-                    "returnGeometry": "true",
-                    "returnTrueCurves": "false",
-                    "outSR": "4326",
-                    "f": "geojson",
-                },
+            page_features = query_feature_batch(
+                session=session,
+                layer_url=layer_url,
+                object_ids=page_ids,
+                output_fields=output_fields,
+                name=name,
             )
+
+            page_payload = {
+                "type": "FeatureCollection",
+                "features": page_features,
+            }
 
             atomic_write_json(
                 page_path,
                 page_payload,
             )
+
 
         page_features = (
             page_payload.get(
@@ -698,6 +933,11 @@ def download_snapshot(
 
     frame = frame_wgs84.to_crs(
         target_crs
+    )
+
+    frame = repair_invalid_geometries(
+        frame,
+        name=name,
     )
 
     frame = gpd.clip(

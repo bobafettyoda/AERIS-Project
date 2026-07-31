@@ -1,0 +1,95 @@
+version: 1
+snapshot_label: '2026-07-30'
+inputs:
+  grid:
+    path: data/derived/maryland_grid_1km_access_connectivity.gpkg
+    layer: cells
+  decision_model:
+    path: configs/decision_models/data_center_maryland_demo.yaml
+outputs:
+  streams:
+    path: data/raw/environmental/2026-07-30/maryland_streams_detailed.gpkg
+    layer: streams
+  lakes:
+    path: data/raw/environmental/2026-07-30/maryland_lakes_detailed.gpkg
+    layer: lakes
+  combined_water:
+    path: data/interim/statewide/maryland_surface_water.gpkg
+    layer: surface_water
+  sfha:
+    path: data/raw/environmental/2026-07-30/maryland_sfha.gpkg
+    layer: sfha
+  protected_snapshot_directory:
+    path: data/raw/environmental/2026-07-30/protected_lands
+  combined_protected:
+    path: data/interim/statewide/maryland_protected_lands.gpkg
+    layer: protected_lands
+  scored_grid:
+    path: data/derived/maryland_grid_1km_environmental.gpkg
+    layer: cells
+  preview:
+    path: data/derived/maryland_grid_1km_environmental_points.geojson
+  manifest:
+    path: data/manifests/statewide_environmental_constraints.json
+cache:
+  directory: data/cache/statewide/environmental_constraints
+  page_size: 750
+snapshot:
+  target_crs: EPSG:26985
+  buffer_m: 10000
+water:
+  stream_layer_id: 2
+  lake_layer_id: 3
+  desired_fields:
+  - LAYER
+  - GNIS_NAME
+  - NAME
+  - FTYPE
+  - FCODE
+  direct_intersection_tolerance_m: 0.01
+flood:
+  where: SFHA_TF = 'T'
+  desired_fields:
+  - DFIRM_ID
+  - FLD_AR_ID
+  - FLD_ZONE
+  - ZONE_SUBTY
+  - SFHA_TF
+  - STATIC_BFE
+  - DEPTH
+  page_size: 50
+protected_lands:
+  layer_ids:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  desired_fields:
+  - NAME
+  - DNRName
+  - RLArea
+  - Easement
+  - Own_Name
+  - PropName
+  - AREA_NAME
+  - Category
+  - Owner_Type
+  - Unit_Name
+  direct_intersection_tolerance_m: 0.01
+known_point_review:
+  latitude: 38.9897
+  longitude: -76.9378
+  point_evaluator:
+    water_bodies_score: 0.53334
+    protected_areas_score: 1.0
+    hydro_hazard_score: 1.0
+  note: 'The statewide grid uses the representative point of the nearest 1 km cell,
+    so values are not expected to exactly match the original clicked coordinate.
+
+    '

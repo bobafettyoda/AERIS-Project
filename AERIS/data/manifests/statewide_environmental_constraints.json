@@ -1,0 +1,336 @@
+{
+  "schema_version": 1,
+  "pipeline": "statewide_environmental_constraints",
+  "snapshot_label": "2026-07-30",
+  "generated_at_utc": "2026-07-31T02:04:56.642991+00:00",
+  "snapshot": {
+    "target_crs": "EPSG:26985",
+    "buffer_m": 10000.0,
+    "query_envelope_wgs84": {
+      "xmin": -79.5525970058876,
+      "ymin": 37.8113308482156,
+      "xmax": -74.89449260874036,
+      "ymax": 39.81838163479739
+    }
+  },
+  "sources": {
+    "streams": {
+      "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Hydrology/MD_Waterbodies/FeatureServer/2",
+      "layer_name": "Rivers and Streams - Detailed",
+      "feature_count": 95384,
+      "selected_fields": [
+        "OBJECTID",
+        "LAYER"
+      ],
+      "used_cache": true,
+      "sha256": "828b77661045e6af4c7c98870caf86b16a4e08f1712d1a54ebb624af1a36c03d"
+    },
+    "lakes": {
+      "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Hydrology/MD_Waterbodies/FeatureServer/3",
+      "layer_name": "Lakes - Detailed",
+      "feature_count": 326,
+      "selected_fields": [
+        "OBJECTID"
+      ],
+      "used_cache": true,
+      "sha256": "b7cbd88d570f8de5cec59e663432ff8ce3d5426bfb4608d190152cb5402ea1f2"
+    },
+    "sfha": {
+      "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Hydrology/MD_Floodplain/FeatureServer/1",
+      "layer_name": "Effective FEMA Floodplain",
+      "where": "SFHA_TF = 'T'",
+      "feature_count": 15661,
+      "selected_fields": [
+        "OBJECTID",
+        "DFIRM_ID",
+        "FLD_AR_ID",
+        "FLD_ZONE",
+        "ZONE_SUBTY",
+        "SFHA_TF",
+        "STATIC_BFE"
+      ],
+      "used_cache": true,
+      "sha256": "32cc6121f9422893ac1d24e10ccba01ace68ba8f6570db470113e27a89b77ae5"
+    },
+    "protected_lands": [
+      {
+        "layer_id": 0,
+        "layer_name": "DNR Owned Lands and Conservation Easements",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/0",
+        "feature_count": 299,
+        "selected_fields": [
+          "OBJECTID",
+          "DNRName"
+        ],
+        "used_cache": true,
+        "sha256": "760e24a978e62ed0e1df578d4181ccff74b7e90a4b2307ae1dd771eb1b300234"
+      },
+      {
+        "layer_id": 1,
+        "layer_name": "Rural Legacy Properties",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/1",
+        "feature_count": 1386,
+        "selected_fields": [
+          "OBJECTID",
+          "RLArea"
+        ],
+        "used_cache": true,
+        "sha256": "f23f9dbbb56eebac8c32efbb089f5855feca0b276f84e381c13dda053578fd4a"
+      },
+      {
+        "layer_id": 2,
+        "layer_name": "MD Environmental Trust Easements",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/2",
+        "feature_count": 1342,
+        "selected_fields": [
+          "OBJECTID",
+          "Easement"
+        ],
+        "used_cache": true,
+        "sha256": "e17906b2496f4a696eb1b34abb610c689a585f1a12f15e69a510a651a336ac99"
+      },
+      {
+        "layer_id": 3,
+        "layer_name": "Forest Conservation Act Easements",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/3",
+        "feature_count": 26334,
+        "selected_fields": [
+          "OBJECTID",
+          "Name"
+        ],
+        "used_cache": true,
+        "sha256": "f9c0ce2b7bdf47415541036f055e04cba187108301be54183c417d34c84b1106"
+      },
+      {
+        "layer_id": 4,
+        "layer_name": "MD Agricultural Land Preservation Foundation Easements",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/4",
+        "feature_count": 2849,
+        "selected_fields": [
+          "OBJECTID",
+          "Own_Name",
+          "Category"
+        ],
+        "used_cache": true,
+        "sha256": "ba5dab8a680fca4f1fe7ea8c26e20d862c33940135ebf7ee55985e313eb513a5"
+      },
+      {
+        "layer_id": 5,
+        "layer_name": "Local Protected Lands",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/5",
+        "feature_count": 19763,
+        "selected_fields": [
+          "OBJECTID",
+          "Own_Name",
+          "Category"
+        ],
+        "used_cache": true,
+        "sha256": "954b7ceb939ea42855423eedfa5301c9392bc754ae89bd743f15761758c1734e"
+      },
+      {
+        "layer_id": 6,
+        "layer_name": "Coastal and Estuarine Land Conservation Program",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/6",
+        "feature_count": 13,
+        "selected_fields": [
+          "OBJECTID",
+          "PropName"
+        ],
+        "used_cache": true,
+        "sha256": "357aeffccc89b06a7068a1bb216286fad8e0589449e9bf8062eb230cb29ef1dd"
+      },
+      {
+        "layer_id": 7,
+        "layer_name": "Private Conservation Lands",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/7",
+        "feature_count": 604,
+        "selected_fields": [
+          "OBJECTID",
+          "AREA_NAME"
+        ],
+        "used_cache": true,
+        "sha256": "afebfab7231fb5a827ffe34568c092f939d071d33f28ac388f53cfcf96c90dd7"
+      },
+      {
+        "layer_id": 8,
+        "layer_name": "Protected Federal Lands",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/8",
+        "feature_count": 614,
+        "selected_fields": [
+          "OBJECTID",
+          "NAME"
+        ],
+        "used_cache": true,
+        "sha256": "f0a2675efd7bd2a20949b696049f2137ffd193b3300da0c32662a033aad0491b"
+      },
+      {
+        "layer_id": 9,
+        "layer_name": "Transfer Development Rights and Purchase Development Rights",
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Environment/MD_ProtectedLands/FeatureServer/9",
+        "feature_count": 3056,
+        "selected_fields": [
+          "OBJECTID",
+          "Own_Name",
+          "Category"
+        ],
+        "used_cache": true,
+        "sha256": "9a748bf52fb9f25e3982e49b5c5f7ff54d58e6bd184a54abfbadf35457f7f1ab"
+      }
+    ]
+  },
+  "regional_feature_counts": {
+    "surface_water": {
+      "western_maryland": 23471,
+      "central_maryland": 32731,
+      "eastern_maryland": 33100
+    },
+    "sfha": {
+      "western_maryland": 2030,
+      "central_maryland": 4208,
+      "eastern_maryland": 9088
+    },
+    "protected_lands": {
+      "western_maryland": 9621,
+      "central_maryland": 41549,
+      "eastern_maryland": 10229
+    }
+  },
+  "scoring": {
+    "water_bodies": {
+      "weight": 0.0847,
+      "method": "nearest_surface_water_balanced_setback",
+      "distance_points": [
+        {
+          "distance_m": 0,
+          "score": 0.25
+        },
+        {
+          "distance_m": 100,
+          "score": 0.25
+        },
+        {
+          "distance_m": 300,
+          "score": 0.65
+        },
+        {
+          "distance_m": 1000,
+          "score": 1.0
+        },
+        {
+          "distance_m": 3000,
+          "score": 0.9
+        },
+        {
+          "distance_m": 5000,
+          "score": 0.8
+        }
+      ],
+      "beyond_search_radius_score": 0.7,
+      "direct_intersection_exclusion": true
+    },
+    "protected_areas": {
+      "weight": 0.154,
+      "direct_intersection_exclusion": true
+    },
+    "hydro_hazard": {
+      "weight": 0.039,
+      "sfha_buffer_m": 91.0,
+      "inside_or_buffer_exclusion": true
+    }
+  },
+  "grid": {
+    "cell_count": 27596,
+    "water_distance_statistics_m": {
+      "count": 27596,
+      "minimum": 0.0,
+      "median": 227.382,
+      "mean": 302.771,
+      "maximum": 3584.699
+    },
+    "protected_distance_statistics_m": {
+      "count": 27596,
+      "minimum": 0.0,
+      "median": 167.598,
+      "mean": 388.608,
+      "maximum": 7946.519
+    },
+    "sfha_distance_statistics_m": {
+      "count": 27596,
+      "minimum": 0.0,
+      "median": 456.382,
+      "mean": 727.12,
+      "maximum": 6883.666
+    },
+    "water_score_statistics": {
+      "count": 27596,
+      "minimum": 0.0,
+      "median": 0.505,
+      "mean": 0.518,
+      "maximum": 1.0
+    },
+    "partial_score_statistics": {
+      "count": 27591,
+      "minimum": 0.069,
+      "median": 0.505,
+      "mean": 0.508,
+      "maximum": 0.962
+    },
+    "partial_effective_score_statistics": {
+      "count": 27591,
+      "minimum": 0.0,
+      "median": 0.45,
+      "mean": 0.339,
+      "maximum": 0.962
+    },
+    "partial_technical_weight_total": 0.7499,
+    "partial_criteria": [
+      "population_density",
+      "grid_infrastructure",
+      "telecom_infrastructure",
+      "protected_areas",
+      "water_bodies",
+      "road_access",
+      "hydro_hazard"
+    ],
+    "water_excluded_cells": 91,
+    "protected_excluded_cells": 7682,
+    "hydro_excluded_cells": 6695,
+    "any_environmental_exclusion_cells": 12252,
+    "auto_recommendation_eligible_cells": 0,
+    "exploration_eligible_cells": 0,
+    "partial_heatmap_only": true,
+    "missing_criterion": "climate"
+  },
+  "known_point_review": {
+    "input_latitude": 38.9897,
+    "input_longitude": -76.9378,
+    "nearest_grid_cell": "MD1K-R117-C220",
+    "representative_point_distance_m": 381.253,
+    "water_distance_m": 300.78,
+    "water_score": 0.65039,
+    "protected_distance_m": 302.596,
+    "protected_score": 1.0,
+    "sfha_distance_m": 291.548,
+    "hydro_score": 1.0,
+    "point_evaluator": {
+      "water_bodies_score": 0.53334,
+      "protected_areas_score": 1.0,
+      "hydro_hazard_score": 1.0
+    },
+    "note": "The statewide grid uses the representative point of the nearest 1 km cell, so values are not expected to exactly match the original clicked coordinate.\n"
+  },
+  "outputs": {
+    "combined_water": "data/interim/statewide/maryland_surface_water.gpkg",
+    "sfha": "data/raw/environmental/2026-07-30/maryland_sfha.gpkg",
+    "combined_protected": "data/interim/statewide/maryland_protected_lands.gpkg",
+    "scored_grid": "data/derived/maryland_grid_1km_environmental.gpkg",
+    "preview": "data/derived/maryland_grid_1km_environmental_points.geojson"
+  },
+  "output_checksums": {
+    "combined_water": "c0b6ffe2f20ec082742c75f7613899e0dcc7ab650f8bc644d2e824967ba3dd36",
+    "sfha": "32cc6121f9422893ac1d24e10ccba01ace68ba8f6570db470113e27a89b77ae5",
+    "combined_protected": "21508ba3a556b7e8c8af240589081d94c5988f879884d328b5d8d589ce055e41",
+    "scored_grid": "e7d4c7918c5d07a4f3e3814c3e42e7e312567ede3dec7d880d752cb2fa4c211e",
+    "preview": "55ea2ddbff321782312ffe66f4672a16442342d110f33c366587ca7aa1c78a99"
+  }
+}
