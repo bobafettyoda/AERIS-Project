@@ -8,8 +8,8 @@ from analysis.statewide.foundation_join import (
     equity_gate_status,
     normalize_percentage,
     parse_boolean_flag,
-    population_density_score,
 )
+from analysis.statewide.scoring import piecewise_linear_series
 
 
 class FoundationJoinTests(
@@ -100,20 +100,44 @@ class FoundationJoinTests(
             )
         )
 
-    def test_population_score_matches_existing_calibration(
+    def test_population_score_matches_existing_curve(
         self,
     ) -> None:
-        result = population_density_score(
-            pd.Series([2752.72]),
-            base_score=0.70,
-            density_multiplier=0.0001,
-            minimum_score=0.0,
-            maximum_score=1.0,
+        points = [
+            (0, 0.30),
+            (250, 0.30),
+            (1000, 0.80),
+            (3000, 1.00),
+            (6000, 0.50),
+            (12000, 0.20),
+        ]
+
+        result = piecewise_linear_series(
+            pd.Series(
+                [
+                    2752.72,
+                    6000,
+                    12000,
+                ]
+            ),
+            points,
         )
 
         self.assertAlmostEqual(
             result.iloc[0],
             0.975272,
+            places=6,
+        )
+
+        self.assertAlmostEqual(
+            result.iloc[1],
+            0.50,
+            places=6,
+        )
+
+        self.assertAlmostEqual(
+            result.iloc[2],
+            0.20,
             places=6,
         )
 

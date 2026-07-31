@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 import yaml
 
+from analysis.statewide.scoring import piecewise_linear_series
+
 
 def utc_now() -> str:
     return datetime.now(
@@ -266,28 +268,6 @@ def normalize_percentage(
         numeric <= 100
     )
 
-
-def population_density_score(
-    density_people_sq_km: pd.Series,
-    base_score: float,
-    density_multiplier: float,
-    minimum_score: float,
-    maximum_score: float,
-) -> pd.Series:
-    density = pd.to_numeric(
-        density_people_sq_km,
-        errors="coerce",
-    )
-
-    score = (
-        base_score
-        + density * density_multiplier
-    )
-
-    return score.clip(
-        lower=minimum_score,
-        upper=maximum_score,
-    )
 
 
 class StageReporter:
@@ -741,30 +721,43 @@ def build_foundation_datasets(
         "population_density"
     ]
 
+    decision_model_path = resolve_path(
+        project_directory,
+        density_config[
+            "decision_model_path"
+        ],
+    )
+
+    decision_model = yaml.safe_load(
+        decision_model_path.read_text(
+            encoding="utf-8"
+        )
+    )
+
+    population_scoring = (
+        decision_model[
+            density_config[
+                "scoring_section"
+            ]
+        ]
+    )
+
+    population_points = [
+        (
+            float(point["density"]),
+            float(point["score"]),
+        )
+        for point
+        in population_scoring["points"]
+    ]
+
     tracts[
         "population_density_score"
-    ] = population_density_score(
+    ] = piecewise_linear_series(
         tracts[
             "population_density_people_sq_km"
         ],
-        base_score=float(
-            density_config["base_score"]
-        ),
-        density_multiplier=float(
-            density_config[
-                "density_multiplier"
-            ]
-        ),
-        minimum_score=float(
-            density_config[
-                "minimum_score"
-            ]
-        ),
-        maximum_score=float(
-            density_config[
-                "maximum_score"
-            ]
-        ),
+        population_points,
     )
 
     reporter.detail(
@@ -1319,7 +1312,8 @@ def build_foundation_datasets(
         },
         "population_density_method": {
             "source_population": (
-                "ACS 2024 5-year B01003_001E"
+                "ACS 2024 5-year "
+                "B01003_001E"
             ),
             "source_land_area": (
                 "TIGER 2024 ALAND"
@@ -1328,14 +1322,24 @@ def build_foundation_datasets(
                 "population / "
                 "tract_land_area_sq_km"
             ),
-            "score_formula": (
-                f"clip("
-                f"{density_config['base_score']} + "
-                f"density * "
-                f"{density_config['density_multiplier']}, "
-                f"{density_config['minimum_score']}, "
-                f"{density_config['maximum_score']})"
+            "scoring_source": str(
+                decision_model_path.relative_to(
+                    project_directory
+                )
             ),
+            "scoring_method": (
+                population_scoring["method"]
+            ),
+            "scoring_points": [
+                {
+                    "density_people_sq_km": (
+                        density
+                    ),
+                    "score": score,
+                }
+                for density, score
+                in population_points
+            ],
             "known_point_calibration": {
                 "density_people_sq_km": (
                     2752.72

@@ -1,0 +1,74 @@
+version: 1
+snapshot_label: "2026-07-30"
+
+inputs:
+  foundation_grid:
+    path: data/derived/maryland_grid_1km_foundation.gpkg
+    layer: cells
+
+  source_audit:
+    path: data/manifests/grid_infrastructure_source_audit.json
+
+  decision_model:
+    path: configs/decision_models/data_center_maryland_demo.yaml
+
+outputs:
+  substations:
+    path: data/raw/grid_infrastructure/2026-07-30/maryland_substations.gpkg
+    layer: substations
+
+  transmission_lines:
+    path: data/raw/grid_infrastructure/2026-07-30/maryland_transmission_lines.gpkg
+    layer: transmission_lines
+
+  scored_grid:
+    path: data/derived/maryland_grid_1km_grid_infrastructure.gpkg
+    layer: cells
+
+  preview:
+    path: data/derived/maryland_grid_1km_grid_infrastructure_points.geojson
+
+  manifest:
+    path: data/manifests/statewide_grid_infrastructure.json
+
+cache:
+  directory: data/cache/statewide/grid_infrastructure
+  page_size: 500
+
+snapshot:
+  target_crs: EPSG:26985
+  buffer_m: 10000
+
+sources:
+  substations:
+    desired_fields:
+      - NAME
+      - STATE
+      - COUNTY
+      - CITY
+      - STATUS
+      - TYPE
+      - OWNER
+      - MAX_VOLT
+      - MIN_VOLT
+      - VOLTAGE
+
+  transmission_lines:
+    desired_fields:
+      - ID
+      - TYPE
+      - STATUS
+      - OWNER
+      - VOLTAGE
+      - VOLT_CLASS
+      - SUB_1
+      - SUB_2
+      - SOURCE
+      - SOURCEDATE
+      - VAL_METHOD
+      - VAL_DATE
+
+known_point_review:
+  latitude: 38.9897
+  longitude: -76.9378
+  point_evaluator_score: 0.589373

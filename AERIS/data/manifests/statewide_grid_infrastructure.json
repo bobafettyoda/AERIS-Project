@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "pipeline": "statewide_grid_infrastructure",
+  "generated_at_utc": "2026-07-31T00:20:59.517378+00:00",
+  "snapshot_label": "2026-07-30",
+  "source_audit": {
+    "path": "data/manifests/grid_infrastructure_source_audit.json",
+    "sha256": "9bc0ac00f8a0ac5f15a691defc7d8689a7337cdbb7ede679a15f6c8256cca91e",
+    "decision": "eligible_for_statewide_snapshot"
+  },
+  "snapshot": {
+    "target_crs": "EPSG:26985",
+    "buffer_m": 10000.0,
+    "query_envelope_wgs84": {
+      "xmin": -79.5525970058876,
+      "ymin": 37.8113308482156,
+      "xmax": -74.89449260874036,
+      "ymax": 39.81838163479739
+    }
+  },
+  "sources": {
+    "substations": {
+      "layer_url": "https://services5.arcgis.com/HDRa0B57OVrv2E1q/ArcGIS/rest/services/Electric_Substations/FeatureServer/0",
+      "layer_name": "Electric_Substations",
+      "object_id_field": "OBJECTID_1",
+      "selected_fields": [
+        "OBJECTID_1",
+        "NAME",
+        "STATE",
+        "COUNTY",
+        "CITY",
+        "STATUS",
+        "TYPE",
+        "MAX_VOLT",
+        "MIN_VOLT"
+      ],
+      "source_object_count": 1534,
+      "snapshot_feature_count": 948,
+      "used_cache": false,
+      "sha256": "e5854ef5aa67a6a5f405d633fd3f5f834d9e3b1fc257abc95a1a7d51d93da755",
+      "regional_feature_counts": {
+        "western_maryland": 182,
+        "central_maryland": 543,
+        "eastern_maryland": 220
+      }
+    },
+    "transmission_lines": {
+      "layer_url": "https://services2.arcgis.com/LYMgRMwHfrWWEg3s/arcgis/rest/services/HIFLD_US_Electric_Power_Transmission_Lines/FeatureServer/0",
+      "layer_name": "HIFLD_US_Electric_Power_Transmission_Lines",
+      "object_id_field": "OBJECTID_1",
+      "selected_fields": [
+        "OBJECTID_1",
+        "ID",
+        "TYPE",
+        "STATUS",
+        "OWNER",
+        "VOLTAGE",
+        "VOLT_CLASS",
+        "SUB_1",
+        "SUB_2",
+        "SOURCE",
+        "SOURCEDATE",
+        "VAL_METHOD",
+        "VAL_DATE"
+      ],
+      "source_object_count": 1560,
+      "snapshot_feature_count": 1003,
+      "used_cache": false,
+      "sha256": "2f418615da0691c00adc1e7111030ce825653d1eec5204f5e4ce99c84e41a2e5",
+      "regional_feature_counts": {
+        "western_maryland": 188,
+        "central_maryland": 611,
+        "eastern_maryland": 218
+      }
+    }
+  },
+  "scoring": {
+    "criterion": "grid_infrastructure",
+    "criterion_weight": 0.154,
+    "substation": {
+      "best_m": 0,
+      "worst_m": 4000.0,
+      "component_weight": 0.6
+    },
+    "transmission_lines": {
+      "best_m": 0,
+      "worst_m": 4000.0,
+      "component_weight": 0.4
+    }
+  },
+  "grid": {
+    "cell_count": 27596,
+    "substation_distance_statistics_m": {
+      "count": 25302,
+      "minimum": 14.694,
+      "median": 3779.092,
+      "mean": 4144.777,
+      "maximum": 9998.974
+    },
+    "transmission_distance_statistics_m": {
+      "count": 25032,
+      "minimum": 0.098,
+      "median": 2400.72,
+      "mean": 3005.056,
+      "maximum": 9997.101
+    },
+    "grid_score_statistics": {
+      "count": 27596,
+      "minimum": 0.0,
+      "median": 0.234,
+      "mean": 0.274,
+      "maximum": 0.996
+    },
+    "cells_with_substation_within_cutoff": 13456,
+    "cells_with_transmission_within_cutoff": 17534,
+    "complete_cells": 27596
+  },
+  "known_point_review": {
+    "input_latitude": 38.9897,
+    "input_longitude": -76.9378,
+    "nearest_grid_cell": "MD1K-R117-C220",
+    "representative_point_distance_m": 381.253,
+    "grid_cell_substation_distance_m": 1118.551,
+    "grid_cell_transmission_distance_m": 2602.231,
+    "grid_cell_score": 0.571994,
+    "point_evaluator_score": 0.589373,
+    "note": "The grid representative point is not expected to exactly match the original clicked coordinate."
+  },
+  "outputs": {
+    "substations": "data/raw/grid_infrastructure/2026-07-30/maryland_substations.gpkg",
+    "transmission_lines": "data/raw/grid_infrastructure/2026-07-30/maryland_transmission_lines.gpkg",
+    "scored_grid": "data/derived/maryland_grid_1km_grid_infrastructure.gpkg",
+    "preview": "data/derived/maryland_grid_1km_grid_infrastructure_points.geojson"
+  },
+  "output_checksums": {
+    "scored_grid": "53cf4ec95b4cb304be641e33b8731af8ae897f9ba3138713b915acffda338c67",
+    "preview": "a8a48b9aa12010b77e480f6da5ad66d39764f3fdd873cf04eaca307e1b7e880f"
+  }
+}

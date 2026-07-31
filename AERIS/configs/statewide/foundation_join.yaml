@@ -1,51 +1,35 @@
 version: 1
-
 inputs:
   grid:
     path: data/derived/maryland_grid_1km.gpkg
     layer: cells
-
   tiger_tracts:
     path: data/raw/census/2024/tl_2024_24_tract.zip
-
   acs_population:
     path: data/raw/census/2024/acs5_md_tract_population.csv
-
   md_enviroscreen:
     path: data/raw/md_enviroscreen/2025-07-24/md_enviroscreen_v3.geojson
-
   source_manifest:
     path: data/manifests/statewide_foundations.json
-
 outputs:
   standardized_tracts:
     path: data/interim/statewide/maryland_foundation_tracts.gpkg
     layer: tracts
-
   enriched_grid:
     path: data/derived/maryland_grid_1km_foundation.gpkg
     layer: cells
-
   manifest:
     path: data/manifests/statewide_foundation_join.json
-
   unmatched_enviroscreen:
     path: data/interim/statewide/enviroscreen_unmatched_tracts.csv
-
 spatial_join:
   target_crs: EPSG:26985
   nearest_fallback_distance_m: 100
-
 regional_screening:
-  minimum_land_fraction: 0.50
-
+  minimum_land_fraction: 0.5
 population_density:
-  methodology: existing_aeris_population_density_curve
-  base_score: 0.70
-  density_multiplier: 0.0001
-  minimum_score: 0.0
-  maximum_score: 1.0
-
+  decision_model_path: configs/decision_models/data_center_maryland_demo.yaml
+  scoring_section: population_density_scoring
 equity_gate:
   overburdened_status: HIGH_BURDEN
   underserved_status: CAUTION

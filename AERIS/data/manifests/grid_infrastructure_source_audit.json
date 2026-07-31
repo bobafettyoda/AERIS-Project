@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "audit": "grid_infrastructure_sources",
+  "generated_at_utc": "2026-07-30T22:47:16.000021+00:00",
+  "regions": {
+    "western_maryland": {
+      "xmin": -79.5,
+      "ymin": 39.15,
+      "xmax": -77.0,
+      "ymax": 39.85
+    },
+    "central_maryland": {
+      "xmin": -77.5,
+      "ymin": 38.55,
+      "xmax": -76.35,
+      "ymax": 39.75
+    },
+    "eastern_maryland": {
+      "xmin": -76.45,
+      "ymin": 37.85,
+      "xmax": -74.95,
+      "ymax": 39.8
+    }
+  },
+  "sources": {
+    "substations": {
+      "source_name": "substations",
+      "layer_url": "https://services5.arcgis.com/HDRa0B57OVrv2E1q/ArcGIS/rest/services/Electric_Substations/FeatureServer/0",
+      "layer_name": "Electric_Substations",
+      "description": "Electric_Substations",
+      "geometry_type": "esriGeometryPoint",
+      "object_id_field": "OBJECTID_1",
+      "max_record_count": 2000,
+      "supports_pagination": true,
+      "total_feature_count": 75328,
+      "regional_feature_counts": {
+        "western_maryland": 224,
+        "central_maryland": 616,
+        "eastern_maryland": 394
+      },
+      "full_extent_wgs84": {
+        "xmin": -165.43039499999998,
+        "ymin": 13.292483361000052,
+        "xmax": 145.71604753600002,
+        "ymax": 65.00660619200005
+      },
+      "statewide_coverage_candidate": true
+    },
+    "transmission_lines": {
+      "source_name": "transmission_lines",
+      "layer_url": "https://services2.arcgis.com/LYMgRMwHfrWWEg3s/arcgis/rest/services/HIFLD_US_Electric_Power_Transmission_Lines/FeatureServer/0",
+      "layer_name": "HIFLD_US_Electric_Power_Transmission_Lines",
+      "description": "This feature class/shapefile represents electric power transmission lines. Transmission Lines are the system of structures, wires, insulators and associated hardware that carry electric energy from one point to another in an electric power system. Lines are operated at relatively high voltages varying from 69 kV up to 765 kV, and are capable of transmitting large quantities of electricity over long distances. Underground transmission lines are included where sources were available. The following updates have been made since the previous release: 7,935 features added, geographic coverage expanded to include Alaska and Hawaii, the METHOD and DATE fields renamed to VAL_METHOD and VAL_DATE respectively, and new fields have been included, namely, TYPE, NAICS_CODE, NAICS_DESC, and SOURCEDATE.",
+      "geometry_type": "esriGeometryPolyline",
+      "object_id_field": "OBJECTID_1",
+      "max_record_count": 2000,
+      "supports_pagination": true,
+      "total_feature_count": 74553,
+      "regional_feature_counts": {
+        "western_maryland": 220,
+        "central_maryland": 695,
+        "eastern_maryland": 339
+      },
+      "full_extent_wgs84": {
+        "xmin": -179.999989,
+        "ymin": 9.694886,
+        "xmax": 179.999989,
+        "ymax": 69.088101
+      },
+      "statewide_coverage_candidate": true
+    }
+  },
+  "overall_statewide_candidate": true,
+  "decision": "eligible_for_statewide_snapshot"
+}

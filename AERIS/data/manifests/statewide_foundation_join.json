@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "pipeline": "statewide_foundation_join",
-  "generated_at_utc": "2026-07-30T22:39:27.316645+00:00",
+  "generated_at_utc": "2026-07-31T00:20:42.631501+00:00",
   "target_crs": "EPSG:26985",
   "join_method": {
     "primary": "grid representative point within TIGER tract",
@@ -11,7 +11,34 @@
     "source_population": "ACS 2024 5-year B01003_001E",
     "source_land_area": "TIGER 2024 ALAND",
     "formula": "population / tract_land_area_sq_km",
-    "score_formula": "clip(0.7 + density * 0.0001, 0.0, 1.0)",
+    "scoring_source": "configs/decision_models/data_center_maryland_demo.yaml",
+    "scoring_method": "local_tract_provisional",
+    "scoring_points": [
+      {
+        "density_people_sq_km": 0.0,
+        "score": 0.3
+      },
+      {
+        "density_people_sq_km": 250.0,
+        "score": 0.3
+      },
+      {
+        "density_people_sq_km": 1000.0,
+        "score": 0.8
+      },
+      {
+        "density_people_sq_km": 3000.0,
+        "score": 1.0
+      },
+      {
+        "density_people_sq_km": 6000.0,
+        "score": 0.5
+      },
+      {
+        "density_people_sq_km": 12000.0,
+        "score": 0.2
+      }
+    ],
     "known_point_calibration": {
       "density_people_sq_km": 2752.72,
       "expected_score": 0.975272
@@ -60,7 +87,7 @@
     "unmatched_enviroscreen": "data/interim/statewide/enviroscreen_unmatched_tracts.csv"
   },
   "output_checksums": {
-    "standardized_tracts": "b017b5feb4f5ab8ff6277ec6532e52241e10397ee10bb0fef6356251fe635a6d",
-    "enriched_grid": "783a7bdee1110ec6b297db36a4c6a24484fb3eb1b18155472966c32a36bc60a8"
+    "standardized_tracts": "edac928bbc73db33604da310b533f70521d10779aef25c5105d7dd368dae26db",
+    "enriched_grid": "6b54bb7d0ed76148d68ac85f433df1f596bc7c49721f0971df0ca99793dbaae7"
   }
 }
