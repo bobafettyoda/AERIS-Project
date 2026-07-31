@@ -1,0 +1,111 @@
+version: 1
+snapshot_label: "2026-07-30"
+
+inputs:
+  grid:
+    path: data/derived/maryland_grid_1km_grid_infrastructure.gpkg
+    layer: cells
+
+  decision_model:
+    path: configs/decision_models/data_center_maryland_demo.yaml
+
+outputs:
+  interstate_snapshot:
+    path: data/raw/transportation/2026-07-30/maryland_interstates.gpkg
+    layer: roads
+
+  us_route_snapshot:
+    path: data/raw/transportation/2026-07-30/maryland_us_routes.gpkg
+    layer: roads
+
+  maryland_route_snapshot:
+    path: data/raw/transportation/2026-07-30/maryland_state_routes.gpkg
+    layer: roads
+
+  combined_major_roads:
+    path: data/interim/statewide/maryland_major_roads.gpkg
+    layer: major_roads
+
+  fiber_snapshot:
+    path: data/raw/telecom/2026-07-30/maryland_fiber_coverage.gpkg
+    layer: fiber_coverage
+
+  scored_grid:
+    path: data/derived/maryland_grid_1km_access_connectivity.gpkg
+    layer: cells
+
+  preview:
+    path: data/derived/maryland_grid_1km_access_connectivity_points.geojson
+
+  manifest:
+    path: data/manifests/statewide_access_connectivity.json
+
+cache:
+  directory: data/cache/statewide/access_connectivity
+  page_size: 750
+
+snapshot:
+  target_crs: EPSG:26985
+  buffer_m: 10000
+
+roads:
+  methodology: major_route_proximity
+  included_classes:
+    - interstate
+    - us_route
+    - maryland_route
+
+  desired_fields:
+    - ROADNAMESHA
+    - ID_PREFIX
+    - ID_RTE_NO
+    - ROUTEID
+    - ROUTEID_RH
+    - MAIN_LINE
+    - COUNTY
+
+  source_vintage_warning: >
+    Maryland road-service metadata identifies the published
+    source as 2017. This source remains an official statewide
+    screening layer but should be refreshed or replaced when a
+    newer authoritative edition is available.
+
+telecom:
+  methodology: public_fiber_coverage_proxy
+  provider_diversity_radius_m: 5000
+
+  desired_fields:
+    - PROVNAME
+    - DBANAME
+    - FRN
+    - STATEFIPS
+    - COUNTYFIPS
+    - TRACT
+    - BLOCKID
+    - FULLFIPSID
+    - TRANSTECH
+    - MAXADDOWN
+    - MAXADUP
+    - TYPICDOWN
+    - TYPICUP
+    - EndUserCat
+
+  source_quality: legacy_public_proxy
+
+  source_warning: >
+    Maryland iMAP fiber coverage is retained as an interim
+    public screening proxy. It does not confirm current
+    enterprise capacity, exact physical fiber routes,
+    latency, route diversity, pricing, or service guarantees.
+
+known_point_review:
+  latitude: 38.9897
+  longitude: -76.9378
+  point_evaluator:
+    road_access_score: 1.0
+    telecom_infrastructure_score: 0.93
+
+  road_method_difference: >
+    The v0.1 point evaluator used all public road centerlines.
+    The statewide method uses major routes only, so its road
+    score is intentionally not expected to match exactly.

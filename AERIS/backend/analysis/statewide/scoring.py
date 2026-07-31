@@ -174,3 +174,112 @@ def weighted_composite_series(
         )
 
     return result.where(complete)
+
+def telecom_proximity_score_series(
+    distances_m: pd.Series,
+    scores: dict[str, float],
+) -> pd.Series:
+    required = {
+        "direct_coverage",
+        "within_500_m",
+        "within_1000_m",
+        "within_2000_m",
+        "within_5000_m",
+        "beyond_5000_m",
+    }
+
+    missing = required - set(scores)
+
+    if missing:
+        raise ValueError(
+            "Telecom proximity scores are missing: "
+            + ", ".join(sorted(missing))
+        )
+
+    distance = pd.to_numeric(
+        distances_m,
+        errors="coerce",
+    )
+
+    values = np.select(
+        [
+            distance.le(0),
+            distance.le(500),
+            distance.le(1000),
+            distance.le(2000),
+            distance.le(5000),
+        ],
+        [
+            float(scores["direct_coverage"]),
+            float(scores["within_500_m"]),
+            float(scores["within_1000_m"]),
+            float(scores["within_2000_m"]),
+            float(scores["within_5000_m"]),
+        ],
+        default=float(
+            scores["beyond_5000_m"]
+        ),
+    )
+
+    return pd.Series(
+        values,
+        index=distance.index,
+        dtype=float,
+    ).clip(
+        lower=0.0,
+        upper=1.0,
+    )
+
+
+def provider_diversity_score_series(
+    provider_counts: pd.Series,
+    scores: dict[str, float],
+) -> pd.Series:
+    required = {
+        "zero_providers",
+        "one_provider",
+        "two_providers",
+        "three_providers",
+        "four_or_more_providers",
+    }
+
+    missing = required - set(scores)
+
+    if missing:
+        raise ValueError(
+            "Provider-diversity scores are missing: "
+            + ", ".join(sorted(missing))
+        )
+
+    counts = pd.to_numeric(
+        provider_counts,
+        errors="coerce",
+    ).fillna(0)
+
+    values = np.select(
+        [
+            counts.le(0),
+            counts.eq(1),
+            counts.eq(2),
+            counts.eq(3),
+        ],
+        [
+            float(scores["zero_providers"]),
+            float(scores["one_provider"]),
+            float(scores["two_providers"]),
+            float(scores["three_providers"]),
+        ],
+        default=float(
+            scores["four_or_more_providers"]
+        ),
+    )
+
+    return pd.Series(
+        values,
+        index=counts.index,
+        dtype=float,
+    ).clip(
+        lower=0.0,
+        upper=1.0,
+    )
+

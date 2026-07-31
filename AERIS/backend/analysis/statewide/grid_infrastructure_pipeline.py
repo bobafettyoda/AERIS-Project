@@ -244,6 +244,16 @@ def selected_fields(
     metadata: dict[str, Any],
     desired: Sequence[str],
 ) -> tuple[str, list[str]]:
+    field_metadata = [
+        field
+        for field in metadata.get(
+            "fields",
+            [],
+        )
+        if isinstance(field, dict)
+        and field.get("name")
+    ]
+
     object_id_field = str(
         metadata.get(
             "objectIdField",
@@ -252,25 +262,62 @@ def selected_fields(
             "objectIdFieldName",
         )
         or ""
-    )
+    ).strip()
+
+    # Some ArcGIS MapServer layers omit the
+    # top-level object-ID property even though
+    # their field definitions identify an OID.
+    if not object_id_field:
+        oid_fields = [
+            str(field["name"])
+            for field in field_metadata
+            if str(
+                field.get("type", "")
+            ).lower()
+            == "esrifieldtypeoid"
+        ]
+
+        if len(oid_fields) == 1:
+            object_id_field = (
+                oid_fields[0]
+            )
+        elif len(oid_fields) > 1:
+            raise RuntimeError(
+                "ArcGIS metadata identifies "
+                "multiple object-ID fields: "
+                + ", ".join(oid_fields)
+            )
 
     if not object_id_field:
+        available = [
+            (
+                f"{field.get('name')} "
+                f"({field.get('type')})"
+            )
+            for field in field_metadata
+        ]
+
         raise RuntimeError(
             "ArcGIS metadata does not identify "
-            "an object-ID field."
+            "an object-ID field. Available fields: "
+            + ", ".join(available)
         )
 
     available_lookup = {
         str(field["name"]).upper(): (
             str(field["name"])
         )
-        for field
-        in metadata.get(
-            "fields",
-            [],
-        )
-        if field.get("name")
+        for field in field_metadata
     }
+
+    # Preserve the exact capitalization used
+    # by the service's field definition.
+    object_id_field = (
+        available_lookup.get(
+            object_id_field.upper(),
+            object_id_field,
+        )
+    )
 
     fields = [
         object_id_field

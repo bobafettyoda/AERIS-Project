@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "pipeline": "statewide_access_connectivity",
+  "snapshot_label": "2026-07-30",
+  "generated_at_utc": "2026-07-31T00:43:09.988258+00:00",
+  "snapshot": {
+    "target_crs": "EPSG:26985",
+    "buffer_m": 10000.0,
+    "query_envelope_wgs84": {
+      "xmin": -79.5525970058876,
+      "ymin": 37.8113308482156,
+      "xmax": -74.89449260874036,
+      "ymax": 39.81838163479739
+    }
+  },
+  "road_methodology": {
+    "method": "major_route_proximity",
+    "included_classes": [
+      "interstate",
+      "us_route",
+      "maryland_route"
+    ],
+    "best_m": 800.0,
+    "worst_m": 5000.0,
+    "criterion_weight": 0.0795,
+    "source_vintage_warning": true,
+    "warning": "Maryland road-service metadata identifies the published source as 2017. This source remains an official statewide screening layer but should be refreshed or replaced when a newer authoritative edition is available.\n"
+  },
+  "telecom_methodology": {
+    "method": "public_fiber_coverage_proxy",
+    "source_quality": "legacy_public_proxy",
+    "warning": "Maryland iMAP fiber coverage is retained as an interim public screening proxy. It does not confirm current enterprise capacity, exact physical fiber routes, latency, route diversity, pricing, or service guarantees.\n",
+    "provider_diversity_radius_m": 5000.0,
+    "criterion_weight": 0.154,
+    "proximity_component_weight": 0.7,
+    "diversity_component_weight": 0.3
+  },
+  "sources": {
+    "roads": {
+      "interstate": {
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Transportation/MD_RoadCenterlines/MapServer/0",
+        "layer_name": "Interstates",
+        "snapshot_feature_count": 1661,
+        "selected_fields": [
+          "OBJECTID",
+          "ROADNAMESHA",
+          "ID_PREFIX",
+          "ID_RTE_NO",
+          "ROUTEID",
+          "ROUTEID_RH",
+          "MAIN_LINE",
+          "COUNTY"
+        ],
+        "used_cache": false,
+        "metadata_description": "Maryland Roadway Centerline data consists of linear geometric features which represent the street centerline for all public roadways in the State of Maryland. The centerline represents the geographic location on the roadway between both shoulders (physical center), which often but not always coincides with the center painted line dividing bi-directional travel lanes. Roadway Centerlines data plays an important role in transportation management and planning, while also being the basis for all other roadway related data products. Maryland Roadway Centerline data is the end product of a statewide data sharing process between the Federal Highway Administration (FHWA), Maryland Department of Transportation (MDOT), Maryland Department of Transportation State Highway Administration (MDOT SHA), county governments and local municipal governments. Using a common centerline allows for better exchange of information related to the roadway system and provides opportunities for more efficient collection of information about roadway assets. Some centerlines were created in-house using imagery, GPS data, and MDOT SHA's Highway Performance Monitoring System (HPMS) database and others were received from county governments and updated in house using imagery, GPS data and MDOT SHA's HPMS database. The Centerline data includes annual HPMS updates / improvements submitted to the Federal Highway Administration (FHWA). Maryland Roadway Centerline data is needed for emergency response and management, routing buses and other vehicles, planning for land use and transportation needs, continuity of roadway data and display at county boundaries leading to the same \"look and feel\" across jurisdictions, tracking assets on and along the roadway network, producing maps at various scales, and numerous other applications. There are opportunities to make these processes more efficient, and this program addresses a shared foundation to solve some of these issues. This data is also used by various business units throughout MDOT, as well as many other Federal, State and local government agencies. Maryland Roadway Centerline data is updated and published on an annual basis for the prior year. This data is for the year 2017. For additional information, contact MDOT SHA Geospatial Technologies Email: GIS@mdot.state.md.us For additional information related to the Maryland Department of Transportation (MDOT) Website: https://www.mdot.maryland.gov/ For additional information related to the Maryland Department of Transportation State Highway Administration (MDOT SHA): Website: https://roads.maryland.gov/Home.aspx MDOT SHA Geospatial Data Legal Disclaimer: The Maryland Department of Transportation State Highway Administration (MDOT SHA) makes no warranty, expressed or implied, as to the use or appropriateness of geospatial data, and there are no warranties of merchantability or fitness for a particular purpose or use. The information contained in geospatial data is from publicly available sources, but no representation is made as to the accuracy or completeness of geospatial data. MDOT SHA shall not be subject to liability for human error, error due to software conversion, defect, or failure of machines, or any material used in the connection with the machines, including tapes, disks, CD-ROMs or DVD-ROMs and energy. MDOT SHA shall not be liable for any lost profits, consequential damages, or claims against MDOT SHA by third parties.",
+        "sha256": "01ec750b44bf0a91120508e216b33c4289e8cde0bfb286648dcaac9410aea595"
+      },
+      "us_route": {
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Transportation/MD_RoadCenterlines/MapServer/1",
+        "layer_name": "US Routes",
+        "snapshot_feature_count": 893,
+        "selected_fields": [
+          "OBJECTID",
+          "ROADNAMESHA",
+          "ID_PREFIX",
+          "ID_RTE_NO",
+          "ROUTEID",
+          "ROUTEID_RH",
+          "MAIN_LINE",
+          "COUNTY"
+        ],
+        "used_cache": false,
+        "metadata_description": "Maryland Roadway Centerline data consists of linear geometric features which represent the street centerline for all public roadways in the State of Maryland. The centerline represents the geographic location on the roadway between both shoulders (physical center), which often but not always coincides with the center painted line dividing bi-directional travel lanes. Roadway Centerlines data plays an important role in transportation management and planning, while also being the basis for all other roadway related data products. Maryland Roadway Centerline data is the end product of a statewide data sharing process between the Federal Highway Administration (FHWA), Maryland Department of Transportation (MDOT), Maryland Department of Transportation State Highway Administration (MDOT SHA), county governments and local municipal governments. Using a common centerline allows for better exchange of information related to the roadway system and provides opportunities for more efficient collection of information about roadway assets. Some centerlines were created in-house using imagery, GPS data, and MDOT SHA's Highway Performance Monitoring System (HPMS) database and others were received from county governments and updated in house using imagery, GPS data and MDOT SHA's HPMS database. The Centerline data includes annual HPMS updates / improvements submitted to the Federal Highway Administration (FHWA). Maryland Roadway Centerline data is needed for emergency response and management, routing buses and other vehicles, planning for land use and transportation needs, continuity of roadway data and display at county boundaries leading to the same \"look and feel\" across jurisdictions, tracking assets on and along the roadway network, producing maps at various scales, and numerous other applications. There are opportunities to make these processes more efficient, and this program addresses a shared foundation to solve some of these issues. This data is also used by various business units throughout MDOT, as well as many other Federal, State and local government agencies. Maryland Roadway Centerline data is updated and published on an annual basis for the prior year. This data is for the year 2017. For additional information, contact MDOT SHA Geospatial Technologies Email: GIS@mdot.state.md.us For additional information related to the Maryland Department of Transportation (MDOT) Website: https://www.mdot.maryland.gov/ For additional information related to the Maryland Department of Transportation State Highway Administration (MDOT SHA): Website: https://roads.maryland.gov/Home.aspx MDOT SHA Geospatial Data Legal Disclaimer: The Maryland Department of Transportation State Highway Administration (MDOT SHA) makes no warranty, expressed or implied, as to the use or appropriateness of geospatial data, and there are no warranties of merchantability or fitness for a particular purpose or use. The information contained in geospatial data is from publicly available sources, but no representation is made as to the accuracy or completeness of geospatial data. MDOT SHA shall not be subject to liability for human error, error due to software conversion, defect, or failure of machines, or any material used in the connection with the machines, including tapes, disks, CD-ROMs or DVD-ROMs and energy. MDOT SHA shall not be liable for any lost profits, consequential damages, or claims against MDOT SHA by third parties.",
+        "sha256": "edff9ef4dd83151d10f015621fc09ea0eefced34e1de5c4d6b4060a00a4cb2b0"
+      },
+      "maryland_route": {
+        "layer_url": "https://mdgeodata.md.gov/imap/rest/services/Transportation/MD_RoadCenterlines/MapServer/2",
+        "layer_name": "Maryland Routes",
+        "snapshot_feature_count": 4812,
+        "selected_fields": [
+          "OBJECTID",
+          "ROADNAMESHA",
+          "ID_PREFIX",
+          "ID_RTE_NO",
+          "ROUTEID",
+          "ROUTEID_RH",
+          "MAIN_LINE",
+          "COUNTY"
+        ],
+        "used_cache": false,
+        "metadata_description": "Maryland Roadway Centerline data consists of linear geometric features which represent the street centerline for all public roadways in the State of Maryland. The centerline represents the geographic location on the roadway between both shoulders (physical center), which often but not always coincides with the center painted line dividing bi-directional travel lanes. Roadway Centerlines data plays an important role in transportation management and planning, while also being the basis for all other roadway related data products. Maryland Roadway Centerline data is the end product of a statewide data sharing process between the Federal Highway Administration (FHWA), Maryland Department of Transportation (MDOT), Maryland Department of Transportation State Highway Administration (MDOT SHA), county governments and local municipal governments. Using a common centerline allows for better exchange of information related to the roadway system and provides opportunities for more efficient collection of information about roadway assets. Some centerlines were created in-house using imagery, GPS data, and MDOT SHA's Highway Performance Monitoring System (HPMS) database and others were received from county governments and updated in house using imagery, GPS data and MDOT SHA's HPMS database. The Centerline data includes annual HPMS updates / improvements submitted to the Federal Highway Administration (FHWA). Maryland Roadway Centerline data is needed for emergency response and management, routing buses and other vehicles, planning for land use and transportation needs, continuity of roadway data and display at county boundaries leading to the same \"look and feel\" across jurisdictions, tracking assets on and along the roadway network, producing maps at various scales, and numerous other applications. There are opportunities to make these processes more efficient, and this program addresses a shared foundation to solve some of these issues. This data is also used by various business units throughout MDOT, as well as many other Federal, State and local government agencies. Maryland Roadway Centerline data is updated and published on an annual basis for the prior year. This data is for the year 2017. For additional information, contact MDOT SHA Geospatial Technologies Email: GIS@mdot.state.md.us For additional information related to the Maryland Department of Transportation (MDOT) Website: https://www.mdot.maryland.gov/ For additional information related to the Maryland Department of Transportation State Highway Administration (MDOT SHA): Website: https://roads.maryland.gov/Home.aspx MDOT SHA Geospatial Data Legal Disclaimer: The Maryland Department of Transportation State Highway Administration (MDOT SHA) makes no warranty, expressed or implied, as to the use or appropriateness of geospatial data, and there are no warranties of merchantability or fitness for a particular purpose or use. The information contained in geospatial data is from publicly available sources, but no representation is made as to the accuracy or completeness of geospatial data. MDOT SHA shall not be subject to liability for human error, error due to software conversion, defect, or failure of machines, or any material used in the connection with the machines, including tapes, disks, CD-ROMs or DVD-ROMs and energy. MDOT SHA shall not be liable for any lost profits, consequential damages, or claims against MDOT SHA by third parties.",
+        "sha256": "ec885132bbef35c0549d50eeac0b597bd7431237cb0f27409475df7372899236"
+      }
+    },
+    "fiber_coverage": {
+      "layer_url": "https://mdgeodata.md.gov/imap/rest/services/UtilityTelecom/MD_BroadbandServiceAreas/MapServer/3",
+      "layer_name": "Fiber Optic Provider Coverage",
+      "snapshot_feature_count": 37913,
+      "distinct_provider_count": 14,
+      "selected_fields": [
+        "OBJECTID",
+        "PROVNAME",
+        "DBANAME",
+        "FRN",
+        "STATEFIPS",
+        "COUNTYFIPS",
+        "TRACT",
+        "BLOCKID",
+        "FULLFIPSID",
+        "TRANSTECH",
+        "MAXADDOWN",
+        "MAXADUP",
+        "TYPICDOWN",
+        "TYPICUP",
+        "EndUserCat"
+      ],
+      "used_cache": false,
+      "metadata_description": "Polygon layer displays areas where fiber optic broadband service is available.",
+      "sha256": "5246b8b084235b905ff329eddbe9c335d369c14c385b79abae30afd01c24757f"
+    }
+  },
+  "regional_feature_counts": {
+    "major_roads": {
+      "western_maryland": 1467,
+      "central_maryland": 4740,
+      "eastern_maryland": 1774
+    },
+    "fiber_coverage": {
+      "western_maryland": 2363,
+      "central_maryland": 35585,
+      "eastern_maryland": 3149
+    }
+  },
+  "grid": {
+    "cell_count": 27596,
+    "major_road_distance_statistics_m": {
+      "count": 27386,
+      "minimum": 0.011,
+      "median": 1117.212,
+      "mean": 1630.289,
+      "maximum": 9994.915
+    },
+    "road_score_statistics": {
+      "count": 27596,
+      "minimum": 0.0,
+      "median": 0.921,
+      "mean": 0.777,
+      "maximum": 1.0
+    },
+    "fiber_distance_statistics_m": {
+      "count": 21219,
+      "minimum": 0.0,
+      "median": 2246.133,
+      "mean": 3061.313,
+      "maximum": 9999.334
+    },
+    "fiber_provider_count_statistics": {
+      "count": 27596,
+      "minimum": 0.0,
+      "median": 1.0,
+      "mean": 1.263,
+      "maximum": 8.0
+    },
+    "telecom_score_statistics": {
+      "count": 27596,
+      "minimum": 0.07,
+      "median": 0.37,
+      "mean": 0.404,
+      "maximum": 1.0
+    },
+    "partial_technical_score_statistics": {
+      "count": 27591,
+      "minimum": 0.077,
+      "median": 0.383,
+      "mean": 0.416,
+      "maximum": 0.978
+    },
+    "partial_technical_weight_total": 0.4722,
+    "partial_criteria": [
+      "population_density",
+      "grid_infrastructure",
+      "telecom_infrastructure",
+      "road_access"
+    ],
+    "partial_heatmap_only": true
+  },
+  "known_point_review": {
+    "input_latitude": 38.9897,
+    "input_longitude": -76.9378,
+    "nearest_grid_cell": "MD1K-R117-C220",
+    "representative_point_distance_m": 381.253,
+    "major_road_distance_m": 0.927,
+    "statewide_road_score": 1.0,
+    "point_evaluator_road_score": 1.0,
+    "road_method_difference": "The v0.1 point evaluator used all public road centerlines. The statewide method uses major routes only, so its road score is intentionally not expected to match exactly.\n",
+    "fiber_distance_m": 249.358,
+    "provider_count_5km": 6,
+    "statewide_telecom_score": 0.93,
+    "point_evaluator_telecom_score": 0.93
+  },
+  "outputs": {
+    "combined_major_roads": "data/interim/statewide/maryland_major_roads.gpkg",
+    "fiber_snapshot": "data/raw/telecom/2026-07-30/maryland_fiber_coverage.gpkg",
+    "scored_grid": "data/derived/maryland_grid_1km_access_connectivity.gpkg",
+    "preview": "data/derived/maryland_grid_1km_access_connectivity_points.geojson"
+  },
+  "output_checksums": {
+    "combined_major_roads": "b0acdee04230290948fba4f7dfe74e0817eced7116374ffab59f6868ce34cf66",
+    "fiber_snapshot": "5246b8b084235b905ff329eddbe9c335d369c14c385b79abae30afd01c24757f",
+    "scored_grid": "f0ff7d88e60e68d0e4d031d2a8c267a60c8a9b28ca534372fa79043e18c5b13d",
+    "preview": "ac41f13ceb2a4dbfee4970fdb06754463954f09e8c0287052db3f5998c1bfa8c"
+  }
+}

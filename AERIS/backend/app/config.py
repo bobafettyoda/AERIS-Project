@@ -74,3 +74,23 @@ MARYLAND_LAND_BOUNDARIES_URL = (
     "Boundaries/MD_PhysicalBoundaries/FeatureServer/1"
 )
 
+ROAD_INTERSTATES_LAYER_URL = (
+    "https://mdgeodata.md.gov/imap/rest/services/"
+    "Transportation/MD_RoadCenterlines/MapServer/0"
+)
+
+ROAD_US_ROUTES_LAYER_URL = (
+    "https://mdgeodata.md.gov/imap/rest/services/"
+    "Transportation/MD_RoadCenterlines/MapServer/1"
+)
+
+ROAD_MARYLAND_ROUTES_LAYER_URL = (
+    "https://mdgeodata.md.gov/imap/rest/services/"
+    "Transportation/MD_RoadCenterlines/MapServer/2"
+)
+
+FIBER_COVERAGE_LAYER_URL = (
+    "https://mdgeodata.md.gov/imap/rest/services/"
+    "UtilityTelecom/MD_BroadbandServiceAreas/MapServer/3"
+)
+
