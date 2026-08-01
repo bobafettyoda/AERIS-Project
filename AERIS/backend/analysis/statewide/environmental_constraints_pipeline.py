@@ -1292,26 +1292,11 @@ def build_environmental_constraints(
 
     scored_grid[
         "partial_auto_recommendation_eligible"
-    ] = (
-        base_ready
-        & scored_grid[
-            "equity_gate"
-        ].eq("PASS")
-    )
+    ] = False
 
     scored_grid[
         "partial_exploration_eligible"
-    ] = (
-        base_ready
-        & scored_grid[
-            "equity_gate"
-        ].isin(
-            [
-                "PASS",
-                "CAUTION",
-            ]
-        )
-    )
+    ] = False
 
     reporter.detail(
         (

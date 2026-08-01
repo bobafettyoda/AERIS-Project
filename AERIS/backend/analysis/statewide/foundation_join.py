@@ -321,7 +321,8 @@ def standardize_enviroscreen(
             "GEOID": standardized_geoid(
                 frame[geoid_column]
             )
-        }
+        },
+        index=frame.index,
     )
 
     field_mapping = {
@@ -366,99 +367,176 @@ def standardize_enviroscreen(
                 )
             )
 
-    overburdened_column = (
-        optional_column(
-            frame,
-            "OVERBURDENED",
+    factor_count_column = optional_column(
+        frame,
+        "OVERBURDENED_SUM",
+    )
+
+    if factor_count_column is None:
+        factor_count = pd.Series(
+            np.nan,
+            index=frame.index,
+            dtype=float,
         )
-    )
-
-    underserved_column = (
-        optional_column(
-            frame,
-            "UNDERSERVED",
-        )
-    )
-
-    burden_count_column = (
-        optional_column(
-            frame,
-            "OVERBURDENED_SUM",
-        )
-    )
-
-    if overburdened_column is None:
-        standardized[
-            "overburdened_raw"
-        ] = None
     else:
-        standardized[
-            "overburdened_raw"
-        ] = frame[
-            overburdened_column
-        ].astype("string")
-
-    if underserved_column is None:
-        standardized[
-            "underserved_raw"
-        ] = None
-    else:
-        standardized[
-            "underserved_raw"
-        ] = frame[
-            underserved_column
-        ].astype("string")
-
-    standardized["overburdened"] = (
-        standardized[
-            "overburdened_raw"
-        ].map(parse_boolean_flag)
-    )
-
-    standardized["underserved"] = (
-        standardized[
-            "underserved_raw"
-        ].map(parse_boolean_flag)
-    )
-
-    if burden_count_column is None:
-        standardized[
-            "overburdened_factor_count"
-        ] = np.nan
-    else:
-        standardized[
-            "overburdened_factor_count"
-        ] = pd.to_numeric(
-            frame[burden_count_column],
+        factor_count = pd.to_numeric(
+            frame[factor_count_column],
             errors="coerce",
         )
 
-    if not standardized[
-        "GEOID"
-    ].is_unique:
-        duplicates = (
-            standardized.loc[
-                standardized[
-                    "GEOID"
-                ].duplicated(
-                    keep=False
-                ),
-                "GEOID",
-            ]
-            .drop_duplicates()
-            .tolist()
+    standardized[
+        "overburdened_factor_count"
+    ] = factor_count
+
+    official_overburdened_column = (
+        optional_column(
+            frame,
+            "OVERBURDENED_COMMUNITY",
+        )
+    )
+
+    if official_overburdened_column is None:
+        official_overburdened = pd.Series(
+            None,
+            index=frame.index,
+            dtype="object",
+        )
+    else:
+        official_overburdened = (
+            frame[
+                official_overburdened_column
+            ].map(parse_boolean_flag)
         )
 
-        raise RuntimeError(
-            "MD EnviroScreen contains "
-            "duplicate GEOIDs: "
-            + ", ".join(
-                duplicates[:10]
-            )
+    # Some archived/downloaded EnviroScreen
+    # snapshots omit the official community
+    # flag even though OVERBURDENED_SUM remains.
+    # The published Maryland definition is
+    # three or more qualifying factors.
+    derived_overburdened = pd.Series(
+        None,
+        index=frame.index,
+        dtype="object",
+    )
+
+    factor_known = factor_count.notna()
+
+    derived_overburdened.loc[
+        factor_known
+    ] = (
+        factor_count.loc[
+            factor_known
+        ].ge(3)
+        .astype(bool)
+    )
+
+    standardized["overburdened"] = (
+        official_overburdened.where(
+            official_overburdened.notna(),
+            derived_overburdened,
+        )
+    )
+
+    official_underserved_column = (
+        optional_column(
+            frame,
+            "UNDERSERVED_COMMUNITY",
+        )
+    )
+
+    if official_underserved_column is None:
+        official_underserved = pd.Series(
+            None,
+            index=frame.index,
+            dtype="object",
+        )
+    else:
+        official_underserved = (
+            frame[
+                official_underserved_column
+            ].map(parse_boolean_flag)
         )
 
-    return standardized
+    minority = pd.to_numeric(
+        standardized[
+            "minority_or_hispanic_pct"
+        ],
+        errors="coerce",
+    )
 
+    low_income = pd.to_numeric(
+        standardized[
+            "low_income_pct"
+        ],
+        errors="coerce",
+    )
+
+    limited_english = pd.to_numeric(
+        standardized[
+            "limited_english_pct"
+        ],
+        errors="coerce",
+    )
+
+    threshold_frame = pd.DataFrame(
+        {
+            "minority": minority,
+            "low_income": low_income,
+            "limited_english": (
+                limited_english
+            ),
+        },
+        index=frame.index,
+    )
+
+    threshold_true = pd.DataFrame(
+        {
+            "minority": minority.ge(50.0),
+            "low_income": (
+                low_income.ge(25.0)
+            ),
+            "limited_english": (
+                limited_english.ge(15.0)
+            ),
+        },
+        index=frame.index,
+    )
+
+    any_threshold_true = (
+        threshold_true.any(axis=1)
+    )
+
+    all_thresholds_known = (
+        threshold_frame.notna().all(
+            axis=1
+        )
+    )
+
+    derived_underserved = pd.Series(
+        None,
+        index=frame.index,
+        dtype="object",
+    )
+
+    derived_underserved.loc[
+        any_threshold_true
+    ] = True
+
+    derived_underserved.loc[
+        ~any_threshold_true
+        & all_thresholds_known
+    ] = False
+
+    standardized["underserved"] = (
+        official_underserved.where(
+            official_underserved.notna(),
+            derived_underserved,
+        )
+    )
+
+    return standardized.reset_index(
+        drop=True
+    )
 
 def build_foundation_datasets(
     config_path: Path,
@@ -820,7 +898,7 @@ def build_foundation_datasets(
                 overburdened
                 if isinstance(
                     overburdened,
-                    bool,
+                    (bool, np.bool_),
                 )
                 else None
             ),
@@ -828,7 +906,7 @@ def build_foundation_datasets(
                 underserved
                 if isinstance(
                     underserved,
-                    bool,
+                    (bool, np.bool_),
                 )
                 else None
             ),

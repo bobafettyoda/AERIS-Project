@@ -1,0 +1,75 @@
+.aeris-product-shell {
+  min-height: 100vh;
+}
+
+.aeris-mode-bar {
+  min-height: 48px;
+  padding: 7px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: #102a3d;
+  background: #ffffff;
+  border-bottom: 1px solid #d4dfe3;
+}
+
+.aeris-mode-bar > div:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.aeris-mode-bar strong {
+  font-size: 0.86rem;
+}
+
+.aeris-mode-bar span {
+  color: #687986;
+  font-size: 0.66rem;
+}
+
+.aeris-mode-buttons {
+  display: inline-grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid #b9ced2;
+  border-radius: 8px;
+}
+
+.aeris-mode-buttons button {
+  padding: 7px 11px;
+  color: #687986;
+  background: #f6f9fa;
+  border: 0;
+  border-right: 1px solid #cbdadd;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.aeris-mode-buttons button:last-child {
+  border-right: 0;
+}
+
+.aeris-mode-buttons button.active {
+  color: #ffffff;
+  background: #147d7f;
+}
+
+@media (max-width: 620px) {
+  .aeris-mode-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .aeris-mode-bar > div:first-child {
+    display: block;
+  }
+
+  .aeris-mode-bar span {
+    display: block;
+    margin-top: 2px;
+  }
+}

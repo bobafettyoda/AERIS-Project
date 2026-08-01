@@ -115,4 +115,52 @@ https://services.arcgis.com/2gdL2gxYNFY2TOUb/ArcGIS/rest/services/FEMA_National_
 **Status**
 - 🔄 Connector pending
 - 🔄 Point-in-polygon analysis pending
-- 🔄 Hydro hazard scoring pending
+## FEMA Effective Floodplain — Maryland
+
+**Criterion**
+- Hydro Hazard
+
+**Purpose**
+- Identify whether a candidate site intersects a mapped FEMA flood hazard polygon.
+- Identify whether a Special Flood Hazard Area is within the study-derived 91-meter buffer.
+- Support hard-exclusion screening for unsuitable candidate sites.
+
+**Source**
+- FEMA effective floodplain data hosted by Maryland iMAP
+
+**Access Method**
+- ArcGIS REST Feature Service
+
+**REST Endpoint**
+https://mdgeodata.md.gov/imap/rest/services/Hydrology/MD_Floodplain/FeatureServer/1
+
+**Important Fields**
+- `FLD_ZONE`
+- `ZONE_SUBTY`
+- `SFHA_TF`
+- `DFIRM_ID`
+- `FLD_AR_ID`
+
+**Geometry**
+- Polygon
+
+**Study Area**
+- Maryland
+- Current demonstration area: Prince George's County
+- Queried around each candidate point during analysis
+
+**Analysis**
+- Point-in-polygon flood-zone check
+- 91-meter Special Flood Hazard Area buffer check
+- Binary hard-exclusion result
+- Hydro-hazard criterion weight: `0.039`
+
+**API Endpoint**
+- `/gis/flood/fema/hazard-score`
+
+**Status**
+- ✅ Data service verified
+- ✅ Connector active
+- ✅ Point-in-polygon analysis active
+- ✅ 91-meter buffer analysis active
+- ✅ API endpoint tested successfully- 🔄 Hydro hazard scoring pending
