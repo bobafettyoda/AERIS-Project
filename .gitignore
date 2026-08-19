@@ -21,3 +21,12 @@ AERIS/data/interim/
 
 # AERIS generated statewide tables
 AERIS/data/derived/*.csv
+
+# AERIS parcel-analysis runtime outputs
+AERIS/data/derived/parcels/
+AERIS/data/derived/parcel_envelopes/
+AERIS/data/manifests/parcels/
+AERIS/data/manifests/parcel_envelopes/
+AERIS/data/raw/parcels/
+AERIS/data/cache/parcels/
+AERIS/data/interim/parcels/
