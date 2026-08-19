@@ -20,9 +20,12 @@ import {
 } from "./statewideApi";
 
 import {
+  fetchParcelConstraints,
   fetchParcelDetail,
+  fetchParcelEnvelopes,
   fetchZoneParcels,
   type ParcelDetail,
+  type ParcelEnvelopeCollection,
   type ParcelFeatureCollection,
 } from "./parcelApi";
 
@@ -194,6 +197,29 @@ export default function ParcelExplorerApp() {
   );
 
   const [
+    envelopes,
+    setEnvelopes,
+  ] = useState<ParcelEnvelopeCollection | null>(
+    null,
+  );
+
+  const [
+    constraints,
+    setConstraints,
+  ] = useState<ParcelEnvelopeCollection | null>(
+    null,
+  );
+
+  const [
+    parcelView,
+    setParcelView,
+  ] = useState<
+    "parcels"
+    | "envelopes"
+    | "constraints"
+  >("parcels");
+
+  const [
     loadingParcels,
     setLoadingParcels,
   ] = useState(false);
@@ -336,6 +362,22 @@ export default function ParcelExplorerApp() {
         },
       );
 
+      map.addSource(
+        "parcel-envelopes",
+        {
+          type: "geojson",
+          data: EMPTY_COLLECTION,
+        },
+      );
+
+      map.addSource(
+        "parcel-constraints",
+        {
+          type: "geojson",
+          data: EMPTY_COLLECTION,
+        },
+      );
+
       map.addLayer({
         id: "parcel-zone-fill",
         type: "fill",
@@ -461,6 +503,57 @@ export default function ParcelExplorerApp() {
             1,
             1,
           ],
+        },
+      });
+
+      map.addLayer({
+        id: "parcel-constraint-fill",
+        type: "fill",
+        source: "parcel-constraints",
+        layout: {
+          visibility: "none",
+        },
+        paint: {
+          "fill-color": [
+            "match",
+            ["get", "constraint_id"],
+            "water",
+            "#2563eb",
+            "protected_lands",
+            "#166534",
+            "sfha",
+            "#0891b2",
+            "aviation",
+            "#7c3aed",
+            "#64748b",
+          ],
+          "fill-opacity": 0.45,
+        },
+      });
+
+      map.addLayer({
+        id: "parcel-envelope-fill",
+        type: "fill",
+        source: "parcel-envelopes",
+        layout: {
+          visibility: "none",
+        },
+        paint: {
+          "fill-color": "#0f766e",
+          "fill-opacity": 0.48,
+        },
+      });
+
+      map.addLayer({
+        id: "parcel-envelope-line",
+        type: "line",
+        source: "parcel-envelopes",
+        layout: {
+          visibility: "none",
+        },
+        paint: {
+          "line-color": "#064e3b",
+          "line-width": 1.8,
         },
       });
 
@@ -638,6 +731,44 @@ export default function ParcelExplorerApp() {
   ]);
 
 
+  useEffect(() => {
+    if (
+      !mapReady
+      || !mapRef.current
+    ) {
+      return;
+    }
+
+    sourceData(
+      mapRef.current,
+      "parcel-envelopes",
+      envelopes ?? EMPTY_COLLECTION,
+    );
+  }, [
+    envelopes,
+    mapReady,
+  ]);
+
+
+  useEffect(() => {
+    if (
+      !mapReady
+      || !mapRef.current
+    ) {
+      return;
+    }
+
+    sourceData(
+      mapRef.current,
+      "parcel-constraints",
+      constraints ?? EMPTY_COLLECTION,
+    );
+  }, [
+    constraints,
+    mapReady,
+  ]);
+
+
   function loadSelectedZone(): void {
     if (!selectedZoneId) {
       return;
@@ -646,11 +777,41 @@ export default function ParcelExplorerApp() {
     setLoadingParcels(true);
     setError(null);
     setParcelDetail(null);
+    setEnvelopes(null);
+    setConstraints(null);
 
     fetchZoneParcels(
       selectedZoneId
     )
-      .then(setParcels)
+      .then(async (parcelResult) => {
+        setParcels(
+          parcelResult
+        );
+
+        const scopeId =
+          parcelResult.metadata
+            .scope.scope_id;
+
+        const [
+          envelopeResult,
+          constraintResult,
+        ] = await Promise.all([
+          fetchParcelEnvelopes(
+            scopeId
+          ),
+          fetchParcelConstraints(
+            scopeId
+          ),
+        ]);
+
+        setEnvelopes(
+          envelopeResult
+        );
+
+        setConstraints(
+          constraintResult
+        );
+      })
       .catch(
         (
           caughtError:
@@ -807,6 +968,62 @@ export default function ParcelExplorerApp() {
                   "Load parcel outlines"
                 )}
             </button>
+
+            {parcels && (
+              <div className="parcel-view-controls">
+                <span>Map layer</span>
+
+                <div>
+                  <button
+                    type="button"
+                    className={
+                      parcelView === "parcels"
+                        ? "active"
+                        : undefined
+                    }
+                    onClick={() => {
+                      setParcelView(
+                        "parcels"
+                      );
+                    }}
+                  >
+                    Parcels
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      parcelView === "envelopes"
+                        ? "active"
+                        : undefined
+                    }
+                    onClick={() => {
+                      setParcelView(
+                        "envelopes"
+                      );
+                    }}
+                  >
+                    Envelopes
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      parcelView === "constraints"
+                        ? "active"
+                        : undefined
+                    }
+                    onClick={() => {
+                      setParcelView(
+                        "constraints"
+                      );
+                    }}
+                  >
+                    Constraints
+                  </button>
+                </div>
+              </div>
+            )}
 
             {parcels && (
               <div className="parcel-scope-note">

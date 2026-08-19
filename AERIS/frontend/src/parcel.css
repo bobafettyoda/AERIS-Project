@@ -382,3 +382,61 @@
     grid-template-columns: 1fr;
   }
 }
+
+.parcel-envelope-heading {
+  margin: 17px 0 8px;
+  font-size: 0.82rem;
+}
+
+.parcel-envelope-warning {
+  margin-top: 12px;
+  padding: 10px;
+  color: #075c46;
+  background: #e7f5ef;
+  border: 1px solid #b4dfcf;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.parcel-view-controls {
+  margin-top: 12px;
+}
+
+.parcel-view-controls > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #687986;
+  font-size: 0.69rem;
+  font-weight: 850;
+}
+
+.parcel-view-controls > div {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid #b9ced2;
+  border-radius: 8px;
+}
+
+.parcel-view-controls button {
+  width: auto;
+  margin: 0;
+  padding: 8px 5px;
+  color: #687986;
+  background: #f6f9fa;
+  border: 0;
+  border-right: 1px solid #cbdadd;
+  border-radius: 0;
+  font-size: 0.67rem;
+}
+
+.parcel-view-controls button:last-child {
+  border-right: 0;
+}
+
+.parcel-view-controls button.active {
+  color: white;
+  background: #147d7f;
+}

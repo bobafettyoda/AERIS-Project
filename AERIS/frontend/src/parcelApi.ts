@@ -101,6 +101,31 @@ export type ParcelDetail = {
     string | null
   >;
 
+  development_envelope?: {
+    status?: string | null;
+    analysis_area_acres?: number | null;
+    water_overlap_acres?: number | null;
+    protected_lands_overlap_acres?:
+      number | null;
+    sfha_overlap_acres?: number | null;
+    aviation_overlap_acres?: number | null;
+    mapped_constrained_area_acres?:
+      number | null;
+    preliminary_unconstrained_area_acres?:
+      number | null;
+    preliminary_unconstrained_fraction?:
+      number | null;
+    largest_contiguous_unconstrained_acres?:
+      number | null;
+    largest_contiguous_fraction?:
+      number | null;
+    unconstrained_component_count?:
+      number | null;
+    mapped_constraint_types?:
+      string | null;
+    preliminary_envelope_only: true;
+  } | null;
+
   warning: string;
 };
 
@@ -175,6 +200,77 @@ export async function fetchParcelDetail(
       + encodeURIComponent(scopeId)
       + "/parcels/"
       + encodeURIComponent(parcelId)
+    ),
+  );
+}
+
+
+export type ParcelEnvelopeCollection =
+  FeatureCollection<
+    Geometry,
+    GeoJsonProperties
+  > & {
+    metadata: {
+      scope_id: string;
+      layer: string;
+      returned_count: number;
+
+      manifest: {
+        counts: Record<
+          string,
+          number
+        >;
+
+        status_counts: Record<
+          string,
+          number
+        >;
+
+        statistics?: Record<
+          string,
+          unknown
+        >;
+
+        constraints?: Record<
+          string,
+          unknown
+        >;
+
+        safeguards: Record<
+          string,
+          boolean
+        >;
+
+        interpretation?: Record<
+          string,
+          unknown
+        >;
+      };
+    };
+  };
+
+
+export async function fetchParcelEnvelopes(
+  scopeId: string,
+): Promise<ParcelEnvelopeCollection> {
+  return fetchJson<ParcelEnvelopeCollection>(
+    (
+      "/analysis/parcels/scopes/"
+      + encodeURIComponent(scopeId)
+      + "/development-envelopes"
+    ),
+  );
+}
+
+
+export async function fetchParcelConstraints(
+  scopeId: string,
+): Promise<ParcelEnvelopeCollection> {
+  return fetchJson<ParcelEnvelopeCollection>(
+    (
+      "/analysis/parcels/scopes/"
+      + encodeURIComponent(scopeId)
+      + "/constraints"
     ),
   );
 }

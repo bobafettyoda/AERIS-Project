@@ -280,6 +280,128 @@ export function ParcelDetails({
         </div>
       </div>
 
+      {parcel.development_envelope && (
+        <>
+          <h3 className="parcel-envelope-heading">
+            Preliminary mapped-constraint envelope
+          </h3>
+
+          <div className="parcel-stat-grid">
+            <div>
+              <span>
+                Scope analysis area
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel
+                    .development_envelope
+                    .analysis_area_acres,
+                  2,
+                )}
+                {" ac"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Unique mapped constraints
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel
+                    .development_envelope
+                    .mapped_constrained_area_acres,
+                  2,
+                )}
+                {" ac"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Preliminary unconstrained
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel
+                    .development_envelope
+                    .preliminary_unconstrained_area_acres,
+                  2,
+                )}
+                {" ac"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Unconstrained fraction
+              </span>
+
+              <strong>
+                {
+                  typeof parcel
+                    .development_envelope
+                    .preliminary_unconstrained_fraction
+                  === "number"
+                    ? (
+                      (
+                        parcel
+                          .development_envelope
+                          .preliminary_unconstrained_fraction
+                        * 100
+                      ).toFixed(1)
+                      + "%"
+                    )
+                    : "Not available"
+                }
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Largest contiguous area
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel
+                    .development_envelope
+                    .largest_contiguous_unconstrained_acres,
+                  2,
+                )}
+                {" ac"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Envelope components
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel
+                    .development_envelope
+                    .unconstrained_component_count,
+                  0,
+                )}
+              </strong>
+            </div>
+          </div>
+
+          <div className="parcel-envelope-warning">
+            This is not confirmed buildable
+            land. Buildings, wetlands, local
+            setbacks, aviation, utilities,
+            ownership, and entitlement review
+            remain outstanding.
+          </div>
+        </>
+      )}
+
       <details className="parcel-details">
         <summary>
           Source property indicators

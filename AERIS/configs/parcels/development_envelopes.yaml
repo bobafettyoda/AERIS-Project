@@ -1,0 +1,73 @@
+version: 1
+pipeline_version: "0.4.0"
+
+inputs:
+  parcel_config:
+    path: configs/parcels/maryland_parcels.yaml
+
+  water:
+    enabled: true
+    path: data/interim/statewide/maryland_surface_water.gpkg
+    layer: surface_water
+    label: Mapped surface water
+    buffer_m: 0.0
+    screening_role: direct_mapped_constraint
+
+  protected_lands:
+    enabled: true
+    path: data/interim/statewide/maryland_protected_lands.gpkg
+    layer: protected_lands
+    label: Protected lands
+    buffer_m: 0.0
+    screening_role: direct_mapped_constraint
+
+  sfha:
+    enabled: true
+    path: data/raw/environmental/2026-07-30/maryland_sfha.gpkg
+    layer: sfha
+    label: FEMA Special Flood Hazard Area
+    buffer_m: 91.0
+    screening_role: aeris_screening_buffer
+
+  aviation:
+    enabled: false
+    path: null
+    layer: null
+    label: FAA aviation hard conflicts
+    buffer_m: 0.0
+    screening_role: not_configured
+
+analysis:
+  target_crs: EPSG:26985
+
+  geometry_precision_m: 0.05
+
+  minimum_component_area_acres: 0.01
+
+  area_balance_tolerance_acres: 0.01
+
+  square_meters_per_acre: 4046.8564224
+
+outputs:
+  derived_directory:
+    path: data/derived/parcel_envelopes
+
+  manifest_directory:
+    path: data/manifests/parcel_envelopes
+
+api:
+  maximum_features: 8000
+
+  envelope_simplify_m: 0.50
+
+  constraint_simplify_m: 1.00
+
+safeguards:
+  availability_confirmed: false
+  legal_buildability_confirmed: false
+  zoning_approval_confirmed: false
+  utility_capacity_confirmed: false
+  buildings_included: false
+  local_setbacks_included: false
+  wetlands_included: false
+  aviation_included: false

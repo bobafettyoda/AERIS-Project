@@ -12,6 +12,9 @@ from fastapi.responses import JSONResponse
 from analysis.parcels.api_service import (
     ParcelDataService,
 )
+from analysis.parcels.envelope_api_service import (
+    ParcelEnvelopeService,
+)
 
 
 PROJECT_DIRECTORY = (
@@ -33,6 +36,19 @@ router = APIRouter(
 
 service = ParcelDataService(
     CONFIG_PATH
+)
+
+ENVELOPE_CONFIG_PATH = (
+    PROJECT_DIRECTORY
+    / "configs"
+    / "parcels"
+    / "development_envelopes.yaml"
+)
+
+envelope_service = (
+    ParcelEnvelopeService(
+        ENVELOPE_CONFIG_PATH
+    )
 )
 
 
@@ -186,10 +202,28 @@ def parcel_detail(
     parcel_id: str,
 ) -> dict:
     try:
-        return service.parcel_detail(
+        result = service.parcel_detail(
             scope_id=scope_id,
             parcel_id=parcel_id,
         )
+
+        try:
+            result[
+                "development_envelope"
+            ] = (
+                envelope_service
+                .parcel_metrics(
+                    scope_id=scope_id,
+                    parcel_id=parcel_id,
+                )
+            )
+
+        except KeyError:
+            result[
+                "development_envelope"
+            ] = None
+
+        return result
 
     except KeyError as error:
         raise HTTPException(
@@ -199,3 +233,133 @@ def parcel_detail(
                 "was not found."
             ),
         ) from error
+
+@router.get(
+    "/scopes/{scope_id}/"
+    "development-envelopes"
+)
+def development_envelopes(
+    scope_id: str,
+    refresh: bool = False,
+) -> JSONResponse:
+    try:
+        envelope_service.build(
+            scope_id=scope_id,
+            refresh=refresh,
+        )
+
+        payload = (
+            envelope_service
+            .feature_collection(
+                scope_id=scope_id,
+                layer=(
+                    "development_envelopes"
+                ),
+            )
+        )
+
+        return JSONResponse(
+            content=payload,
+            headers={
+                "Cache-Control": (
+                    "public, max-age=300"
+                ),
+            },
+        )
+
+    except KeyError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Parcel scope was not found."
+            ),
+        ) from error
+
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error),
+        ) from error
+
+
+@router.get(
+    "/scopes/{scope_id}/"
+    "largest-components"
+)
+def largest_components(
+    scope_id: str,
+) -> JSONResponse:
+    try:
+        envelope_service.build(
+            scope_id=scope_id,
+        )
+
+        payload = (
+            envelope_service
+            .feature_collection(
+                scope_id=scope_id,
+                layer=(
+                    "largest_components"
+                ),
+            )
+        )
+
+        return JSONResponse(
+            content=payload,
+            headers={
+                "Cache-Control": (
+                    "public, max-age=300"
+                ),
+            },
+        )
+
+    except (
+        KeyError,
+        RuntimeError,
+    ) as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error),
+        ) from error
+
+
+@router.get(
+    "/scopes/{scope_id}/"
+    "constraints"
+)
+def parcel_constraints(
+    scope_id: str,
+) -> JSONResponse:
+    try:
+        envelope_service.build(
+            scope_id=scope_id,
+        )
+
+        payload = (
+            envelope_service
+            .feature_collection(
+                scope_id=scope_id,
+                layer=(
+                    "scope_constraints"
+                ),
+            )
+        )
+
+        return JSONResponse(
+            content=payload,
+            headers={
+                "Cache-Control": (
+                    "public, max-age=300"
+                ),
+            },
+        )
+
+    except (
+        KeyError,
+        RuntimeError,
+    ) as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error),
+        ) from error
+
