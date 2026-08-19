@@ -39,6 +39,14 @@ from analysis.statewide.grid_infrastructure_pipeline import (
 
 SQUARE_METERS_PER_ACRE = 4046.8564224
 
+CONSTRAINT_SOURCE_IDS = (
+    "water",
+    "protected_lands",
+    "sfha",
+    "aviation",
+    "aviation_review",
+)
+
 
 @dataclass(frozen=True)
 class EnvelopePaths:
@@ -56,6 +64,7 @@ class ConstraintResult:
     layer: str | None
     buffer_m: float
     screening_role: str
+    subtract_from_envelope: bool
     source_feature_count: int
     geometry: BaseGeometry
     checksum: str | None
@@ -374,6 +383,13 @@ def load_constraint(
         )
     )
 
+    subtract_from_envelope = bool(
+        source_config.get(
+            "subtract_from_envelope",
+            True,
+        )
+    )
+
     raw_path = source_config.get(
         "path"
     )
@@ -393,6 +409,9 @@ def load_constraint(
             buffer_m=buffer_m,
             screening_role=(
                 screening_role
+            ),
+            subtract_from_envelope=(
+                subtract_from_envelope
             ),
             source_feature_count=0,
             geometry=GeometryCollection(),
@@ -449,6 +468,9 @@ def load_constraint(
             buffer_m=buffer_m,
             screening_role=(
                 screening_role
+            ),
+            subtract_from_envelope=(
+                subtract_from_envelope
             ),
             source_feature_count=0,
             geometry=GeometryCollection(),
@@ -551,6 +573,9 @@ def load_constraint(
         buffer_m=buffer_m,
         screening_role=(
             screening_role
+        ),
+        subtract_from_envelope=(
+            subtract_from_envelope
         ),
         source_feature_count=(
             source_feature_count
@@ -1120,12 +1145,7 @@ def build_scope_envelopes(
         str | None,
     ] = {}
 
-    for source_id in (
-        "water",
-        "protected_lands",
-        "sfha",
-        "aviation",
-    ):
+    for source_id in CONSTRAINT_SOURCE_IDS:
         source_config = config[
             "inputs"
         ][source_id]
@@ -1281,12 +1301,7 @@ def build_scope_envelopes(
         ConstraintResult,
     ] = {}
 
-    for source_id in (
-        "water",
-        "protected_lands",
-        "sfha",
-        "aviation",
-    ):
+    for source_id in CONSTRAINT_SOURCE_IDS:
         print(
             (
                 "[Envelope] Loading "
@@ -1318,7 +1333,10 @@ def build_scope_envelopes(
         source_id: result.geometry
         for source_id, result
         in constraint_results.items()
-        if result.enabled
+        if (
+            result.enabled
+            and result.subtract_from_envelope
+        )
     }
 
     (
@@ -1342,6 +1360,67 @@ def build_scope_envelopes(
         ),
     )
 
+    aviation_review = (
+        constraint_results.get(
+            "aviation_review"
+        )
+    )
+
+    if (
+        aviation_review is not None
+        and not aviation_review
+        .geometry.is_empty
+    ):
+        parcel_scope_geometries = (
+            parcels.geometry
+            .intersection(
+                scope_geometry
+            )
+        )
+
+        aviation_review_overlap = (
+            parcel_scope_geometries
+            .intersection(
+                aviation_review.geometry
+            )
+            .area
+            / square_meters_per_acre
+        )
+
+    else:
+        aviation_review_overlap = (
+            pd.Series(
+                0.0,
+                index=parcels.index,
+                dtype=float,
+            )
+        )
+
+    parcel_analysis[
+        "aviation_notice_screening_overlap_acres"
+    ] = (
+        aviation_review_overlap
+        .round(6)
+    )
+
+    parcel_analysis[
+        "aviation_notice_screening_status"
+    ] = np.where(
+        aviation_review_overlap.gt(0),
+        (
+            "PROPOSED_HEIGHT_REQUIRED_"
+            "FOR_PART77_SCREEN"
+        ),
+        (
+            "OUTSIDE_CONFIGURED_"
+            "FAA_NOTICE_DISTANCE"
+        ),
+    )
+
+    parcel_analysis[
+        "faa_determination_made"
+    ] = False
+
     constraint_rows = []
 
     for (
@@ -1362,6 +1441,9 @@ def build_scope_envelopes(
                 ),
                 "screening_role": (
                     result.screening_role
+                ),
+                "subtract_from_envelope": (
+                    result.subtract_from_envelope
                 ),
                 "source_feature_count": (
                     result
@@ -1458,6 +1540,9 @@ def build_scope_envelopes(
             ),
             "screening_role": (
                 result.screening_role
+            ),
+            "subtract_from_envelope": (
+                result.subtract_from_envelope
             ),
             "source_feature_count": (
                 result

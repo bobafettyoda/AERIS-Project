@@ -109,6 +109,11 @@ export type ParcelDetail = {
       number | null;
     sfha_overlap_acres?: number | null;
     aviation_overlap_acres?: number | null;
+    aviation_notice_screening_overlap_acres?:
+      number | null;
+    aviation_notice_screening_status?:
+      string | null;
+    faa_determination_made: false;
     mapped_constrained_area_acres?:
       number | null;
     preliminary_unconstrained_area_acres?:

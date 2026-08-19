@@ -1,0 +1,87 @@
+version: 1
+pipeline_version: "0.4.0"
+snapshot_label: "2026-08-06"
+
+source:
+  provider: Federal Aviation Administration
+  product: 28 Day NASR Airports and Other Landing Facilities CSV
+
+  subscription_page_url: >-
+    https://www.faa.gov/air_traffic/flight_info/aeronav/Aero_Data/NASR_Subscription/2026-08-06/
+
+  apt_csv_url: >-
+    https://nfdc.faa.gov/webContent/28DaySub/extra/06_Aug_2026_APT_CSV.zip
+
+  archive_filename: 06_Aug_2026_APT_CSV.zip
+
+  timeout_seconds: 240
+
+  csv_members:
+    airports: APT_BASE.csv
+    runways: APT_RWY.csv
+    runway_ends: APT_RWY_END.csv
+
+inputs:
+  study_area_grid:
+    path: data/derived/maryland_grid_1km_final.gpkg
+    layer: cells
+
+analysis:
+  target_crs: EPSG:26985
+
+  # Includes airports immediately outside Maryland
+  # whose runway screening areas may reach Maryland.
+  study_area_buffer_m: 50000
+
+  feet_to_meters: 0.3048
+  square_meters_per_acre: 4046.8564224
+
+  minimum_runway_length_ft: 100
+  minimum_runway_width_ft: 1
+
+  # Physical pavement only. No extra safety-area
+  # distance is silently added.
+  runway_hard_conflict_extra_buffer_m: 0.0
+
+  notice_screening:
+    long_runway_threshold_ft: 3200
+    long_runway_distance_ft: 20000
+    short_runway_distance_ft: 10000
+    heliport_distance_ft: 5000
+
+    # NASR landing-facility type code commonly
+    # used for heliports. Observed values are
+    # recorded in the manifest for validation.
+    heliport_site_type_codes:
+      - H
+
+  public_use_codes:
+    - PU
+    - PUBLIC
+
+outputs:
+  raw_directory:
+    path: data/raw/aviation/faa_nasr/2026-08-06
+
+  archive:
+    path: data/raw/aviation/faa_nasr/2026-08-06/06_Aug_2026_APT_CSV.zip
+
+  geopackage:
+    path: data/derived/aviation/faa_nasr_2026-08-06.gpkg
+
+  manifest:
+    path: data/manifests/aviation/faa_nasr_2026-08-06.json
+
+layers:
+  airports: airport_points
+  runway_centerlines: runway_centerlines
+  runway_hard_conflicts: runway_hard_conflicts
+  aviation_notice_screening: aviation_notice_screening
+
+safeguards:
+  physical_runway_geometry_only: true
+  airport_property_boundaries_included: false
+  runway_protection_zones_included: false
+  part77_determination_made: false
+  proposed_structure_height_evaluated: false
+  faa_approval_inferred: false

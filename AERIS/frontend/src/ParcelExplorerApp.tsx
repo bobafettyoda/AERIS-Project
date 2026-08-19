@@ -524,6 +524,8 @@ export default function ParcelExplorerApp() {
             "sfha",
             "#0891b2",
             "aviation",
+            "#dc2626",
+            "aviation_review",
             "#7c3aed",
             "#64748b",
           ],
@@ -893,6 +895,35 @@ export default function ParcelExplorerApp() {
               Insufficient data
             </div>
           </div>
+
+          {parcelView === "constraints" && (
+            <div className="parcel-constraint-legend">
+              <div>
+                <span className="constraint-swatch water" />
+                Surface water
+              </div>
+
+              <div>
+                <span className="constraint-swatch protected" />
+                Protected land
+              </div>
+
+              <div>
+                <span className="constraint-swatch flood" />
+                SFHA screening
+              </div>
+
+              <div>
+                <span className="constraint-swatch runway" />
+                Physical runway conflict
+              </div>
+
+              <div>
+                <span className="constraint-swatch aviation-review" />
+                FAA notice-distance screen
+              </div>
+            </div>
+          )}
 
           {loadingParcels && (
             <div className="parcel-loading">

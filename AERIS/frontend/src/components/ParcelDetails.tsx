@@ -390,15 +390,73 @@ export function ParcelDetails({
                 )}
               </strong>
             </div>
+
+            <div>
+              <span>
+                Physical runway conflict
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel
+                    .development_envelope
+                    .aviation_overlap_acres,
+                  2,
+                )}
+                {" ac"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                FAA notice screening overlap
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel
+                    .development_envelope
+                    .aviation_notice_screening_overlap_acres,
+                  2,
+                )}
+                {" ac"}
+              </strong>
+            </div>
           </div>
 
           <div className="parcel-envelope-warning">
             This is not confirmed buildable
             land. Buildings, wetlands, local
-            setbacks, aviation, utilities,
-            ownership, and entitlement review
-            remain outstanding.
+            setbacks, utilities, ownership,
+            and entitlement review remain
+            outstanding.
           </div>
+
+          {
+            parcel.development_envelope
+              .aviation_notice_screening_status
+            === (
+              "PROPOSED_HEIGHT_REQUIRED_"
+              + "FOR_PART77_SCREEN"
+            )
+            && (
+              <div className="parcel-aviation-warning">
+                <strong>
+                  FAA height screening needed
+                </strong>
+
+                <p>
+                  This parcel overlaps the FAA
+                  Part 77 horizontal notice-
+                  distance screen. Proposed
+                  structure height and formal
+                  FAA pre-screening are required
+                  before drawing a regulatory
+                  conclusion.
+                </p>
+              </div>
+            )
+          }
         </>
       )}
 

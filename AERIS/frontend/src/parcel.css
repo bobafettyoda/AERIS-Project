@@ -440,3 +440,68 @@
   color: white;
   background: #147d7f;
 }
+
+.parcel-aviation-warning {
+  margin-top: 10px;
+  padding: 10px;
+  color: #5b21b6;
+  background: #f5f3ff;
+  border: 1px solid #c4b5fd;
+  border-radius: 8px;
+}
+
+.parcel-aviation-warning p {
+  margin: 5px 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.parcel-constraint-legend {
+  position: absolute;
+  z-index: 3;
+  left: 16px;
+  top: 16px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 7px;
+  color: #102a3d;
+  background: rgb(255 255 255 / 95%);
+  border: 1px solid #d0dade;
+  border-radius: 9px;
+  box-shadow:
+    0 10px 28px rgb(16 42 61 / 16%);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.parcel-constraint-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.constraint-swatch {
+  width: 17px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.constraint-swatch.water {
+  background: #2563eb;
+}
+
+.constraint-swatch.protected {
+  background: #166534;
+}
+
+.constraint-swatch.flood {
+  background: #0891b2;
+}
+
+.constraint-swatch.runway {
+  background: #dc2626;
+}
+
+.constraint-swatch.aviation-review {
+  background: #7c3aed;
+}

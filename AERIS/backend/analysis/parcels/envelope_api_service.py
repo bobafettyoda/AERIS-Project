@@ -306,6 +306,19 @@ class ParcelEnvelopeService:
                     "aviation_overlap_acres"
                 )
             ),
+            "aviation_notice_screening_overlap_acres": (
+                value(
+                    "aviation_notice_screening_overlap_acres"
+                )
+            ),
+            "aviation_notice_screening_status": (
+                value(
+                    "aviation_notice_screening_status"
+                )
+            ),
+            "faa_determination_made": (
+                False
+            ),
             "mapped_constrained_area_acres": (
                 value(
                     "mapped_constrained_area_acres"

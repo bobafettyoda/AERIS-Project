@@ -1,5 +1,5 @@
 version: 1
-pipeline_version: "0.4.0"
+pipeline_version: "0.4.1"
 
 inputs:
   parcel_config:
@@ -12,6 +12,7 @@ inputs:
     label: Mapped surface water
     buffer_m: 0.0
     screening_role: direct_mapped_constraint
+    subtract_from_envelope: true
 
   protected_lands:
     enabled: true
@@ -20,6 +21,7 @@ inputs:
     label: Protected lands
     buffer_m: 0.0
     screening_role: direct_mapped_constraint
+    subtract_from_envelope: true
 
   sfha:
     enabled: true
@@ -28,14 +30,25 @@ inputs:
     label: FEMA Special Flood Hazard Area
     buffer_m: 91.0
     screening_role: aeris_screening_buffer
+    subtract_from_envelope: true
 
   aviation:
-    enabled: false
-    path: null
-    layer: null
-    label: FAA aviation hard conflicts
+    enabled: true
+    path: data/derived/aviation/faa_nasr_2026-08-06.gpkg
+    layer: runway_hard_conflicts
+    label: FAA physical runway pavement
     buffer_m: 0.0
-    screening_role: not_configured
+    screening_role: physical_runway_hard_conflict
+    subtract_from_envelope: true
+
+  aviation_review:
+    enabled: true
+    path: data/derived/aviation/faa_nasr_2026-08-06.gpkg
+    layer: aviation_notice_screening
+    label: FAA Part 77 notice-distance screening
+    buffer_m: 0.0
+    screening_role: height_dependent_notice_screen
+    subtract_from_envelope: false
 
 analysis:
   target_crs: EPSG:26985
@@ -67,7 +80,14 @@ safeguards:
   legal_buildability_confirmed: false
   zoning_approval_confirmed: false
   utility_capacity_confirmed: false
+
   buildings_included: false
   local_setbacks_included: false
   wetlands_included: false
-  aviation_included: false
+
+  aviation_included: true
+  physical_runway_footprints_included: true
+  airport_property_boundaries_included: false
+  runway_protection_zones_included: false
+  part77_determination_made: false
+  proposed_structure_height_evaluated: false

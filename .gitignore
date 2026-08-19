@@ -30,3 +30,8 @@ AERIS/data/manifests/parcel_envelopes/
 AERIS/data/raw/parcels/
 AERIS/data/cache/parcels/
 AERIS/data/interim/parcels/
+
+# AERIS generated FAA aviation snapshots
+AERIS/data/raw/aviation/
+AERIS/data/derived/aviation/
+AERIS/data/manifests/aviation/
