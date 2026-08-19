@@ -570,6 +570,15 @@ class ParcelDataService:
                 "overlap_fraction": value(
                     "scope_overlap_fraction"
                 ),
+                "overlap_area_acres": value(
+                    "scope_overlap_area_acres"
+                ),
+                "statewide_link_method": value(
+                    "statewide_link_method"
+                ),
+                "statewide_context_distance_m": value(
+                    "statewide_context_distance_m"
+                ),
             },
             "source_dates": {
                 "polygon_date": value(

@@ -1708,6 +1708,17 @@ def add_scope_overlap(
         "scope_overlap_area_sq_m"
     ] = intersection_area.round(3)
 
+    square_meters_per_acre = (
+        4046.8564224
+    )
+
+    result[
+        "scope_overlap_area_acres"
+    ] = (
+        intersection_area
+        / square_meters_per_acre
+    ).round(6)
+
     result[
         "scope_overlap_fraction"
     ] = (
@@ -1804,12 +1815,6 @@ def add_statewide_context(
         "exploration_screen_eligible": (
             "statewide_exploration_eligible"
         ),
-        "county_fips": (
-            "county_fips"
-        ),
-        "county_name": (
-            "county_name"
-        ),
         "county": (
             "_statewide_county_raw"
         ),
@@ -1820,53 +1825,110 @@ def add_statewide_context(
 
     context = context.rename(
         columns={
-            key: value
-            for key, value
+            source: target
+            for source, target
             in rename_map.items()
-            if key in context.columns
+            if source in context.columns
         }
     )
 
-    points = gpd.GeoDataFrame(
-        {
-            "_parcel_index": (
-                parcels.index
-            )
-        },
-        geometry=(
-            parcels.geometry
-            .representative_point()
-        ),
-        crs=parcels.crs,
+    # Keep only grid cells near the parcel scope.
+    west, south, east, north = (
+        parcels.total_bounds
     )
 
-    maximum_distance = float(
-        config[
-            "linkage"
-        ][
-            "maximum_grid_distance_m"
+    context = context.cx[
+        west:east,
+        south:north,
+    ].copy()
+
+    if context.empty:
+        raise RuntimeError(
+            "No statewide grid cells intersect "
+            "the parcel-scope bounding box."
+        )
+
+    parcel_shapes = parcels[
+        [
+            "parcel_id",
+            "geometry",
         ]
-    )
+    ].copy()
 
-    joined = gpd.sjoin_nearest(
-        points,
+    parcel_shapes[
+        "_parcel_index"
+    ] = parcels.index
+
+    # First preference: choose the statewide
+    # grid cell having the largest polygon
+    # overlap with each parcel.
+    intersections = gpd.sjoin(
+        parcel_shapes,
         context,
         how="left",
-        max_distance=(
-            maximum_distance
-        ),
-        distance_col=(
-            "statewide_context_distance_m"
-        ),
+        predicate="intersects",
     )
 
-    joined = (
-        joined.sort_values(
+    intersections[
+        "_grid_overlap_area_sq_m"
+    ] = np.nan
+
+    has_grid = (
+        intersections[
+            "index_right"
+        ].notna()
+    )
+
+    overlap_areas: list[float] = []
+
+    for (
+        parcel_geometry,
+        grid_index,
+    ) in zip(
+        intersections.loc[
+            has_grid,
+            "geometry",
+        ],
+        intersections.loc[
+            has_grid,
+            "index_right",
+        ],
+        strict=True,
+    ):
+        grid_geometry = (
+            context.geometry.loc[
+                grid_index
+            ]
+        )
+
+        overlap_areas.append(
+            float(
+                parcel_geometry
+                .intersection(
+                    grid_geometry
+                )
+                .area
+            )
+        )
+
+    intersections.loc[
+        has_grid,
+        "_grid_overlap_area_sq_m",
+    ] = overlap_areas
+
+    best_overlap = (
+        intersections.loc[
+            has_grid
+        ]
+        .sort_values(
             [
                 "_parcel_index",
-                "statewide_context_distance_m",
+                "_grid_overlap_area_sq_m",
             ],
-            na_position="last",
+            ascending=[
+                True,
+                False,
+            ],
         )
         .drop_duplicates(
             subset=[
@@ -1874,29 +1936,135 @@ def add_statewide_context(
             ],
             keep="first",
         )
+        .copy()
+    )
+
+    best_overlap[
+        "statewide_context_distance_m"
+    ] = 0.0
+
+    best_overlap[
+        "statewide_link_method"
+    ] = (
+        "maximum_grid_overlap"
+    )
+
+    matched_indices = set(
+        best_overlap[
+            "_parcel_index"
+        ].tolist()
+    )
+
+    unmatched_indices = [
+        index
+        for index in parcels.index
+        if index not in matched_indices
+    ]
+
+    # Rare fallback for unusual geometries
+    # that do not intersect a land-grid cell.
+    fallback = None
+
+    if unmatched_indices:
+        fallback_points = (
+            gpd.GeoDataFrame(
+                {
+                    "_parcel_index": (
+                        unmatched_indices
+                    )
+                },
+                geometry=(
+                    parcels.loc[
+                        unmatched_indices,
+                        "geometry",
+                    ]
+                    .representative_point()
+                ),
+                crs=parcels.crs,
+            )
+        )
+
+        maximum_distance = float(
+            config[
+                "linkage"
+            ][
+                "maximum_grid_distance_m"
+            ]
+        )
+
+        fallback = gpd.sjoin_nearest(
+            fallback_points,
+            context,
+            how="left",
+            max_distance=(
+                maximum_distance
+            ),
+            distance_col=(
+                "statewide_context_distance_m"
+            ),
+        )
+
+        fallback = (
+            fallback.sort_values(
+                [
+                    "_parcel_index",
+                    "statewide_context_distance_m",
+                ],
+                na_position="last",
+            )
+            .drop_duplicates(
+                subset=[
+                    "_parcel_index",
+                ],
+                keep="first",
+            )
+        )
+
+        fallback[
+            "statewide_link_method"
+        ] = (
+            "nearest_representative_point_fallback"
+        )
+
+        fallback[
+            "_grid_overlap_area_sq_m"
+        ] = 0.0
+
+    selected_frames = [
+        best_overlap
+    ]
+
+    if fallback is not None:
+        selected_frames.append(
+            fallback
+        )
+
+    selected = pd.concat(
+        selected_frames,
+        ignore_index=True,
+        sort=False,
     )
 
     attribute_columns = [
         column
-        for column in joined.columns
+        for column in selected.columns
         if column
         not in {
             "geometry",
             "index_right",
+            "parcel_id",
         }
     ]
 
-    attributes = pd.DataFrame(
-        joined[
-            attribute_columns
-        ]
-    )
+    attributes = selected[
+        attribute_columns
+    ].copy()
 
     result = parcels.copy()
 
-    result["_parcel_index"] = (
-        result.index
-    )
+    result[
+        "_parcel_index"
+    ] = result.index
 
     result = result.merge(
         attributes,
@@ -1905,18 +2073,31 @@ def add_statewide_context(
         validate="one_to_one",
     )
 
-    if "county_fips" not in result:
-        result["county_fips"] = (
-            pd.Series(
-                None,
-                index=result.index,
-                dtype="string",
+    # Normalize county FIPS. Empty strings are
+    # treated as missing rather than valid values.
+    if "county_fips" in result:
+        county_fips = (
+            result[
+                "county_fips"
+            ]
+            .astype("string")
+            .str.strip()
+            .replace(
+                "",
+                pd.NA,
             )
+        )
+
+    else:
+        county_fips = pd.Series(
+            pd.NA,
+            index=result.index,
+            dtype="string",
         )
 
     if (
         "_statewide_county_raw"
-        in result
+        in result.columns
     ):
         county_from_raw = (
             standardize_identifier(
@@ -1925,24 +2106,21 @@ def add_statewide_context(
                 ],
                 3,
             )
+            .replace(
+                "",
+                pd.NA,
+            )
         )
 
-        result[
-            "county_fips"
-        ] = (
-            result["county_fips"]
-            .astype("string")
-            .where(
-                result[
-                    "county_fips"
-                ].notna(),
-                county_from_raw,
+        county_fips = (
+            county_fips.fillna(
+                county_from_raw
             )
         )
 
     if (
         "statewide_tract_geoid"
-        in result
+        in result.columns
     ):
         county_from_geoid = (
             standardize_identifier(
@@ -1950,74 +2128,62 @@ def add_statewide_context(
                     "statewide_tract_geoid"
                 ],
                 11,
-            ).str.slice(
+            )
+            .str.slice(
                 2,
                 5,
             )
+            .replace(
+                "",
+                pd.NA,
+            )
         )
 
-        result[
-            "county_fips"
-        ] = (
-            result["county_fips"]
-            .astype("string")
-            .where(
-                result[
-                    "county_fips"
-                ].notna(),
-                county_from_geoid,
+        county_fips = (
+            county_fips.fillna(
+                county_from_geoid
             )
         )
 
     result[
         "county_fips"
-    ] = standardize_identifier(
-        result[
-            "county_fips"
-        ],
-        3,
+    ] = county_fips
+
+    county_from_fips = (
+        county_fips.map(
+            MARYLAND_COUNTIES
+        )
     )
 
-    if "county_name" not in result:
-        result["county_name"] = (
+    if "county_name" in result:
+        county_name = (
             result[
-                "county_fips"
-            ].map(
-                MARYLAND_COUNTIES
+                "county_name"
+            ]
+            .astype("string")
+            .str.strip()
+            .replace(
+                "",
+                pd.NA,
             )
+        )
+
+        result[
+            "county_name"
+        ] = county_name.fillna(
+            county_from_fips
         )
 
     else:
         result[
             "county_name"
-        ] = (
-            result[
-                "county_name"
-            ]
-            .astype("string")
-            .where(
-                result[
-                    "county_name"
-                ].notna(),
-                result[
-                    "county_fips"
-                ].map(
-                    MARYLAND_COUNTIES
-                ),
-            )
-        )
+        ] = county_from_fips
 
     result[
         "statewide_context_complete"
     ] = result[
         "statewide_cell_id"
     ].notna()
-
-    result[
-        "statewide_link_method"
-    ] = config[
-        "linkage"
-    ]["method"]
 
     result = result.drop(
         columns=[

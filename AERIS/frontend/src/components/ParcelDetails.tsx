@@ -25,6 +25,21 @@ function value(
 }
 
 
+function sourceValue(
+  input: unknown,
+): string {
+  if (
+    input === null
+    || input === undefined
+    || input === ""
+  ) {
+    return "Not reported by statewide source";
+  }
+
+  return String(input);
+}
+
+
 function numberValue(
   input: unknown,
   digits = 2,
@@ -159,9 +174,9 @@ export function ParcelDetails({
         </div>
 
         <div>
-          <span>Zoning field</span>
+          <span>Statewide zoning field</span>
           <strong>
-            {value(
+            {sourceValue(
               parcel.parcel
                 .zoning_code,
             )}
@@ -169,9 +184,9 @@ export function ParcelDetails({
         </div>
 
         <div>
-          <span>Land use</span>
+          <span>Statewide land use</span>
           <strong>
-            {value(
+            {sourceValue(
               parcel.parcel
                 .land_use_description,
             )}
@@ -225,6 +240,42 @@ export function ParcelDetails({
               parcel.statewide_context
                 .cell_id,
             )}
+          </strong>
+        </div>
+
+        <div>
+          <span>
+            Inside candidate zone
+          </span>
+
+          <strong>
+            {numberValue(
+              parcel.scope
+                .overlap_area_acres,
+              2,
+            )}
+            {" ac"}
+          </strong>
+        </div>
+
+        <div>
+          <span>Zone overlap</span>
+
+          <strong>
+            {
+              typeof parcel.scope
+                .overlap_fraction
+              === "number"
+                ? (
+                  (
+                    parcel.scope
+                      .overlap_fraction
+                    * 100
+                  ).toFixed(1)
+                  + "%"
+                )
+                : "Not available"
+            }
           </strong>
         </div>
       </div>

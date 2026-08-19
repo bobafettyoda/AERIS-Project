@@ -91,6 +91,9 @@ export type ParcelDetail = {
     candidate_zone_id?: string | null;
     candidate_zone_mode?: string | null;
     overlap_fraction?: number | null;
+    overlap_area_acres?: number | null;
+    statewide_link_method?: string | null;
+    statewide_context_distance_m?: number | null;
   };
 
   source_dates: Record<

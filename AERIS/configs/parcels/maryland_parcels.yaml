@@ -119,7 +119,7 @@ classification:
     - medical center
 
 linkage:
-  method: representative_point_nearest_statewide_cell
+  method: maximum_grid_overlap_with_nearest_fallback
   maximum_grid_distance_m: 1500
 
 api:
@@ -155,3 +155,6 @@ api:
     - statewide_hard_excluded
     - candidate_zone_id
     - scope_overlap_fraction
+    - scope_overlap_area_acres
+    - statewide_link_method
+    - statewide_context_distance_m

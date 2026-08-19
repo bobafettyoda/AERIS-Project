@@ -152,6 +152,11 @@ export default function ParcelExplorerApp() {
       null
     );
 
+  const parcelScopeIdRef =
+    useRef<string | null>(
+      null
+    );
+
   const [
     mapReady,
     setMapReady,
@@ -204,6 +209,15 @@ export default function ParcelExplorerApp() {
   ] = useState<string | null>(
     null
   );
+
+
+  useEffect(() => {
+    parcelScopeIdRef.current = (
+      parcels?.metadata
+        .scope.scope_id
+      ?? null
+    );
+  }, [parcels]);
 
 
   useEffect(() => {
@@ -328,7 +342,7 @@ export default function ParcelExplorerApp() {
         source: "parcel-zones",
         paint: {
           "fill-color": "#7c3aed",
-          "fill-opacity": 0.10,
+          "fill-opacity": 0.12,
         },
       });
 
@@ -338,7 +352,15 @@ export default function ParcelExplorerApp() {
         source: "parcel-zones",
         paint: {
           "line-color": "#6d28d9",
-          "line-width": 3,
+          "line-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            8,
+            3,
+            14,
+            5,
+          ],
         },
       });
 
@@ -363,7 +385,28 @@ export default function ParcelExplorerApp() {
             "#64748b",
             "#64748b",
           ],
-          "fill-opacity": 0.28,
+          "fill-opacity": [
+            "interpolate",
+            ["linear"],
+            [
+              "coalesce",
+              [
+                "get",
+                "scope_overlap_fraction",
+              ],
+              0,
+            ],
+            0,
+            0.05,
+            0.05,
+            0.10,
+            0.25,
+            0.20,
+            0.50,
+            0.30,
+            1,
+            0.42,
+          ],
         },
       });
 
@@ -391,12 +434,43 @@ export default function ParcelExplorerApp() {
             ["linear"],
             ["zoom"],
             10,
-            0.5,
+            0.45,
             16,
             2.2,
           ],
+
+          "line-opacity": [
+            "interpolate",
+            ["linear"],
+            [
+              "coalesce",
+              [
+                "get",
+                "scope_overlap_fraction",
+              ],
+              0,
+            ],
+            0,
+            0.10,
+            0.05,
+            0.20,
+            0.25,
+            0.55,
+            0.50,
+            0.78,
+            1,
+            1,
+          ],
         },
       });
+
+      map.moveLayer(
+        "parcel-zone-fill"
+      );
+
+      map.moveLayer(
+        "parcel-zone-line"
+      );
 
       map.on(
         "mousemove",
@@ -429,8 +503,7 @@ export default function ParcelExplorerApp() {
             ];
 
           const scopeId =
-            parcels?.metadata
-              .scope.scope_id;
+            parcelScopeIdRef.current;
 
           if (
             typeof parcelId
@@ -483,7 +556,7 @@ export default function ParcelExplorerApp() {
       map.remove();
       mapRef.current = null;
     };
-  }, [parcels]);
+  }, []);
 
 
   useEffect(() => {
@@ -499,9 +572,34 @@ export default function ParcelExplorerApp() {
       "parcel-zones",
       zones,
     );
+
+    const selectedZoneFilter:
+    maplibregl.FilterSpecification =
+      selectedZoneId
+        ? [
+          "==",
+          ["get", "zone_id"],
+          selectedZoneId,
+        ]
+        : [
+          "==",
+          ["get", "zone_id"],
+          "__NO_SELECTED_ZONE__",
+        ];
+
+    mapRef.current.setFilter(
+      "parcel-zone-fill",
+      selectedZoneFilter,
+    );
+
+    mapRef.current.setFilter(
+      "parcel-zone-line",
+      selectedZoneFilter,
+    );
   }, [
     mapReady,
     zones,
+    selectedZoneId,
   ]);
 
 
