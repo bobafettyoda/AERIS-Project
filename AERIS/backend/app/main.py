@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
+
+from app.routers import parcels
 from starlette.middleware.gzip import GZipMiddleware
 
 from app.routers import statewide
@@ -48,4 +50,8 @@ app.add_middleware(
 
 app.include_router(
     statewide.router
+)
+
+app.include_router(
+    parcels.router
 )

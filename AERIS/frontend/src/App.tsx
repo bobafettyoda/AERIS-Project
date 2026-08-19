@@ -8,12 +8,16 @@ import SiteScreeningApp
 import StatewideApp
   from "./StatewideApp";
 
+import ParcelExplorerApp
+  from "./ParcelExplorerApp";
+
 import "./ModeShell.css";
 
 
 type ApplicationMode =
   | "point"
-  | "statewide";
+  | "statewide"
+  | "parcels";
 
 
 const STORAGE_KEY =
@@ -27,9 +31,14 @@ ApplicationMode {
       STORAGE_KEY,
     );
 
-  return stored === "statewide"
-    ? "statewide"
-    : "point";
+  if (
+    stored === "statewide"
+    || stored === "parcels"
+  ) {
+    return stored;
+  }
+
+  return "point";
 }
 
 
@@ -94,12 +103,36 @@ export default function App() {
           >
             Statewide explorer
           </button>
+
+          <button
+            type="button"
+            className={
+              mode === "parcels"
+                ? "active"
+                : undefined
+            }
+            onClick={() => {
+              selectMode(
+                "parcels"
+              );
+            }}
+          >
+            Parcel investigation
+          </button>
         </div>
       </nav>
 
-      {mode === "point"
-        ? <SiteScreeningApp />
-        : <StatewideApp />}
+      {mode === "point" && (
+        <SiteScreeningApp />
+      )}
+
+      {mode === "statewide" && (
+        <StatewideApp />
+      )}
+
+      {mode === "parcels" && (
+        <ParcelExplorerApp />
+      )}
     </div>
   );
 }

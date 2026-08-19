@@ -1,0 +1,384 @@
+.parcel-app {
+  min-height: calc(100vh - 48px);
+  color: #102a3d;
+  background: #edf2f3;
+}
+
+.parcel-topbar {
+  min-height: 76px;
+  padding: 13px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: white;
+  background: #102a3d;
+}
+
+.parcel-topbar h1 {
+  margin: 3px 0 0;
+  font-size: 1.35rem;
+}
+
+.parcel-kicker {
+  display: block;
+  color: #147d7f;
+  font-size: 0.67rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.parcel-topbar .parcel-kicker {
+  color: #7ed1d2;
+}
+
+.parcel-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.parcel-summary span {
+  padding: 7px 10px;
+  color: #dbe9ec;
+  background: rgb(255 255 255 / 8%);
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  font-size: 0.69rem;
+  font-weight: 800;
+}
+
+.parcel-layout {
+  min-height: calc(100vh - 124px);
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(360px, 430px);
+}
+
+.parcel-map-panel {
+  position: relative;
+  min-height: calc(100vh - 124px);
+}
+
+.parcel-map {
+  position: absolute;
+  inset: 0;
+}
+
+.parcel-sidebar {
+  height: calc(100vh - 124px);
+  padding: 14px;
+  overflow-y: auto;
+  background: #f4f7f8;
+  border-left: 1px solid #cbd8dc;
+}
+
+.parcel-control-card,
+.parcel-detail-card,
+.parcel-error {
+  padding: 16px;
+  background: white;
+  border: 1px solid #d7e0e4;
+  border-radius: 12px;
+  box-shadow:
+    0 5px 18px rgb(16 42 61 / 6%);
+}
+
+.parcel-detail-card {
+  margin-top: 13px;
+}
+
+.parcel-control-card h2,
+.parcel-detail-card h2 {
+  margin: 4px 0 0;
+  font-size: 1.05rem;
+}
+
+.parcel-control-card label {
+  margin-top: 14px;
+  display: block;
+}
+
+.parcel-control-card label > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #687986;
+  font-size: 0.69rem;
+  font-weight: 850;
+}
+
+.parcel-control-card select {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 9px;
+  color: #102a3d;
+  background: #f6f9fa;
+  border: 1px solid #cbd8dc;
+  border-radius: 8px;
+}
+
+.parcel-control-card button {
+  width: 100%;
+  margin-top: 13px;
+  padding: 10px 12px;
+  color: white;
+  background: #147d7f;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.parcel-control-card button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.parcel-scope-note {
+  margin-top: 12px;
+  padding: 10px;
+  color: #47606f;
+  background: #edf6f5;
+  border: 1px solid #c5dfdc;
+  border-radius: 8px;
+}
+
+.parcel-scope-note p {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+}
+
+.parcel-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.parcel-title-row p {
+  margin: 4px 0 0;
+  color: #687986;
+  font-size: 0.72rem;
+}
+
+.parcel-area {
+  color: #147d7f;
+  font-size: 1.25rem;
+  white-space: nowrap;
+}
+
+.parcel-status {
+  margin-top: 13px;
+  padding: 11px;
+  border-radius: 8px;
+}
+
+.parcel-status p {
+  margin: 5px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.parcel-status.blocked {
+  color: #8f2018;
+  background: #fff3f2;
+  border: 1px solid #efb9b4;
+}
+
+.parcel-status.caution {
+  color: #714605;
+  background: #fff8df;
+  border: 1px solid #ecd38f;
+}
+
+.parcel-status.review {
+  color: #075c46;
+  background: #e7f5ef;
+  border: 1px solid #b4dfcf;
+}
+
+.parcel-stat-grid {
+  margin-top: 13px;
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.parcel-stat-grid > div {
+  padding: 9px;
+  background: #f5f8f9;
+  border: 1px solid #e0e7ea;
+  border-radius: 8px;
+}
+
+.parcel-stat-grid span {
+  display: block;
+  color: #687986;
+  font-size: 0.64rem;
+}
+
+.parcel-stat-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.77rem;
+}
+
+.parcel-details {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #dfe7ea;
+}
+
+.parcel-details summary {
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.parcel-value-list {
+  margin-top: 9px;
+  display: grid;
+  gap: 7px;
+}
+
+.parcel-value-list > div {
+  padding: 8px 9px;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+  gap: 10px;
+  background: #f5f8f9;
+  border: 1px solid #e0e7ea;
+  border-radius: 7px;
+}
+
+.parcel-value-list span {
+  color: #687986;
+  font-size: 0.68rem;
+}
+
+.parcel-value-list strong {
+  text-align: right;
+  font-size: 0.72rem;
+}
+
+.parcel-warning {
+  margin-top: 14px;
+  padding: 11px;
+  color: #714605;
+  background: #fff8df;
+  border: 1px solid #ecd38f;
+  border-radius: 8px;
+}
+
+.parcel-warning p {
+  margin: 5px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.parcel-muted {
+  color: #687986;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.parcel-legend,
+.parcel-loading {
+  position: absolute;
+  z-index: 3;
+  padding: 10px 12px;
+  background: rgb(255 255 255 / 95%);
+  border: 1px solid #d0dade;
+  border-radius: 9px;
+  box-shadow:
+    0 10px 28px rgb(16 42 61 / 16%);
+}
+
+.parcel-legend {
+  left: 16px;
+  bottom: 18px;
+  display: grid;
+  gap: 7px;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.parcel-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.parcel-swatch {
+  width: 17px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.parcel-swatch.public {
+  background: #be123c;
+}
+
+.parcel-swatch.existing {
+  background: #d97706;
+}
+
+.parcel-swatch.potential {
+  background: #15803d;
+}
+
+.parcel-swatch.unknown {
+  background: #64748b;
+}
+
+.parcel-loading {
+  right: 16px;
+  bottom: 18px;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.parcel-error {
+  margin-bottom: 13px;
+  color: #8f2018;
+  background: #fff3f2;
+  border-color: #efb9b4;
+}
+
+.parcel-error p {
+  margin: 5px 0 0;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 980px) {
+  .parcel-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .parcel-map-panel {
+    min-height: 60vh;
+  }
+
+  .parcel-sidebar {
+    height: auto;
+    border-top: 1px solid #cbd8dc;
+    border-left: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .parcel-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .parcel-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}

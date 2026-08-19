@@ -1,0 +1,157 @@
+version: 1
+pipeline_version: "0.3.0"
+
+source:
+  name: Maryland iMAP Parcel Boundaries
+
+  layer_url: >-
+    https://mdgeodata.md.gov/imap/rest/services/PlanningCadastre/MD_ParcelBoundaries/MapServer/0
+
+  target_crs: EPSG:26985
+  request_crs: EPSG:4326
+
+  page_size: 500
+  timeout_seconds: 120
+  maximum_scope_features: 25000
+
+  fields:
+    - OBJECTID
+    - JURSCODE
+    - ACCTID
+    - CT2020
+    - ADDRESS
+    - CITY
+    - ZIPCODE
+    - PREMCITY
+    - ZONING
+    - ZNCHGDAT
+    - CIUSE
+    - DESCCIUSE
+    - EXCLASS
+    - DESCEXCL
+    - LU
+    - DESCLU
+    - ACRES
+    - LANDAREA
+    - LUOM
+    - PFUW
+    - PFUS
+    - PERMITTYP
+    - YEARBLT
+    - SQFTSTRC
+    - BLDG_STORY
+    - BLDG_UNITS
+    - NFMLNDVL
+    - NFMIMPVL
+    - NFMTTLVL
+    - PLNDEVDAT
+    - SDATWEBADR
+    - MDPVDATE
+    - SDATDATE
+    - POLYDATE
+    - POLYACRES
+    - POLYID
+
+inputs:
+  source_audit:
+    path: data/manifests/parcel_source_audit.json
+
+  final_grid:
+    path: data/derived/maryland_grid_1km_final.gpkg
+    layer: cells
+
+  candidate_zones:
+    - mode: top
+      path: data/derived/maryland_candidate_zones_top5.geojson
+      layer: null
+
+    - mode: auto
+      path: data/derived/maryland_candidate_zones_auto.gpkg
+      layer: candidate_zones
+
+    - mode: exploration
+      path: data/derived/maryland_candidate_zones_exploration.gpkg
+      layer: candidate_zones
+
+outputs:
+  audit_manifest: data/manifests/parcel_source_audit.json
+
+  raw_scope_directory:
+    path: data/raw/parcels
+
+  derived_scope_directory:
+    path: data/derived/parcels
+
+  manifest_directory:
+    path: data/manifests/parcels
+
+  cache_directory:
+    path: data/cache/parcels
+
+normalization:
+  minimum_geometry_area_sq_m: 1.0
+  minimum_parcel_acres: 0.01
+
+  acreage_conversion:
+    square_meters_per_acre: 4046.8564224
+
+classification:
+  public_exemption_keywords:
+    - government
+    - county
+    - state
+    - federal
+    - municipal
+    - public
+    - city
+    - town
+
+  institutional_keywords:
+    - university
+    - college
+    - school
+    - hospital
+    - library
+    - church
+    - religious
+    - institutional
+    - campus
+    - medical center
+
+linkage:
+  method: representative_point_nearest_statewide_cell
+  maximum_grid_distance_m: 1500
+
+api:
+  maximum_features: 8000
+  display_simplify_m: 0.75
+
+  display_fields:
+    - parcel_id
+    - account_id
+    - jurisdiction_code
+    - county_fips
+    - county_name
+    - property_address
+    - parcel_area_acres
+    - geometry_area_acres
+    - land_use_code
+    - land_use_description
+    - zoning_code
+    - commercial_industrial_use
+    - public_land_flag
+    - institutional_use_flag
+    - existing_development_indicator
+    - availability_status
+    - availability_reason
+    - availability_confirmed
+    - parcel_data_confidence
+    - public_water_status
+    - public_sewer_status
+    - statewide_cell_id
+    - statewide_technical_score
+    - statewide_effective_score
+    - statewide_equity_gate
+    - statewide_hard_excluded
+    - candidate_zone_id
+    - scope_overlap_fraction
