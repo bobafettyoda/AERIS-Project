@@ -1,0 +1,62 @@
+version: 1
+snapshot_label: "2026-07-31"
+
+inputs:
+  grid:
+    path: data/derived/maryland_grid_1km_environmental.gpkg
+    layer: cells
+
+  decision_model:
+    path: configs/decision_models/data_center_maryland_demo.yaml
+
+  environmental_manifest:
+    path: data/manifests/statewide_environmental_constraints.json
+
+outputs:
+  raw_snapshot:
+    path: data/raw/climate/2026-07-31/nasa_power_t2m_climatology.json
+
+  climate_points:
+    path: data/interim/statewide/nasa_power_t2m_climatology.gpkg
+    layer: climate_points
+
+  final_grid:
+    path: data/derived/maryland_grid_1km_final.gpkg
+    layer: cells
+
+  preview:
+    path: data/derived/maryland_grid_1km_final_points.geojson
+
+  manifest:
+    path: data/manifests/statewide_climate_final.json
+
+nasa_power:
+  endpoint: https://power.larc.nasa.gov/api/temporal/climatology/regional
+  parameter: T2M
+  community: RE
+  format: JSON
+  bounding_margin_degrees: 0.75
+
+assignment:
+  target_crs: EPSG:26985
+  method: nearest_nasa_power_source_point
+  maximum_source_distance_m: 60000
+
+model:
+  final_weight_normalization: true
+  bias_audit_pending: true
+
+known_point_review:
+  latitude: 38.9897
+  longitude: -76.9378
+
+  point_evaluator:
+    annual_mean_temperature_c: 13.15
+    july_mean_temperature_c: 25.79
+    climate_score: 0.7697
+
+  note: >
+    The statewide value is assigned from the nearest NASA POWER
+    regional climatology source point, while the v0.1 evaluator
+    queried the selected coordinate directly. Small differences
+    are expected.

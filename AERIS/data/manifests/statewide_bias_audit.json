@@ -1,0 +1,778 @@
+{
+  "schema_version": 1,
+  "audit": "statewide_disparate_outcome_and_concentration",
+  "audit_status": "FLAGGED",
+  "release_status": "REVIEW_REQUIRED",
+  "screening_shortlist_ready": false,
+  "automated_recommendation_ready": false,
+  "technical_score_uses_demographics": false,
+  "reference_cohort": "All technically complete Maryland cells that meet the regional land threshold and are not hard excluded.\n",
+  "selected_cohort": "Cells contained in the geographically separated top-five baseline auto-screen candidate zones.\n",
+  "counts": {
+    "reference_cells": 15046,
+    "candidate_pool_cells": 685,
+    "top_zone_cells": 50,
+    "top_zone_count": 5,
+    "sensitivity_scenarios": 10,
+    "sensitivity_selections": 50
+  },
+  "selected_equity_gate_counts": {
+    "PASS": 50
+  },
+  "data_completeness": {
+    "complete": true,
+    "missing_columns": [],
+    "selected_missing_excess": [],
+    "insufficient_indicators": []
+  },
+  "top_zone_indicator_audits": [
+    {
+      "column": "ej_percentile",
+      "label": "Environmental-justice percentile",
+      "threshold": 75.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 35.47452507315348,
+      "selected_weighted_mean": 20.73,
+      "reference_share_at_or_above_threshold": 0.054146870414390764,
+      "selected_share_at_or_above_threshold": 0.0,
+      "representation_ratio": 0.0,
+      "percentage_point_difference": -5.414687041439077,
+      "standardized_mean_difference": -0.880681458958302,
+      "selected_valid_cell_count": 50,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "pollution_burden_percentile",
+      "label": "Pollution-burden percentile",
+      "threshold": 75.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 22.59914917915019,
+      "selected_weighted_mean": 37.959999999999994,
+      "reference_share_at_or_above_threshold": 0.0465736240418688,
+      "selected_share_at_or_above_threshold": 0.0,
+      "representation_ratio": 0.0,
+      "percentage_point_difference": -4.65736240418688,
+      "standardized_mean_difference": 0.8648934793236088,
+      "selected_valid_cell_count": 50,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": true,
+      "flagged": true
+    },
+    {
+      "column": "environmental_effects_percentile",
+      "label": "Environmental-effects percentile",
+      "threshold": 75.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 47.861618375790705,
+      "selected_weighted_mean": 21.78,
+      "reference_share_at_or_above_threshold": 0.18786184337316586,
+      "selected_share_at_or_above_threshold": 0.02,
+      "representation_ratio": 0.10646121448021943,
+      "percentage_point_difference": -16.786184337316588,
+      "standardized_mean_difference": -1.3276949500323134,
+      "selected_valid_cell_count": 50,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "sensitive_populations_percentile",
+      "label": "Sensitive-populations percentile",
+      "threshold": 75.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 47.94411098424692,
+      "selected_weighted_mean": 30.936000000000003,
+      "reference_share_at_or_above_threshold": 0.1538235740940598,
+      "selected_share_at_or_above_threshold": 0.0,
+      "representation_ratio": 0.0,
+      "percentage_point_difference": -15.38235740940598,
+      "standardized_mean_difference": -0.7848181381181097,
+      "selected_valid_cell_count": 50,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "minority_or_hispanic_pct",
+      "label": "Minority or Hispanic population",
+      "threshold": 50.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 27.156456314585867,
+      "selected_weighted_mean": 21.026418609600004,
+      "reference_share_at_or_above_threshold": 0.15644452819179366,
+      "selected_share_at_or_above_threshold": 0.0,
+      "representation_ratio": 0.0,
+      "percentage_point_difference": -15.644452819179367,
+      "standardized_mean_difference": -0.31552370206529207,
+      "selected_valid_cell_count": 50,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "low_income_pct",
+      "label": "Low-income population",
+      "threshold": 25.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 19.60436936541931,
+      "selected_weighted_mean": 12.729825730199998,
+      "reference_share_at_or_above_threshold": 0.301502021316256,
+      "selected_share_at_or_above_threshold": 0.0,
+      "representation_ratio": 0.0,
+      "percentage_point_difference": -30.150202131625598,
+      "standardized_mean_difference": -0.7408430886736325,
+      "selected_valid_cell_count": 50,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "limited_english_pct",
+      "label": "Limited-English population",
+      "threshold": 15.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 13.292475719805664,
+      "selected_weighted_mean": 9.3369936606,
+      "reference_share_at_or_above_threshold": 0.23881503468351656,
+      "selected_share_at_or_above_threshold": 0.0,
+      "representation_ratio": 0.0,
+      "percentage_point_difference": -23.881503468351656,
+      "standardized_mean_difference": -0.3391695952981085,
+      "selected_valid_cell_count": 50,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    }
+  ],
+  "candidate_pool_indicator_audits": [
+    {
+      "column": "ej_percentile",
+      "label": "Environmental-justice percentile",
+      "threshold": 75.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 35.47452507315348,
+      "selected_weighted_mean": 20.202436711653295,
+      "reference_share_at_or_above_threshold": 0.054146870414390764,
+      "selected_share_at_or_above_threshold": 0.07748023730957003,
+      "representation_ratio": 1.4309273410745063,
+      "percentage_point_difference": 2.3333366895179264,
+      "standardized_mean_difference": -0.6867743716241516,
+      "selected_valid_cell_count": 685,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "pollution_burden_percentile",
+      "label": "Pollution-burden percentile",
+      "threshold": 75.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 22.59914917915019,
+      "selected_weighted_mean": 20.17409398254254,
+      "reference_share_at_or_above_threshold": 0.0465736240418688,
+      "selected_share_at_or_above_threshold": 0.00584756507996755,
+      "representation_ratio": 0.12555529444542904,
+      "percentage_point_difference": -4.072605896190125,
+      "standardized_mean_difference": -0.12576966063479975,
+      "selected_valid_cell_count": 685,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "environmental_effects_percentile",
+      "label": "Environmental-effects percentile",
+      "threshold": 75.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 47.861618375790705,
+      "selected_weighted_mean": 20.406992644922404,
+      "reference_share_at_or_above_threshold": 0.18786184337316586,
+      "selected_share_at_or_above_threshold": 0.002923782539983775,
+      "representation_ratio": 0.01556347200413667,
+      "percentage_point_difference": -18.49380608331821,
+      "standardized_mean_difference": -1.3579750606470835,
+      "selected_valid_cell_count": 685,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "sensitive_populations_percentile",
+      "label": "Sensitive-populations percentile",
+      "threshold": 75.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 47.94411098424692,
+      "selected_weighted_mean": 29.54746020315689,
+      "reference_share_at_or_above_threshold": 0.1538235740940598,
+      "selected_share_at_or_above_threshold": 0.027775934129845862,
+      "representation_ratio": 0.1805700738227645,
+      "percentage_point_difference": -12.604763996421395,
+      "standardized_mean_difference": -0.855089671470559,
+      "selected_valid_cell_count": 685,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "minority_or_hispanic_pct",
+      "label": "Minority or Hispanic population",
+      "threshold": 50.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 27.156456314585867,
+      "selected_weighted_mean": 18.231568646749594,
+      "reference_share_at_or_above_threshold": 0.15644452819179366,
+      "selected_share_at_or_above_threshold": 0.0,
+      "representation_ratio": 0.0,
+      "percentage_point_difference": -15.644452819179367,
+      "standardized_mean_difference": -0.4876397087620936,
+      "selected_valid_cell_count": 685,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "low_income_pct",
+      "label": "Low-income population",
+      "threshold": 25.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 19.60436936541931,
+      "selected_weighted_mean": 10.609667230753482,
+      "reference_share_at_or_above_threshold": 0.301502021316256,
+      "selected_share_at_or_above_threshold": 0.0,
+      "representation_ratio": 0.0,
+      "percentage_point_difference": -30.150202131625598,
+      "standardized_mean_difference": -0.9868135614188598,
+      "selected_valid_cell_count": 685,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    },
+    {
+      "column": "limited_english_pct",
+      "label": "Limited-English population",
+      "threshold": 15.0,
+      "status": "COMPLETE",
+      "reference_weighted_mean": 13.292475719805664,
+      "selected_weighted_mean": 8.71247654590433,
+      "reference_share_at_or_above_threshold": 0.23881503468351656,
+      "selected_share_at_or_above_threshold": 0.0,
+      "representation_ratio": 0.0,
+      "percentage_point_difference": -23.881503468351656,
+      "standardized_mean_difference": -0.39907857790577006,
+      "selected_valid_cell_count": 685,
+      "selected_missing_fraction": 0.0,
+      "ratio_flag": false,
+      "mean_difference_flag": false,
+      "flagged": false
+    }
+  ],
+  "top_zone_county_concentration": {
+    "counties": [
+      {
+        "county_fips": "005",
+        "county_name": "Baltimore County",
+        "reference_area_share": 0.061401225168657925,
+        "selected_area_share": 0.74,
+        "location_quotient": 12.051876782056961,
+        "flagged": true
+      },
+      {
+        "county_fips": "003",
+        "county_name": "Anne Arundel County",
+        "reference_area_share": 0.04711955611516406,
+        "selected_area_share": 0.22,
+        "location_quotient": 4.6689743736613725,
+        "flagged": false
+      },
+      {
+        "county_fips": "031",
+        "county_name": "Montgomery County",
+        "reference_area_share": 0.04711711912665534,
+        "selected_area_share": 0.04,
+        "location_quotient": 0.8489483385534706,
+        "flagged": false
+      },
+      {
+        "county_fips": "001",
+        "county_name": "Allegany County",
+        "reference_area_share": 0.04634875443080398,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "009",
+        "county_name": "Calvert County",
+        "reference_area_share": 0.021939336391489376,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "011",
+        "county_name": "Caroline County",
+        "reference_area_share": 0.034726866416957526,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "013",
+        "county_name": "Carroll County",
+        "reference_area_share": 0.04507792936520097,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "015",
+        "county_name": "Cecil County",
+        "reference_area_share": 0.039697462947889256,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "017",
+        "county_name": "Charles County",
+        "reference_area_share": 0.049061073647895755,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "019",
+        "county_name": "Dorchester County",
+        "reference_area_share": 0.03178702519144572,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "021",
+        "county_name": "Frederick County",
+        "reference_area_share": 0.07223231527052289,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "023",
+        "county_name": "Garrett County",
+        "reference_area_share": 0.07559622674481599,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "025",
+        "county_name": "Harford County",
+        "reference_area_share": 0.041519248214504055,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "027",
+        "county_name": "Howard County",
+        "reference_area_share": 0.024060913066431617,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "029",
+        "county_name": "Kent County",
+        "reference_area_share": 0.02801510060945435,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "033",
+        "county_name": "Prince George's County",
+        "reference_area_share": 0.05723578856927691,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "035",
+        "county_name": "Queen Anne's County",
+        "reference_area_share": 0.03438657740824851,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "037",
+        "county_name": "St. Mary's County",
+        "reference_area_share": 0.04065523200452912,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "039",
+        "county_name": "Somerset County",
+        "reference_area_share": 0.016546668410167373,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "041",
+        "county_name": "Talbot County",
+        "reference_area_share": 0.02874470404499441,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "043",
+        "county_name": "Washington County",
+        "reference_area_share": 0.051152978659032323,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "045",
+        "county_name": "Wicomico County",
+        "reference_area_share": 0.04078996789223372,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "047",
+        "county_name": "Worcester County",
+        "reference_area_share": 0.05312630994708882,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "510",
+        "county_name": "Baltimore City",
+        "reference_area_share": 0.011661620356540057,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      }
+    ],
+    "flagged_counties": [
+      {
+        "county_fips": "005",
+        "county_name": "Baltimore County",
+        "reference_area_share": 0.061401225168657925,
+        "selected_area_share": 0.74,
+        "location_quotient": 12.051876782056961,
+        "flagged": true
+      }
+    ],
+    "flagged": true
+  },
+  "candidate_pool_county_concentration": {
+    "counties": [
+      {
+        "county_fips": "003",
+        "county_name": "Anne Arundel County",
+        "reference_area_share": 0.04711955611516406,
+        "selected_area_share": 0.2616020716437797,
+        "location_quotient": 5.55187894818879,
+        "flagged": false
+      },
+      {
+        "county_fips": "025",
+        "county_name": "Harford County",
+        "reference_area_share": 0.041519248214504055,
+        "selected_area_share": 0.13449397929655843,
+        "location_quotient": 3.239316343150337,
+        "flagged": false
+      },
+      {
+        "county_fips": "017",
+        "county_name": "Charles County",
+        "reference_area_share": 0.049061073647895755,
+        "selected_area_share": 0.11110372190047076,
+        "location_quotient": 2.2646002959055918,
+        "flagged": false
+      },
+      {
+        "county_fips": "005",
+        "county_name": "Baltimore County",
+        "reference_area_share": 0.061401225168657925,
+        "selected_area_share": 0.10817995397939968,
+        "location_quotient": 1.7618533454706995,
+        "flagged": false
+      },
+      {
+        "county_fips": "023",
+        "county_name": "Garrett County",
+        "reference_area_share": 0.07559622674481599,
+        "selected_area_share": 0.09063725873949703,
+        "location_quotient": 1.1989653801829796,
+        "flagged": false
+      },
+      {
+        "county_fips": "013",
+        "county_name": "Carroll County",
+        "reference_area_share": 0.04507792936520097,
+        "selected_area_share": 0.07017077657393679,
+        "location_quotient": 1.5566548322449538,
+        "flagged": false
+      },
+      {
+        "county_fips": "009",
+        "county_name": "Calvert County",
+        "reference_area_share": 0.021939336391489376,
+        "selected_area_share": 0.06674180095832558,
+        "location_quotient": 3.0421066420320626,
+        "flagged": false
+      },
+      {
+        "county_fips": "021",
+        "county_name": "Frederick County",
+        "reference_area_share": 0.07223231527052289,
+        "selected_area_share": 0.03947105990410716,
+        "location_quotient": 0.5464460021291164,
+        "flagged": false
+      },
+      {
+        "county_fips": "037",
+        "county_name": "St. Mary's County",
+        "reference_area_share": 0.04065523200452912,
+        "selected_area_share": 0.03508493729351161,
+        "location_quotient": 0.8629870145521008,
+        "flagged": false
+      },
+      {
+        "county_fips": "043",
+        "county_name": "Washington County",
+        "reference_area_share": 0.051152978659032323,
+        "selected_area_share": 0.027775934129845865,
+        "location_quotient": 0.5429973944428618,
+        "flagged": false
+      },
+      {
+        "county_fips": "027",
+        "county_name": "Howard County",
+        "reference_area_share": 0.024060913066431617,
+        "selected_area_share": 0.01315702142992699,
+        "location_quotient": 0.5468213693138229,
+        "flagged": false
+      },
+      {
+        "county_fips": "011",
+        "county_name": "Caroline County",
+        "reference_area_share": 0.034726866416957526,
+        "selected_area_share": 0.011695130159935101,
+        "location_quotient": 0.3367747040436748,
+        "flagged": false
+      },
+      {
+        "county_fips": "001",
+        "county_name": "Allegany County",
+        "reference_area_share": 0.04634875443080398,
+        "selected_area_share": 0.010881767480810826,
+        "location_quotient": 0.23478014920674248,
+        "flagged": false
+      },
+      {
+        "county_fips": "041",
+        "county_name": "Talbot County",
+        "reference_area_share": 0.02874470404499441,
+        "selected_area_share": 0.008771347619951325,
+        "location_quotient": 0.3051465621709458,
+        "flagged": false
+      },
+      {
+        "county_fips": "031",
+        "county_name": "Montgomery County",
+        "reference_area_share": 0.04711711912665534,
+        "selected_area_share": 0.007309456349959438,
+        "location_quotient": 0.1551337706006795,
+        "flagged": false
+      },
+      {
+        "county_fips": "047",
+        "county_name": "Worcester County",
+        "reference_area_share": 0.05312630994708882,
+        "selected_area_share": 0.0029237825399837753,
+        "location_quotient": 0.055034549602555084,
+        "flagged": false
+      },
+      {
+        "county_fips": "015",
+        "county_name": "Cecil County",
+        "reference_area_share": 0.039697462947889256,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "019",
+        "county_name": "Dorchester County",
+        "reference_area_share": 0.03178702519144572,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "029",
+        "county_name": "Kent County",
+        "reference_area_share": 0.02801510060945435,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "033",
+        "county_name": "Prince George's County",
+        "reference_area_share": 0.05723578856927691,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "035",
+        "county_name": "Queen Anne's County",
+        "reference_area_share": 0.03438657740824851,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "039",
+        "county_name": "Somerset County",
+        "reference_area_share": 0.016546668410167373,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "045",
+        "county_name": "Wicomico County",
+        "reference_area_share": 0.04078996789223372,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      },
+      {
+        "county_fips": "510",
+        "county_name": "Baltimore City",
+        "reference_area_share": 0.011661620356540057,
+        "selected_area_share": 0.0,
+        "location_quotient": 0.0,
+        "flagged": false
+      }
+    ],
+    "flagged_counties": [],
+    "flagged": false
+  },
+  "weight_sensitivity_concentration": {
+    "status": "COMPLETE",
+    "scenario_count": 10,
+    "selection_count": 50,
+    "counties": [
+      {
+        "county_fips": "005",
+        "county_name": "Baltimore County",
+        "selection_count": 20,
+        "selection_share": 0.4,
+        "reference_area_share": 0.061401225168657925,
+        "location_quotient": 6.514527990301061,
+        "flagged": true
+      },
+      {
+        "county_fips": "003",
+        "county_name": "Anne Arundel County",
+        "selection_count": 20,
+        "selection_share": 0.4,
+        "reference_area_share": 0.04711955611516406,
+        "location_quotient": 8.48904431574795,
+        "flagged": true
+      },
+      {
+        "county_fips": "025",
+        "county_name": "Harford County",
+        "selection_count": 8,
+        "selection_share": 0.16,
+        "reference_area_share": 0.041519248214504055,
+        "location_quotient": 3.853634323371652,
+        "flagged": false
+      },
+      {
+        "county_fips": "023",
+        "county_name": "Garrett County",
+        "selection_count": 1,
+        "selection_share": 0.02,
+        "reference_area_share": 0.07559622674481599,
+        "location_quotient": 0.2645634691201238,
+        "flagged": false
+      },
+      {
+        "county_fips": "031",
+        "county_name": "Montgomery County",
+        "selection_count": 1,
+        "selection_share": 0.02,
+        "reference_area_share": 0.04711711912665534,
+        "location_quotient": 0.4244741692767353,
+        "flagged": false
+      }
+    ],
+    "flagged_counties": [
+      {
+        "county_fips": "005",
+        "county_name": "Baltimore County",
+        "selection_count": 20,
+        "selection_share": 0.4,
+        "reference_area_share": 0.061401225168657925,
+        "location_quotient": 6.514527990301061,
+        "flagged": true
+      },
+      {
+        "county_fips": "003",
+        "county_name": "Anne Arundel County",
+        "selection_count": 20,
+        "selection_share": 0.4,
+        "reference_area_share": 0.04711955611516406,
+        "location_quotient": 8.48904431574795,
+        "flagged": true
+      }
+    ],
+    "flagged": true
+  },
+  "material_flags": {
+    "top_zone_disparities": [
+      "pollution_burden_percentile"
+    ],
+    "candidate_pool_disparities": [],
+    "top_zone_county_concentration": true,
+    "candidate_pool_county_concentration": false,
+    "sensitivity_county_concentration": true,
+    "blocked_equity_gate_present": false
+  },
+  "limitations": [
+    "The audit measures spatial selection outcomes, not individual exposure or causation.",
+    "Census-tract attributes are repeated across grid cells and are not parcel-level measurements.",
+    "Passing the audit does not replace community engagement or civil-rights review.",
+    "Candidate zones require parcel, zoning, utility-capacity, engineering, and environmental due diligence."
+  ]
+}

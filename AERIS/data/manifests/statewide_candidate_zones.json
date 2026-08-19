@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "pipeline": "statewide_candidate_zones_and_bias_audit",
+  "snapshot_label": "2026-07-31",
+  "input": {
+    "final_grid": "data/derived/maryland_grid_1km_final.gpkg",
+    "final_grid_sha256": "7d20478563ecd9766378b47a97e3f3e3c74562790741e3a80f2bb079eabe0ded",
+    "final_model_manifest": "data/manifests/statewide_climate_final.json",
+    "final_model_manifest_sha256": "9defa73d9c1c374a72de03cb8633bee0b1eea2dcc57de3aac94a565d778e1299"
+  },
+  "zone_method": {
+    "adjacency": "rook",
+    "rank_weights": {
+      "mean_score": 0.6,
+      "p90_score": 0.25,
+      "maximum_score": 0.15
+    },
+    "auto": {
+      "eligibility_column": "auto_screen_eligible",
+      "minimum_score": 0.7,
+      "maximum_score": 1.0,
+      "minimum_land_fraction": 0.5,
+      "minimum_zone_cells": 2,
+      "minimum_zone_area_sq_km": 1.5,
+      "top_n": 5,
+      "minimum_zone_spacing_m": 10000
+    },
+    "exploration": {
+      "eligibility_column": "exploration_screen_eligible",
+      "minimum_score": 0.7,
+      "maximum_score": 0.9,
+      "minimum_land_fraction": 0.5,
+      "minimum_zone_cells": 1,
+      "minimum_zone_area_sq_km": 0.5,
+      "top_n": 10,
+      "minimum_zone_spacing_m": 5000
+    }
+  },
+  "counts": {
+    "grid_cells": 27596,
+    "auto_zone_count": 83,
+    "exploration_zone_count": 275,
+    "top_zone_count": 5,
+    "top3_zone_count": 3,
+    "top5_zone_count": 5,
+    "auto_zone_cell_memberships": 685,
+    "exploration_zone_cell_memberships": 2180
+  },
+  "top_zone_ids": [
+    "AUTO-Z001",
+    "AUTO-Z002",
+    "AUTO-Z005",
+    "AUTO-Z007",
+    "AUTO-Z008"
+  ],
+  "top_zone_score_statistics": {
+    "count": 5,
+    "minimum": 0.77,
+    "median": 0.799,
+    "mean": 0.812,
+    "maximum": 0.866
+  },
+  "top_zone_area_statistics_sq_km": {
+    "count": 5,
+    "minimum": 2.0,
+    "median": 8.0,
+    "mean": 10.0,
+    "maximum": 28.0
+  },
+  "audit": {
+    "status": "FLAGGED",
+    "release_status": "REVIEW_REQUIRED",
+    "screening_shortlist_ready": false,
+    "automated_recommendation_ready": false,
+    "technical_score_uses_demographics": false,
+    "material_flags": {
+      "top_zone_disparities": [
+        "pollution_burden_percentile"
+      ],
+      "candidate_pool_disparities": [],
+      "top_zone_county_concentration": true,
+      "candidate_pool_county_concentration": false,
+      "sensitivity_county_concentration": true,
+      "blocked_equity_gate_present": false
+    }
+  },
+  "terminology": {
+    "allowed": "Regional screening candidate zone",
+    "not_yet_allowed": [
+      "Recommended build site",
+      "Approved development site",
+      "Investment-ready parcel"
+    ]
+  },
+  "required_next_stage": [
+    "Parcel and contiguous-land analysis",
+    "Zoning and land-use compatibility",
+    "Wetlands and sensitive receptors",
+    "Utility capacity and interconnection study",
+    "Ownership and acquisition feasibility",
+    "Community engagement and public-health review"
+  ],
+  "outputs": {
+    "auto_zones": "data/derived/maryland_candidate_zones_auto.gpkg",
+    "exploration_zones": "data/derived/maryland_candidate_zones_exploration.gpkg",
+    "top_zones": "data/derived/maryland_candidate_zones_top5.geojson",
+    "zone_membership": "data/derived/maryland_candidate_zone_membership.csv",
+    "score_band_summary": "data/manifests/statewide_score_band_summary.json",
+    "bias_audit": "data/manifests/statewide_bias_audit.json"
+  },
+  "output_checksums": {
+    "auto_zones": "4b48490053b96e3f19e54ae4440e37c4e20b756bbf870e62a77f2334c5f81592",
+    "exploration_zones": "54a072320aa700e8e5bd9c1520c045e3cd0bf10dfee633df58518cdb9415ba8d",
+    "top_zones": "2ca6ad78d40b52fbf13cf4ccc13b46b73bfe27a70e3961cbe96f17eb6a17344f",
+    "zone_membership": "419fe0e8e0c9da05fc7375a79d4376fd3c40c38f577b8c2fed23e1b26eb3f132",
+    "score_band_summary": "dfa51f8490bf20da84a90fab5dfb28fa015d6c05773dec10d9ad330308cefabc",
+    "bias_audit": "8ddc626f8ada8e818ff7d71a019bcf977cc4e7efc35b817315247df1f15c6a6b"
+  }
+}

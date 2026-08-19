@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "pipeline": "statewide_foundation_join",
-  "generated_at_utc": "2026-07-31T00:20:42.631501+00:00",
+  "generated_at_utc": "2026-08-01T15:35:28.180809+00:00",
   "target_crs": "EPSG:26985",
   "join_method": {
     "primary": "grid representative point within TIGER tract",
@@ -63,12 +63,15 @@
     "grid_primary_join_duplicates": 0,
     "grid_nearest_fallbacks": 1,
     "grid_unmatched_cells": 1,
-    "foundation_complete_cells": 0,
+    "foundation_complete_cells": 27591,
     "regional_land_threshold_cells": 26415,
-    "foundation_screen_ready_cells": 0
+    "foundation_screen_ready_cells": 26414
   },
   "equity_gate_counts_by_tract": {
-    "INSUFFICIENT_DATA": 1475
+    "HIGH_BURDEN": 976,
+    "CAUTION": 321,
+    "PASS": 166,
+    "INSUFFICIENT_DATA": 12
   },
   "population_statistics": {
     "minimum_density_people_sq_km": 0.0,
@@ -87,7 +90,7 @@
     "unmatched_enviroscreen": "data/interim/statewide/enviroscreen_unmatched_tracts.csv"
   },
   "output_checksums": {
-    "standardized_tracts": "edac928bbc73db33604da310b533f70521d10779aef25c5105d7dd368dae26db",
-    "enriched_grid": "6b54bb7d0ed76148d68ac85f433df1f596bc7c49721f0971df0ca99793dbaae7"
+    "standardized_tracts": "2f732ade20878e5558ec15f8ea2a352e5313b3eee3048cad7d05fede0c226417",
+    "enriched_grid": "451b65eec05628fdbd18d6ac8ae234d82343369804f86d3e10694cc9148fa5be"
   }
 }

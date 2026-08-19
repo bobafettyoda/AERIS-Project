@@ -18,3 +18,6 @@ AERIS/data/interim/
 # Partial and temporary data files
 *.part
 *.tmp
+
+# AERIS generated statewide tables
+AERIS/data/derived/*.csv

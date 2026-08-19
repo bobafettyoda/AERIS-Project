@@ -2,7 +2,7 @@
   "schema_version": 1,
   "pipeline": "statewide_environmental_constraints",
   "snapshot_label": "2026-07-30",
-  "generated_at_utc": "2026-07-31T02:04:56.642991+00:00",
+  "generated_at_utc": "2026-08-01T15:44:30.168517+00:00",
   "snapshot": {
     "target_crs": "EPSG:26985",
     "buffer_m": 10000.0,
@@ -327,10 +327,10 @@
     "preview": "data/derived/maryland_grid_1km_environmental_points.geojson"
   },
   "output_checksums": {
-    "combined_water": "c0b6ffe2f20ec082742c75f7613899e0dcc7ab650f8bc644d2e824967ba3dd36",
+    "combined_water": "c49fb9bc93c55173a52725cd6ac173eef7e3ae9213a0218b4b5b9f69c9b644ee",
     "sfha": "32cc6121f9422893ac1d24e10ccba01ace68ba8f6570db470113e27a89b77ae5",
-    "combined_protected": "21508ba3a556b7e8c8af240589081d94c5988f879884d328b5d8d589ce055e41",
-    "scored_grid": "e7d4c7918c5d07a4f3e3814c3e42e7e312567ede3dec7d880d752cb2fa4c211e",
-    "preview": "55ea2ddbff321782312ffe66f4672a16442342d110f33c366587ca7aa1c78a99"
+    "combined_protected": "4a9c681d3799e88d41d27ad11ef618de005c6c1048f6edbb75f67f3fa03753a4",
+    "scored_grid": "69fcbdc4f8b3cf37a735ccc3cb5de2d0797531b20646872ca58e5836c14c1a27",
+    "preview": "21d6ccb880ccb151ff9571417481687662b10ba47617308d60477af1e301b75f"
   }
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "pipeline": "statewide_grid_infrastructure",
-  "generated_at_utc": "2026-07-31T00:20:59.517378+00:00",
+  "generated_at_utc": "2026-08-01T15:37:06.408570+00:00",
   "snapshot_label": "2026-07-30",
   "source_audit": {
     "path": "data/manifests/grid_infrastructure_source_audit.json",
@@ -34,9 +34,9 @@
         "MAX_VOLT",
         "MIN_VOLT"
       ],
-      "source_object_count": 1534,
+      "source_object_count": 948,
       "snapshot_feature_count": 948,
-      "used_cache": false,
+      "used_cache": true,
       "sha256": "e5854ef5aa67a6a5f405d633fd3f5f834d9e3b1fc257abc95a1a7d51d93da755",
       "regional_feature_counts": {
         "western_maryland": 182,
@@ -63,9 +63,9 @@
         "VAL_METHOD",
         "VAL_DATE"
       ],
-      "source_object_count": 1560,
+      "source_object_count": 1003,
       "snapshot_feature_count": 1003,
-      "used_cache": false,
+      "used_cache": true,
       "sha256": "2f418615da0691c00adc1e7111030ce825653d1eec5204f5e4ce99c84e41a2e5",
       "regional_feature_counts": {
         "western_maryland": 188,
@@ -133,7 +133,7 @@
     "preview": "data/derived/maryland_grid_1km_grid_infrastructure_points.geojson"
   },
   "output_checksums": {
-    "scored_grid": "53cf4ec95b4cb304be641e33b8731af8ae897f9ba3138713b915acffda338c67",
-    "preview": "a8a48b9aa12010b77e480f6da5ad66d39764f3fdd873cf04eaca307e1b7e880f"
+    "scored_grid": "e26002f00acaf3816fae8ab1c2ff63708cbcb1e41c651bbe0f3bd1acab84da65",
+    "preview": "1f297c78e33e5173967d6f9293f4a566e078aca8dbf4092e58b1671c40d86638"
   }
 }

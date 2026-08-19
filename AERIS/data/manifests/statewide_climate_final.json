@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "pipeline": "statewide_climate_and_final_model",
+  "snapshot_label": "2026-07-31",
+  "generated_at_utc": "2026-08-01T15:45:12.794601+00:00",
+  "climate_source": {
+    "provider": "NASA POWER",
+    "endpoint": "https://power.larc.nasa.gov/api/temporal/climatology/regional",
+    "request_parameters": {
+      "latitude-min": 37.1775279,
+      "latitude-max": 40.4724124,
+      "longitude-min": -80.2344743,
+      "longitude-max": -74.3008932,
+      "parameters": "T2M",
+      "community": "RE",
+      "format": "JSON"
+    },
+    "parameter": "T2M",
+    "community": "RE",
+    "format": "JSON",
+    "source_point_count": 60,
+    "source_products": [
+      "MERRA2"
+    ],
+    "climatology_period": null,
+    "api": {
+      "version": "v2.9.7",
+      "name": "POWER Climatology API"
+    },
+    "time_standard": "LST",
+    "fill_value": -999.0,
+    "units": "C",
+    "long_name": "Temperature at 2 Meters",
+    "raw_snapshot_sha256": "65c592daeb55118e25ae4af6572f79be7939b07cdab1e315c8699953e173c757"
+  },
+  "assignment": {
+    "method": "nearest_nasa_power_source_point",
+    "target_crs": "EPSG:26985",
+    "maximum_source_distance_m": 60000.0,
+    "distance_statistics_m": {
+      "count": 27596,
+      "minimum": 252.755,
+      "median": 22053.693,
+      "mean": 21137.831,
+      "maximum": 38611.907
+    }
+  },
+  "climate_scoring": {
+    "method": "nasa_power_temperature_proxy",
+    "criterion_weight": 0.25,
+    "annual_component_weight": 0.6,
+    "july_component_weight": 0.4,
+    "annual_temperature_points": [
+      {
+        "temperature_c": 8,
+        "score": 1.0
+      },
+      {
+        "temperature_c": 12,
+        "score": 0.9
+      },
+      {
+        "temperature_c": 16,
+        "score": 0.7
+      },
+      {
+        "temperature_c": 20,
+        "score": 0.4
+      },
+      {
+        "temperature_c": 24,
+        "score": 0.1
+      }
+    ],
+    "july_temperature_points": [
+      {
+        "temperature_c": 18,
+        "score": 1.0
+      },
+      {
+        "temperature_c": 22,
+        "score": 0.85
+      },
+      {
+        "temperature_c": 26,
+        "score": 0.65
+      },
+      {
+        "temperature_c": 30,
+        "score": 0.35
+      },
+      {
+        "temperature_c": 34,
+        "score": 0.1
+      }
+    ],
+    "score_statistics": {
+      "count": 27596,
+      "minimum": 0.7,
+      "median": 0.77,
+      "mean": 0.785,
+      "maximum": 0.927
+    }
+  },
+  "final_model": {
+    "criteria": [
+      "climate",
+      "grid_infrastructure",
+      "telecom_infrastructure",
+      "protected_areas",
+      "water_bodies",
+      "population_density",
+      "road_access",
+      "hydro_hazard"
+    ],
+    "score_columns": {
+      "climate": "climate_score",
+      "grid_infrastructure": "grid_infrastructure_score",
+      "telecom_infrastructure": "telecom_infrastructure_score",
+      "protected_areas": "protected_areas_score",
+      "water_bodies": "water_bodies_score",
+      "population_density": "population_density_score",
+      "road_access": "road_access_score",
+      "hydro_hazard": "hydro_hazard_score"
+    },
+    "weights": {
+      "climate": 0.25,
+      "grid_infrastructure": 0.154,
+      "telecom_infrastructure": 0.154,
+      "protected_areas": 0.154,
+      "water_bodies": 0.0847,
+      "population_density": 0.0847,
+      "road_access": 0.0795,
+      "hydro_hazard": 0.039
+    },
+    "configured_weight_total": 0.9999,
+    "weight_normalization": true,
+    "technical_score_statistics": {
+      "count": 27591,
+      "minimum": 0.232,
+      "median": 0.576,
+      "mean": 0.577,
+      "maximum": 0.926
+    },
+    "effective_score_statistics": {
+      "count": 27591,
+      "minimum": 0.0,
+      "median": 0.536,
+      "mean": 0.364,
+      "maximum": 0.926
+    },
+    "cell_count": 27596,
+    "complete_cells": 27591,
+    "insufficient_data_cells": 5,
+    "hard_excluded_cells": 12252,
+    "auto_screen_eligible_cells": 2994,
+    "exploration_screen_eligible_cells": 5329,
+    "bias_audit_pending": true,
+    "automated_recommendation_ready": false,
+    "demographic_fields_used_in_technical_score": false
+  },
+  "known_point_review": {
+    "input_latitude": 38.9897,
+    "input_longitude": -76.9378,
+    "nearest_grid_cell": "MD1K-R117-C220",
+    "grid_cell_latitude": 38.9864146,
+    "grid_cell_longitude": -76.936518,
+    "annual_mean_temperature_c": 13.15,
+    "july_mean_temperature_c": 25.79,
+    "statewide_climate_score": 0.7697,
+    "point_evaluator_climate_score": 0.7697,
+    "absolute_score_difference": 0.0,
+    "technical_suitability_score": 0.829722,
+    "hard_excluded": false,
+    "equity_gate": "HIGH_BURDEN",
+    "note": "The statewide value is assigned from the nearest NASA POWER regional climatology source point, while the v0.1 evaluator queried the selected coordinate directly. Small differences are expected.\n"
+  },
+  "environmental_input": {
+    "manifest": "data/manifests/statewide_environmental_constraints.json",
+    "sha256": "951cd3b1622c0e2b1fc7bfb4efde4b2ec57e0efebeda2d01e1c4fac405e7b00e",
+    "environmental_exclusion_cells": 12252
+  },
+  "outputs": {
+    "raw_snapshot": "data/raw/climate/2026-07-31/nasa_power_t2m_climatology.json",
+    "climate_points": "data/interim/statewide/nasa_power_t2m_climatology.gpkg",
+    "final_grid": "data/derived/maryland_grid_1km_final.gpkg",
+    "preview": "data/derived/maryland_grid_1km_final_points.geojson"
+  },
+  "output_checksums": {
+    "climate_points": "598c34811a742936bac939f6244ecb04451ceb46f0c996e3ad4ba98b0a1b4d8b",
+    "final_grid": "7d20478563ecd9766378b47a97e3f3e3c74562790741e3a80f2bb079eabe0ded",
+    "preview": "483c915ad0e00f9756a3ebccd813ecd8f1c9d55514d9c9ac83694f9047e84085"
+  }
+}

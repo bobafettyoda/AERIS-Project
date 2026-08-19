@@ -1,0 +1,159 @@
+version: 1
+snapshot_label: "2026-07-31"
+
+inputs:
+  final_grid:
+    path: data/derived/maryland_grid_1km_final.gpkg
+    layer: cells
+
+  decision_model:
+    path: configs/decision_models/data_center_maryland_demo.yaml
+
+  final_model_manifest:
+    path: data/manifests/statewide_climate_final.json
+
+outputs:
+  auto_zones:
+    path: data/derived/maryland_candidate_zones_auto.gpkg
+    layer: candidate_zones
+
+  exploration_zones:
+    path: data/derived/maryland_candidate_zones_exploration.gpkg
+    layer: candidate_zones
+
+  top_zones:
+    path: data/derived/maryland_candidate_zones_top5.geojson
+
+  zone_membership:
+    path: data/derived/maryland_candidate_zone_membership.csv
+
+  score_band_summary:
+    path: data/manifests/statewide_score_band_summary.json
+
+  bias_audit:
+    path: data/manifests/statewide_bias_audit.json
+
+  manifest:
+    path: data/manifests/statewide_candidate_zones.json
+
+zone_build:
+  adjacency: rook
+
+  rank_weights:
+    mean_score: 0.60
+    p90_score: 0.25
+    maximum_score: 0.15
+
+  auto:
+    eligibility_column: auto_screen_eligible
+    minimum_score: 0.70
+    maximum_score: 1.00
+    minimum_land_fraction: 0.50
+    minimum_zone_cells: 2
+    minimum_zone_area_sq_km: 1.50
+    top_n: 5
+    minimum_zone_spacing_m: 10000
+
+  exploration:
+    eligibility_column: exploration_screen_eligible
+    minimum_score: 0.70
+    maximum_score: 0.90
+    minimum_land_fraction: 0.50
+    minimum_zone_cells: 1
+    minimum_zone_area_sq_km: 0.50
+    top_n: 10
+    minimum_zone_spacing_m: 5000
+
+score_bands:
+  - id: emerging_opportunity
+    label: Emerging opportunity
+    minimum: 0.70
+    maximum: 0.75
+
+  - id: moderate_suitability
+    label: Moderate suitability
+    minimum: 0.75
+    maximum: 0.80
+
+  - id: strong_suitability
+    label: Strong suitability
+    minimum: 0.80
+    maximum: 0.85
+
+  - id: very_strong_suitability
+    label: Very strong suitability
+    minimum: 0.85
+    maximum: 0.90
+
+  - id: premium_technical
+    label: Premium technical suitability
+    minimum: 0.90
+    maximum: 1.00
+
+bias_audit:
+  reference_cohort: >
+    All technically complete Maryland cells that meet the
+    regional land threshold and are not hard excluded.
+
+  selected_cohort: >
+    Cells contained in the geographically separated top-five
+    baseline auto-screen candidate zones.
+
+  minimum_selected_cells: 10
+  maximum_selected_missing_fraction: 0.05
+
+  indicators:
+    - column: ej_percentile
+      label: Environmental-justice percentile
+      threshold: 75
+
+    - column: pollution_burden_percentile
+      label: Pollution-burden percentile
+      threshold: 75
+
+    - column: environmental_effects_percentile
+      label: Environmental-effects percentile
+      threshold: 75
+
+    - column: sensitive_populations_percentile
+      label: Sensitive-populations percentile
+      threshold: 75
+
+    - column: minority_or_hispanic_pct
+      label: Minority or Hispanic population
+      threshold: 50
+
+    - column: low_income_pct
+      label: Low-income population
+      threshold: 25
+
+    - column: limited_english_pct
+      label: Limited-English population
+      threshold: 15
+
+  disparity_thresholds:
+    representation_ratio: 1.25
+    percentage_point_difference: 5.0
+    standardized_mean_difference: 0.25
+
+  concentration_thresholds:
+    selected_county_share: 0.40
+    county_location_quotient: 2.00
+
+  sensitivity:
+    criterion_multiplier: 1.25
+    include_equal_weights: true
+    minimum_score: 0.70
+    top_n: 5
+    minimum_spacing_m: 10000
+
+release:
+  minimum_top_zones: 3
+  screening_shortlist_requires_audit_pass: true
+  automated_recommendation_ready: false
+
+limitations:
+  - The audit measures spatial selection outcomes, not individual exposure or causation.
+  - Census-tract attributes are repeated across grid cells and are not parcel-level measurements.
+  - Passing the audit does not replace community engagement or civil-rights review.
+  - Candidate zones require parcel, zoning, utility-capacity, engineering, and environmental due diligence.
