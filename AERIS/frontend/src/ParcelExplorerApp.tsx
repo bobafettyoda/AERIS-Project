@@ -23,10 +23,12 @@ import {
   fetchParcelConstraints,
   fetchParcelDetail,
   fetchParcelEnvelopes,
+  fetchParcelGridEvidence,
   fetchZoneParcels,
   type ParcelDetail,
   type ParcelEnvelopeCollection,
   type ParcelFeatureCollection,
+  type ParcelGridEvidenceCollection,
 } from "./parcelApi";
 
 import {
@@ -217,7 +219,15 @@ export default function ParcelExplorerApp() {
     "parcels"
     | "envelopes"
     | "constraints"
+    | "grid"
   >("parcels");
+
+  const [
+    gridEvidence,
+    setGridEvidence,
+  ] = useState<ParcelGridEvidenceCollection | null>(
+    null,
+  );
 
   const [
     loadingParcels,
@@ -372,6 +382,14 @@ export default function ParcelExplorerApp() {
 
       map.addSource(
         "parcel-constraints",
+        {
+          type: "geojson",
+          data: EMPTY_COLLECTION,
+        },
+      );
+
+      map.addSource(
+        "parcel-grid-evidence",
         {
           type: "geojson",
           data: EMPTY_COLLECTION,
@@ -556,6 +574,134 @@ export default function ParcelExplorerApp() {
         paint: {
           "line-color": "#064e3b",
           "line-width": 1.8,
+        },
+      });
+
+      map.addLayer({
+        id: "parcel-grid-transmission",
+        type: "line",
+        source: "parcel-grid-evidence",
+        filter: [
+          "==",
+          ["get", "evidence_kind"],
+          "TRANSMISSION_LINE",
+        ],
+        layout: {
+          visibility: "none",
+        },
+        paint: {
+          "line-color": [
+            "match",
+            [
+              "get",
+              "transmission_voltage_class",
+            ],
+            "EXTRA_HIGH_345_KV_PLUS",
+            "#7c3aed",
+            "HIGH_230_TO_344_KV",
+            "#dc2626",
+            "REGIONAL_115_TO_229_KV",
+            "#ea580c",
+            "SUBTRANSMISSION_69_TO_114_KV",
+            "#ca8a04",
+            "BELOW_69_KV",
+            "#65a30d",
+            "#64748b",
+          ],
+          "line-width": [
+            "interpolate",
+            ["linear"],
+            [
+              "coalesce",
+              [
+                "get",
+                "transmission_voltage_kv",
+              ],
+              69,
+            ],
+            69,
+            1.4,
+            230,
+            3,
+            500,
+            5,
+          ],
+          "line-opacity": 0.9,
+        },
+      });
+
+      map.addLayer({
+        id: "parcel-grid-connectors",
+        type: "line",
+        source: "parcel-grid-evidence",
+        filter: [
+          "any",
+          [
+            "==",
+            ["get", "evidence_kind"],
+            "TRANSMISSION_CONNECTOR",
+          ],
+          [
+            "==",
+            ["get", "evidence_kind"],
+            "SUBSTATION_CONNECTOR",
+          ],
+        ],
+        layout: {
+          visibility: "none",
+        },
+        paint: {
+          "line-color": [
+            "match",
+            ["get", "evidence_kind"],
+            "TRANSMISSION_CONNECTOR",
+            "#0f766e",
+            "#1d4ed8",
+          ],
+          "line-width": 1.1,
+          "line-dasharray": [
+            3,
+            2,
+          ],
+          "line-opacity": 0.48,
+        },
+      });
+
+      map.addLayer({
+        id: "parcel-grid-substations",
+        type: "circle",
+        source: "parcel-grid-evidence",
+        filter: [
+          "==",
+          ["get", "evidence_kind"],
+          "SUBSTATION",
+        ],
+        layout: {
+          visibility: "none",
+        },
+        paint: {
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            [
+              "coalesce",
+              [
+                "get",
+                "substation_max_voltage_kv",
+              ],
+              69,
+            ],
+            69,
+            4,
+            230,
+            7,
+            500,
+            10,
+          ],
+          "circle-color": "#1d4ed8",
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 1.2,
+          "circle-opacity": 0.92,
         },
       });
 
@@ -771,6 +917,25 @@ export default function ParcelExplorerApp() {
   ]);
 
 
+  useEffect(() => {
+    if (
+      !mapReady
+      || !mapRef.current
+    ) {
+      return;
+    }
+
+    sourceData(
+      mapRef.current,
+      "parcel-grid-evidence",
+      gridEvidence ?? EMPTY_COLLECTION,
+    );
+  }, [
+    gridEvidence,
+    mapReady,
+  ]);
+
+
   function loadSelectedZone(): void {
     if (!selectedZoneId) {
       return;
@@ -781,6 +946,7 @@ export default function ParcelExplorerApp() {
     setParcelDetail(null);
     setEnvelopes(null);
     setConstraints(null);
+    setGridEvidence(null);
 
     fetchZoneParcels(
       selectedZoneId
@@ -797,11 +963,15 @@ export default function ParcelExplorerApp() {
         const [
           envelopeResult,
           constraintResult,
+          gridResult,
         ] = await Promise.all([
           fetchParcelEnvelopes(
             scopeId
           ),
           fetchParcelConstraints(
+            scopeId
+          ),
+          fetchParcelGridEvidence(
             scopeId
           ),
         ]);
@@ -812,6 +982,10 @@ export default function ParcelExplorerApp() {
 
         setConstraints(
           constraintResult
+        );
+
+        setGridEvidence(
+          gridResult
         );
       })
       .catch(
@@ -895,6 +1069,44 @@ export default function ParcelExplorerApp() {
               Insufficient data
             </div>
           </div>
+
+          {parcelView === "grid" && (
+            <div className="parcel-grid-legend">
+              <strong>
+                Public grid context
+              </strong>
+
+              <div>
+                <span className="grid-swatch extra-high" />
+                345 kV and above
+              </div>
+
+              <div>
+                <span className="grid-swatch high" />
+                230–344 kV
+              </div>
+
+              <div>
+                <span className="grid-swatch regional" />
+                115–229 kV
+              </div>
+
+              <div>
+                <span className="grid-swatch subtransmission" />
+                69–114 kV
+              </div>
+
+              <div>
+                <span className="grid-swatch substation" />
+                Mapped substation
+              </div>
+
+              <p>
+                Voltage and proximity do not
+                establish available capacity.
+              </p>
+            </div>
+          )}
 
           {parcelView === "constraints" && (
             <div className="parcel-constraint-legend">
@@ -1051,6 +1263,22 @@ export default function ParcelExplorerApp() {
                     }}
                   >
                     Constraints
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      parcelView === "grid"
+                        ? "active"
+                        : undefined
+                    }
+                    onClick={() => {
+                      setParcelView(
+                        "grid"
+                      );
+                    }}
+                  >
+                    Grid
                   </button>
                 </div>
               </div>

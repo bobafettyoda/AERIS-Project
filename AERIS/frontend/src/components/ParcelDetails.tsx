@@ -460,6 +460,254 @@ export function ParcelDetails({
         </>
       )}
 
+      {parcel.grid_feasibility && (
+        <>
+          <h3 className="parcel-grid-heading">
+            Public mapped-grid context
+          </h3>
+
+          <div className="parcel-grid-context-card">
+            <strong>
+              {value(
+                parcel.grid_feasibility
+                  .public_grid_context_class,
+              )}
+            </strong>
+
+            <span>
+              Data confidence: {
+                value(
+                  parcel.grid_feasibility
+                    .grid_data_confidence,
+                )
+              }
+            </span>
+          </div>
+
+          <div className="parcel-stat-grid">
+            <div>
+              <span>
+                Nearest transmission
+              </span>
+
+              <strong>
+                {
+                  typeof parcel
+                    .grid_feasibility
+                    .nearest_transmission
+                    .distance_m
+                  === "number"
+                    ? (
+                      parcel
+                        .grid_feasibility
+                        .nearest_transmission
+                        .distance_m
+                      >= 1000
+                        ? (
+                          (
+                            parcel
+                              .grid_feasibility
+                              .nearest_transmission
+                              .distance_m
+                            / 1000
+                          ).toFixed(2)
+                          + " km"
+                        )
+                        : (
+                          Math.round(
+                            parcel
+                              .grid_feasibility
+                              .nearest_transmission
+                              .distance_m
+                          )
+                          + " m"
+                        )
+                    )
+                    : "Not available"
+                }
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Nearest line voltage
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel.grid_feasibility
+                    .nearest_transmission
+                    .voltage_kv,
+                  0,
+                )}
+                {" kV"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Line voltage class
+              </span>
+
+              <strong>
+                {value(
+                  parcel.grid_feasibility
+                    .nearest_transmission
+                    .voltage_class,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Line owner
+              </span>
+
+              <strong>
+                {value(
+                  parcel.grid_feasibility
+                    .nearest_transmission
+                    .owner,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Lines within 5 km
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel.grid_feasibility
+                    .transmission_within_5km
+                    .feature_count,
+                  0,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Maximum mapped voltage
+                within 5 km
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel.grid_feasibility
+                    .transmission_within_5km
+                    .maximum_voltage_kv,
+                  0,
+                )}
+                {" kV"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Nearest substation
+              </span>
+
+              <strong>
+                {
+                  typeof parcel
+                    .grid_feasibility
+                    .nearest_substation
+                    .distance_m
+                  === "number"
+                    ? (
+                      parcel
+                        .grid_feasibility
+                        .nearest_substation
+                        .distance_m
+                      >= 1000
+                        ? (
+                          (
+                            parcel
+                              .grid_feasibility
+                              .nearest_substation
+                              .distance_m
+                            / 1000
+                          ).toFixed(2)
+                          + " km"
+                        )
+                        : (
+                          Math.round(
+                            parcel
+                              .grid_feasibility
+                              .nearest_substation
+                              .distance_m
+                          )
+                          + " m"
+                        )
+                    )
+                    : "Not available"
+                }
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Substation maximum voltage
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel.grid_feasibility
+                    .nearest_substation
+                    .maximum_voltage_kv,
+                  0,
+                )}
+                {" kV"}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Substations within 10 km
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel.grid_feasibility
+                    .substations_within_10km
+                    .feature_count,
+                  0,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Capacity status
+              </span>
+
+              <strong>
+                {value(
+                  parcel.grid_feasibility
+                    .capacity.status,
+                )}
+              </strong>
+            </div>
+          </div>
+
+          <div className="parcel-grid-warning">
+            <strong>
+              Capacity is not confirmed
+            </strong>
+
+            <p>
+              {parcel.grid_feasibility.warning}
+              {" "}
+              Utility confirmation and a
+              formal interconnection or
+              service study remain required.
+            </p>
+          </div>
+        </>
+      )}
+
       <details className="parcel-details">
         <summary>
           Source property indicators

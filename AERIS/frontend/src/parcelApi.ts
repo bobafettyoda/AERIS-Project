@@ -131,6 +131,71 @@ export type ParcelDetail = {
     preliminary_envelope_only: true;
   } | null;
 
+  grid_feasibility?: {
+    grid_feasibility_status?: string | null;
+    public_grid_context_class?: string | null;
+    grid_data_confidence?: string | null;
+    statewide_grid_infrastructure_score?:
+      number | null;
+
+    nearest_transmission: {
+      distance_m?: number | null;
+      id?: string | null;
+      type?: string | null;
+      status?: string | null;
+      owner?: string | null;
+      voltage_kv?: number | null;
+      voltage_class?: string | null;
+      source_voltage_class?: string | null;
+      inferred?: boolean | null;
+      substation_1?: string | null;
+      substation_2?: string | null;
+      source_date?: string | null;
+      validation_method?: string | null;
+      data_confidence?: string | null;
+    };
+
+    transmission_within_5km: {
+      feature_count?: number | null;
+      known_voltage_count?: number | null;
+      maximum_voltage_kv?: number | null;
+      distinct_owner_count?: number | null;
+      owners?: string | null;
+    };
+
+    nearest_substation: {
+      distance_m?: number | null;
+      id?: string | null;
+      name?: string | null;
+      type?: string | null;
+      status?: string | null;
+      line_count?: number | null;
+      maximum_voltage_kv?: number | null;
+      minimum_voltage_kv?: number | null;
+      voltage_class?: string | null;
+      source_date?: string | null;
+      validation_method?: string | null;
+      data_confidence?: string | null;
+    };
+
+    substations_within_10km: {
+      feature_count?: number | null;
+      known_voltage_count?: number | null;
+      maximum_voltage_kv?: number | null;
+    };
+
+    capacity: {
+      status: string;
+      available_capacity_mw: null;
+      utility_confirmation_required: true;
+      interconnection_study_required: true;
+      electrical_service_feasibility_confirmed:
+        false;
+    };
+
+    warning: string;
+  } | null;
+
   warning: string;
 };
 
@@ -279,3 +344,55 @@ export async function fetchParcelConstraints(
     ),
   );
 }
+
+
+export type ParcelGridEvidenceCollection =
+  FeatureCollection<
+    Geometry,
+    GeoJsonProperties
+  > & {
+    metadata: {
+      scope_id: string;
+      returned_count: number;
+
+      counts: Record<
+        string,
+        number
+      >;
+
+      context_class_counts:
+        Record<string, number>;
+
+      safeguards: {
+        capacity_status: string;
+        available_capacity_mw: null;
+        capacity_inferred_from_voltage:
+          false;
+        capacity_inferred_from_distance:
+          false;
+        utility_confirmation_required:
+          true;
+        interconnection_study_required:
+          true;
+        electrical_service_feasibility_confirmed:
+          false;
+      };
+
+      interpretation:
+        Record<string, unknown>;
+    };
+  };
+
+
+export async function fetchParcelGridEvidence(
+  scopeId: string,
+): Promise<ParcelGridEvidenceCollection> {
+  return fetchJson<ParcelGridEvidenceCollection>(
+    (
+      "/analysis/parcels/scopes/"
+      + encodeURIComponent(scopeId)
+      + "/grid-evidence"
+    ),
+  );
+}
+

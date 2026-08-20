@@ -1,0 +1,86 @@
+version: 1
+pipeline_version: "0.5.0"
+
+inputs:
+  parcel_config:
+    path: configs/parcels/maryland_parcels.yaml
+
+  final_grid:
+    path: data/derived/maryland_grid_1km_final.gpkg
+    layer: cells
+
+  transmission_lines:
+    path: >-
+      data/raw/grid_infrastructure/2026-07-30/maryland_transmission_lines.gpkg
+    layer: null
+    source_name: HIFLD US Electric Power Transmission Lines
+
+  substations:
+    path: >-
+      data/raw/grid_infrastructure/2026-07-30/maryland_substations.gpkg
+    layer: null
+    source_name: HIFLD Electric Substations
+
+analysis:
+  target_crs: EPSG:26985
+
+  # Infrastructure loaded for map display and nearby summaries.
+  scope_buffer_m: 15000
+
+  # Maximum distance accepted by nearest-feature joins.
+  maximum_nearest_distance_m: 50000
+
+  transmission_summary_radius_m: 5000
+  substation_summary_radius_m: 10000
+
+  connector_minimum_length_m: 0.10
+
+  voltage_classes:
+    extra_high_minimum_kv: 345
+    high_minimum_kv: 230
+    regional_minimum_kv: 115
+    subtransmission_minimum_kv: 69
+
+  context_classes:
+    very_strong:
+      transmission_distance_m: 2000
+      transmission_voltage_kv: 230
+      substation_distance_m: 7500
+      substation_voltage_kv: 115
+
+    strong:
+      transmission_distance_m: 5000
+      transmission_voltage_kv: 115
+      substation_distance_m: 12000
+
+    moderate:
+      transmission_distance_m: 10000
+      substation_distance_m: 15000
+
+outputs:
+  derived_directory:
+    path: data/derived/parcel_grid_feasibility
+
+  manifest_directory:
+    path: data/manifests/parcel_grid_feasibility
+
+layers:
+  parcel_analysis: parcel_grid_analysis
+  transmission_lines: scope_transmission_lines
+  substations: scope_substations
+  connectors: grid_evidence_connectors
+
+api:
+  line_simplify_m: 1.0
+  connector_simplify_m: 0.5
+
+safeguards:
+  capacity_status: UNKNOWN_NOT_IN_PUBLIC_SOURCE
+  available_capacity_mw: null
+  capacity_inferred_from_voltage: false
+  capacity_inferred_from_distance: false
+  utility_confirmation_required: true
+  interconnection_study_required: true
+  electrical_service_feasibility_confirmed: false
+  hosting_capacity_confirmed: false
+  utility_territory_included: false

@@ -1,0 +1,114 @@
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+
+BACKEND_DIRECTORY = (
+    Path(__file__).resolve().parents[1]
+)
+
+PROJECT_DIRECTORY = (
+    BACKEND_DIRECTORY.parent
+)
+
+if str(BACKEND_DIRECTORY) not in sys.path:
+    sys.path.insert(
+        0,
+        str(BACKEND_DIRECTORY),
+    )
+
+
+from analysis.parcels.grid_feasibility_pipeline import (
+    build_grid_feasibility,
+)
+
+
+def arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Build parcel-level public "
+            "electrical-grid context."
+        )
+    )
+
+    parser.add_argument(
+        "scope_id",
+        help=(
+            "Existing parcel scope ID."
+        ),
+    )
+
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help=(
+            "Recalculate even when cached "
+            "inputs remain current."
+        ),
+    )
+
+    return parser.parse_args()
+
+
+def main() -> None:
+    options = arguments()
+
+    config_path = (
+        PROJECT_DIRECTORY
+        / "configs"
+        / "parcels"
+        / "grid_feasibility.yaml"
+    )
+
+    manifest = (
+        build_grid_feasibility(
+            config_path=config_path,
+            scope_id=options.scope_id,
+            refresh=options.refresh,
+        )
+    )
+
+    print()
+    print(
+        "Parcel grid-feasibility "
+        "build complete"
+    )
+
+    print(
+        json.dumps(
+            {
+                "scope_id": (
+                    manifest["scope_id"]
+                ),
+                "counts": (
+                    manifest["counts"]
+                ),
+                "context_class_counts": (
+                    manifest[
+                        "context_class_counts"
+                    ]
+                ),
+                "distance_statistics_m": (
+                    manifest[
+                        "distance_statistics_m"
+                    ]
+                ),
+                "safeguards": (
+                    manifest[
+                        "safeguards"
+                    ]
+                ),
+                "outputs": (
+                    manifest["outputs"]
+                ),
+            },
+            indent=2,
+        )
+    )
+
+
+if __name__ == "__main__":
+    main()

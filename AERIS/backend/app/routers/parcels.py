@@ -15,6 +15,9 @@ from analysis.parcels.api_service import (
 from analysis.parcels.envelope_api_service import (
     ParcelEnvelopeService,
 )
+from analysis.parcels.grid_feasibility_api_service import (
+    ParcelGridFeasibilityService,
+)
 
 
 PROJECT_DIRECTORY = (
@@ -48,6 +51,19 @@ ENVELOPE_CONFIG_PATH = (
 envelope_service = (
     ParcelEnvelopeService(
         ENVELOPE_CONFIG_PATH
+    )
+)
+
+GRID_FEASIBILITY_CONFIG_PATH = (
+    PROJECT_DIRECTORY
+    / "configs"
+    / "parcels"
+    / "grid_feasibility.yaml"
+)
+
+grid_feasibility_service = (
+    ParcelGridFeasibilityService(
+        GRID_FEASIBILITY_CONFIG_PATH
     )
 )
 
@@ -223,6 +239,22 @@ def parcel_detail(
                 "development_envelope"
             ] = None
 
+        try:
+            result[
+                "grid_feasibility"
+            ] = (
+                grid_feasibility_service
+                .parcel_metrics(
+                    scope_id=scope_id,
+                    parcel_id=parcel_id,
+                )
+            )
+
+        except KeyError:
+            result[
+                "grid_feasibility"
+            ] = None
+
         return result
 
     except KeyError as error:
@@ -358,6 +390,50 @@ def parcel_constraints(
         KeyError,
         RuntimeError,
     ) as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error),
+        ) from error
+
+@router.get(
+    "/scopes/{scope_id}/"
+    "grid-evidence"
+)
+def parcel_grid_evidence(
+    scope_id: str,
+    refresh: bool = False,
+) -> JSONResponse:
+    try:
+        grid_feasibility_service.build(
+            scope_id=scope_id,
+            refresh=refresh,
+        )
+
+        payload = (
+            grid_feasibility_service
+            .grid_evidence(
+                scope_id=scope_id
+            )
+        )
+
+        return JSONResponse(
+            content=payload,
+            headers={
+                "Cache-Control": (
+                    "public, max-age=300"
+                ),
+            },
+        )
+
+    except KeyError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Parcel scope was not found."
+            ),
+        ) from error
+
+    except RuntimeError as error:
         raise HTTPException(
             status_code=503,
             detail=str(error),

@@ -414,7 +414,7 @@
 .parcel-view-controls > div {
   display: grid;
   grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+    repeat(4, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid #b9ced2;
   border-radius: 8px;
@@ -504,4 +504,110 @@
 
 .constraint-swatch.aviation-review {
   background: #7c3aed;
+}
+
+.parcel-grid-heading {
+  margin: 17px 0 8px;
+  font-size: 0.82rem;
+}
+
+.parcel-grid-context-card {
+  padding: 10px;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+}
+
+.parcel-grid-context-card strong,
+.parcel-grid-context-card span {
+  display: block;
+}
+
+.parcel-grid-context-card span {
+  margin-top: 4px;
+  font-size: 0.7rem;
+}
+
+.parcel-grid-warning {
+  margin-top: 12px;
+  padding: 10px;
+  color: #7c2d12;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+}
+
+.parcel-grid-warning p {
+  margin: 5px 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.parcel-grid-legend {
+  position: absolute;
+  z-index: 3;
+  left: 16px;
+  top: 16px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 7px;
+  color: #102a3d;
+  background: rgb(255 255 255 / 95%);
+  border: 1px solid #d0dade;
+  border-radius: 9px;
+  box-shadow:
+    0 10px 28px rgb(16 42 61 / 16%);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.parcel-grid-legend strong {
+  margin-bottom: 2px;
+}
+
+.parcel-grid-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.parcel-grid-legend p {
+  max-width: 220px;
+  margin: 4px 0 0;
+  color: #7c2d12;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.grid-swatch {
+  width: 22px;
+  height: 4px;
+  border-radius: 999px;
+}
+
+.grid-swatch.extra-high {
+  background: #7c3aed;
+}
+
+.grid-swatch.high {
+  background: #dc2626;
+}
+
+.grid-swatch.regional {
+  background: #ea580c;
+}
+
+.grid-swatch.subtransmission {
+  background: #ca8a04;
+}
+
+.grid-swatch.substation {
+  width: 12px;
+  height: 12px;
+  background: #1d4ed8;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #1d4ed8;
 }
