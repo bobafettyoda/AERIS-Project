@@ -620,11 +620,15 @@ export default function ParcelExplorerApp() {
               69,
             ],
             69,
-            1.4,
+            1.5,
+            115,
+            2.25,
             230,
-            3,
+            3.25,
+            345,
+            4.25,
             500,
-            5,
+            5.25,
           ],
           "line-opacity": 0.9,
         },
@@ -692,11 +696,13 @@ export default function ParcelExplorerApp() {
               69,
             ],
             69,
-            4,
+            6,
+            115,
+            8,
             230,
-            7,
-            500,
             10,
+            500,
+            13,
           ],
           "circle-color": "#1d4ed8",
           "circle-stroke-color": "#ffffff",
@@ -707,6 +713,18 @@ export default function ParcelExplorerApp() {
 
       map.moveLayer(
         "parcel-zone-fill"
+      );
+
+      map.moveLayer(
+        "parcel-grid-transmission"
+      );
+
+      map.moveLayer(
+        "parcel-grid-connectors"
+      );
+
+      map.moveLayer(
+        "parcel-grid-substations"
       );
 
       map.moveLayer(
@@ -933,6 +951,39 @@ export default function ParcelExplorerApp() {
   }, [
     gridEvidence,
     mapReady,
+  ]);
+
+
+  useEffect(() => {
+    if (
+      !mapReady
+      || !mapRef.current
+    ) {
+      return;
+    }
+
+    const map = mapRef.current;
+
+    const gridVisibility =
+      parcelView === "grid"
+        ? "visible"
+        : "none";
+
+    for (const layerId of [
+      "parcel-grid-transmission",
+      "parcel-grid-substations",
+    ]) {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(
+          layerId,
+          "visibility",
+          gridVisibility,
+        );
+      }
+    }
+  }, [
+    mapReady,
+    parcelView,
   ]);
 
 

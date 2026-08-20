@@ -97,10 +97,13 @@ class ParcelGridFeasibilityService:
             dict[str, Any]
         ] = []
 
+        # Browser payload intentionally includes only
+        # mapped infrastructure. Parcel-to-feature connector
+        # geometries remain in the derived GeoPackage for
+        # audit/debug use but are not sent for every parcel.
         for layer_key in (
             "transmission_lines",
             "substations",
-            "connectors",
         ):
             layer_name = layer_config[
                 layer_key
