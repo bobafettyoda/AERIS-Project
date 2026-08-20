@@ -39,3 +39,7 @@ AERIS/data/manifests/aviation/
 # AERIS generated parcel grid-feasibility outputs
 AERIS/data/derived/parcel_grid_feasibility/
 AERIS/data/manifests/parcel_grid_feasibility/
+
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
