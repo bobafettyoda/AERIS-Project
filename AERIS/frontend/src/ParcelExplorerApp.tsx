@@ -24,11 +24,13 @@ import {
   fetchParcelDetail,
   fetchParcelEnvelopes,
   fetchParcelGridEvidence,
+  fetchParcelPlanningEvidence,
   fetchZoneParcels,
   type ParcelDetail,
   type ParcelEnvelopeCollection,
   type ParcelFeatureCollection,
   type ParcelGridEvidenceCollection,
+  type ParcelPlanningEvidenceCollection,
 } from "./parcelApi";
 
 import {
@@ -220,12 +222,20 @@ export default function ParcelExplorerApp() {
     | "envelopes"
     | "constraints"
     | "grid"
+    | "planning"
   >("parcels");
 
   const [
     gridEvidence,
     setGridEvidence,
   ] = useState<ParcelGridEvidenceCollection | null>(
+    null,
+  );
+
+  const [
+    planningEvidence,
+    setPlanningEvidence,
+  ] = useState<ParcelPlanningEvidenceCollection | null>(
     null,
   );
 
@@ -390,6 +400,14 @@ export default function ParcelExplorerApp() {
 
       map.addSource(
         "parcel-grid-evidence",
+        {
+          type: "geojson",
+          data: EMPTY_COLLECTION,
+        },
+      );
+
+      map.addSource(
+        "parcel-planning-evidence",
         {
           type: "geojson",
           data: EMPTY_COLLECTION,
@@ -711,6 +729,85 @@ export default function ParcelExplorerApp() {
         },
       });
 
+      map.addLayer({
+        id: "parcel-planning-fill",
+        type: "fill",
+        source: "parcel-planning-evidence",
+        layout: {
+          visibility: "none",
+        },
+        paint: {
+          "fill-color": [
+            "match",
+            [
+              "get",
+              "planning_context_kind",
+            ],
+            "priority_funding_area",
+            "#2563eb",
+            "critical_area",
+            "#dc2626",
+            "enterprise_zone",
+            "#7c3aed",
+            "sustainable_community",
+            "#059669",
+            "foreign_trade_zone",
+            "#0891b2",
+            "rise_zone",
+            "#d97706",
+            "opportunity_zone",
+            "#9333ea",
+            "municipal_boundary",
+            "#ca8a04",
+            "#64748b",
+          ],
+          "fill-opacity": [
+            "match",
+            [
+              "get",
+              "planning_context_kind",
+            ],
+            "municipal_boundary",
+            0.08,
+            0.28,
+          ],
+        },
+      });
+
+      map.addLayer({
+        id: "parcel-planning-line",
+        type: "line",
+        source: "parcel-planning-evidence",
+        layout: {
+          visibility: "none",
+        },
+        paint: {
+          "line-color": [
+            "match",
+            [
+              "get",
+              "planning_context_kind",
+            ],
+            "municipal_boundary",
+            "#ca8a04",
+            "critical_area",
+            "#dc2626",
+            "#6d28d9",
+          ],
+          "line-width": [
+            "match",
+            [
+              "get",
+              "planning_context_kind",
+            ],
+            "municipal_boundary",
+            2.5,
+            1.5,
+          ],
+          "line-opacity": 0.85,
+        },
+      });
+
       map.moveLayer(
         "parcel-zone-fill"
       );
@@ -969,6 +1066,11 @@ export default function ParcelExplorerApp() {
         ? "visible"
         : "none";
 
+    const planningVisibility =
+      parcelView === "planning"
+        ? "visible"
+        : "none";
+
     for (const layerId of [
       "parcel-grid-transmission",
       "parcel-grid-substations",
@@ -981,9 +1083,41 @@ export default function ParcelExplorerApp() {
         );
       }
     }
+
+    for (const layerId of [
+      "parcel-planning-fill",
+      "parcel-planning-line",
+    ]) {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(
+          layerId,
+          "visibility",
+          planningVisibility,
+        );
+      }
+    }
   }, [
     mapReady,
     parcelView,
+  ]);
+
+
+  useEffect(() => {
+    if (
+      !mapReady
+      || !mapRef.current
+    ) {
+      return;
+    }
+
+    sourceData(
+      mapRef.current,
+      "parcel-planning-evidence",
+      planningEvidence ?? EMPTY_COLLECTION,
+    );
+  }, [
+    planningEvidence,
+    mapReady,
   ]);
 
 
@@ -998,6 +1132,7 @@ export default function ParcelExplorerApp() {
     setEnvelopes(null);
     setConstraints(null);
     setGridEvidence(null);
+    setPlanningEvidence(null);
 
     fetchZoneParcels(
       selectedZoneId
@@ -1015,6 +1150,7 @@ export default function ParcelExplorerApp() {
           envelopeResult,
           constraintResult,
           gridResult,
+          planningResult,
         ] = await Promise.all([
           fetchParcelEnvelopes(
             scopeId
@@ -1023,6 +1159,9 @@ export default function ParcelExplorerApp() {
             scopeId
           ),
           fetchParcelGridEvidence(
+            scopeId
+          ),
+          fetchParcelPlanningEvidence(
             scopeId
           ),
         ]);
@@ -1037,6 +1176,10 @@ export default function ParcelExplorerApp() {
 
         setGridEvidence(
           gridResult
+        );
+
+        setPlanningEvidence(
+          planningResult
         );
       })
       .catch(
@@ -1120,6 +1263,44 @@ export default function ParcelExplorerApp() {
               Insufficient data
             </div>
           </div>
+
+          {parcelView === "planning" && (
+            <div className="parcel-planning-legend">
+              <strong>
+                Statewide planning context
+              </strong>
+
+              <div>
+                <span className="planning-swatch pfa" />
+                Priority Funding Area
+              </div>
+
+              <div>
+                <span className="planning-swatch critical" />
+                Critical Area
+              </div>
+
+              <div>
+                <span className="planning-swatch enterprise" />
+                Enterprise zone
+              </div>
+
+              <div>
+                <span className="planning-swatch sustainable" />
+                Sustainable community
+              </div>
+
+              <div>
+                <span className="planning-swatch municipal" />
+                Municipal boundary
+              </div>
+
+              <p>
+                These overlays do not establish
+                zoning approval or permitted use.
+              </p>
+            </div>
+          )}
 
           {parcelView === "grid" && (
             <div className="parcel-grid-legend">
@@ -1330,6 +1511,22 @@ export default function ParcelExplorerApp() {
                     }}
                   >
                     Grid
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      parcelView === "planning"
+                        ? "active"
+                        : undefined
+                    }
+                    onClick={() => {
+                      setParcelView(
+                        "planning"
+                      );
+                    }}
+                  >
+                    Planning
                   </button>
                 </div>
               </div>

@@ -18,6 +18,9 @@ from analysis.parcels.envelope_api_service import (
 from analysis.parcels.grid_feasibility_api_service import (
     ParcelGridFeasibilityService,
 )
+from analysis.planning.planning_api_service import (
+    PlanningContextService,
+)
 
 
 PROJECT_DIRECTORY = (
@@ -64,6 +67,19 @@ GRID_FEASIBILITY_CONFIG_PATH = (
 grid_feasibility_service = (
     ParcelGridFeasibilityService(
         GRID_FEASIBILITY_CONFIG_PATH
+    )
+)
+
+PLANNING_CONFIG_PATH = (
+    PROJECT_DIRECTORY
+    / "configs"
+    / "planning"
+    / "statewide_planning.yaml"
+)
+
+planning_service = (
+    PlanningContextService(
+        PLANNING_CONFIG_PATH
     )
 )
 
@@ -255,6 +271,22 @@ def parcel_detail(
                 "grid_feasibility"
             ] = None
 
+        try:
+            result[
+                "planning_context"
+            ] = (
+                planning_service
+                .parcel_metrics(
+                    scope_id=scope_id,
+                    parcel_id=parcel_id,
+                )
+            )
+
+        except KeyError:
+            result[
+                "planning_context"
+            ] = None
+
         return result
 
     except KeyError as error:
@@ -412,6 +444,57 @@ def parcel_grid_evidence(
         payload = (
             grid_feasibility_service
             .grid_evidence(
+                scope_id=scope_id
+            )
+        )
+
+        return JSONResponse(
+            content=payload,
+            headers={
+                "Cache-Control": (
+                    "public, max-age=300"
+                ),
+            },
+        )
+
+    except KeyError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Parcel scope was not found."
+            ),
+        ) from error
+
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error),
+        ) from error
+
+@router.get("/planning/registry")
+def planning_registry() -> dict:
+    return (
+        planning_service
+        .registry_summary()
+    )
+
+
+@router.get(
+    "/scopes/{scope_id}/"
+    "planning-evidence"
+)
+def planning_evidence(
+    scope_id: str,
+    refresh: bool = False,
+) -> JSONResponse:
+    try:
+        planning_service.build(
+            scope_id=scope_id,
+            refresh=refresh,
+        )
+
+        payload = (
+            planning_service.overlays(
                 scope_id=scope_id
             )
         )

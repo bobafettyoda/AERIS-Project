@@ -708,6 +708,270 @@ export function ParcelDetails({
         </>
       )}
 
+      {parcel.planning_context && (
+        <>
+          <h3 className="parcel-planning-heading">
+            Planning and entitlement context
+          </h3>
+
+          <div className="parcel-planning-status">
+            <strong>
+              {value(
+                parcel.planning_context
+                  .decision
+                  .planning_review_status,
+              )}
+            </strong>
+
+            <span>
+              Data confidence: {
+                value(
+                  parcel.planning_context
+                    .decision
+                    .data_confidence,
+                )
+              }
+            </span>
+          </div>
+
+          <div className="parcel-stat-grid">
+            <div>
+              <span>
+                Governing authority
+              </span>
+
+              <strong>
+                {value(
+                  parcel.planning_context
+                    .jurisdiction
+                    .authority_name,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Authority status
+              </span>
+
+              <strong>
+                {value(
+                  parcel.planning_context
+                    .jurisdiction
+                    .authority_status,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Municipality
+              </span>
+
+              <strong>
+                {value(
+                  parcel.planning_context
+                    .jurisdiction
+                    .municipality_name,
+                  "Outside mapped municipality",
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Statewide zoning code
+              </span>
+
+              <strong>
+                {value(
+                  parcel.planning_context
+                    .zoning
+                    .statewide_code,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Local zoning source
+              </span>
+
+              <strong>
+                {value(
+                  parcel.planning_context
+                    .zoning
+                    .local_source_status,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Comprehensive plan
+              </span>
+
+              <strong>
+                {value(
+                  parcel.planning_context
+                    .planning_sources
+                    .comprehensive_plan,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Active-development source
+              </span>
+
+              <strong>
+                {value(
+                  parcel.planning_context
+                    .planning_sources
+                    .active_development,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Permit source
+              </span>
+
+              <strong>
+                {value(
+                  parcel.planning_context
+                    .planning_sources
+                    .permits,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Priority Funding Area
+              </span>
+
+              <strong>
+                {value(
+                  parcel.planning_context
+                    .statewide_context
+                    .priority_funding_area,
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Critical Area overlap
+              </span>
+
+              <strong>
+                {numberValue(
+                  parcel.planning_context
+                    .statewide_context
+                    .critical_area_overlap_acres,
+                  2,
+                )}
+                {" ac"}
+              </strong>
+            </div>
+          </div>
+
+          <details className="parcel-details">
+            <summary>
+              Statewide planning overlays
+            </summary>
+
+            <div className="parcel-value-list">
+              <div>
+                <span>
+                  Enterprise zones
+                </span>
+
+                <strong>
+                  {value(
+                    parcel.planning_context
+                      .statewide_context
+                      .enterprise_zone_names,
+                    "None mapped",
+                  )}
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Sustainable communities
+                </span>
+
+                <strong>
+                  {value(
+                    parcel.planning_context
+                      .statewide_context
+                      .sustainable_community_names,
+                    "None mapped",
+                  )}
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Foreign trade zones
+                </span>
+
+                <strong>
+                  {value(
+                    parcel.planning_context
+                      .statewide_context
+                      .foreign_trade_zone_names,
+                    "None mapped",
+                  )}
+                </strong>
+              </div>
+
+              <div>
+                <span>RISE zones</span>
+
+                <strong>
+                  {value(
+                    parcel.planning_context
+                      .statewide_context
+                      .rise_zone_names,
+                    "None mapped",
+                  )}
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Opportunity zones
+                </span>
+
+                <strong>
+                  {value(
+                    parcel.planning_context
+                      .statewide_context
+                      .opportunity_zone_names,
+                    "None mapped",
+                  )}
+                </strong>
+              </div>
+            </div>
+          </details>
+
+          <div className="parcel-planning-warning">
+            <strong>
+              Local verification required
+            </strong>
+
+            <p>
+              {parcel.planning_context.warning}
+            </p>
+          </div>
+        </>
+      )}
+
       <details className="parcel-details">
         <summary>
           Source property indicators

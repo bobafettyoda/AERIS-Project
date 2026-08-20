@@ -196,6 +196,73 @@ export type ParcelDetail = {
     warning: string;
   } | null;
 
+  planning_context?: {
+    jurisdiction: {
+      county_fips?: string | null;
+      county_name?: string | null;
+      municipality_name?: string | null;
+      authority_profile?: string | null;
+      authority_level?: string | null;
+      authority_name?: string | null;
+      authority_status?: string | null;
+    };
+
+    zoning: {
+      statewide_code?: string | null;
+      statewide_status?: string | null;
+      local_source_status?: string | null;
+      local_source_note?: string | null;
+      local_verified: false;
+      permitted_use_determined: false;
+    };
+
+    planning_sources: {
+      comprehensive_plan?: string | null;
+      active_development?: string | null;
+      permits?: string | null;
+    };
+
+    statewide_context: {
+      priority_funding_area?: string | null;
+      critical_area_overlap: boolean;
+      critical_area_overlap_acres?:
+        number | null;
+      enterprise_zone_count?:
+        number | null;
+      enterprise_zone_names?:
+        string | null;
+      sustainable_community_count?:
+        number | null;
+      sustainable_community_names?:
+        string | null;
+      foreign_trade_zone_count?:
+        number | null;
+      foreign_trade_zone_names?:
+        string | null;
+      rise_zone_count?: number | null;
+      rise_zone_names?: string | null;
+      opportunity_zone_count?:
+        number | null;
+      opportunity_zone_names?:
+        string | null;
+    };
+
+    decision: {
+      planning_review_status?:
+        string | null;
+      data_confidence?: string | null;
+      manual_local_verification_required:
+        true;
+      active_development_clear: false;
+      permit_clearance_determined:
+        false;
+      entitlement_clearance_determined:
+        false;
+    };
+
+    warning: string;
+  } | null;
+
   warning: string;
 };
 
@@ -392,6 +459,48 @@ export async function fetchParcelGridEvidence(
       "/analysis/parcels/scopes/"
       + encodeURIComponent(scopeId)
       + "/grid-evidence"
+    ),
+  );
+}
+
+
+export type ParcelPlanningEvidenceCollection =
+  FeatureCollection<
+    Geometry,
+    GeoJsonProperties
+  > & {
+    metadata: {
+      scope_id: string;
+      returned_count: number;
+
+      counts: Record<
+        string,
+        number
+      >;
+
+      planning_review_status_counts:
+        Record<string, number>;
+
+      registry_coverage: {
+        jurisdiction_count: number;
+      };
+
+      safeguards: Record<
+        string,
+        boolean
+      >;
+    };
+  };
+
+
+export async function fetchParcelPlanningEvidence(
+  scopeId: string,
+): Promise<ParcelPlanningEvidenceCollection> {
+  return fetchJson<ParcelPlanningEvidenceCollection>(
+    (
+      "/analysis/parcels/scopes/"
+      + encodeURIComponent(scopeId)
+      + "/planning-evidence"
     ),
   );
 }

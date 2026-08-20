@@ -611,3 +611,104 @@
   border-radius: 50%;
   box-shadow: 0 0 0 1px #1d4ed8;
 }
+
+.parcel-planning-heading {
+  margin: 17px 0 8px;
+  font-size: 0.82rem;
+}
+
+.parcel-planning-status {
+  padding: 10px;
+  color: #5b21b6;
+  background: #f5f3ff;
+  border: 1px solid #c4b5fd;
+  border-radius: 8px;
+}
+
+.parcel-planning-status strong,
+.parcel-planning-status span {
+  display: block;
+}
+
+.parcel-planning-status span {
+  margin-top: 4px;
+  font-size: 0.7rem;
+}
+
+.parcel-planning-warning {
+  margin-top: 12px;
+  padding: 10px;
+  color: #713f12;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+}
+
+.parcel-planning-warning p {
+  margin: 5px 0 0;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.parcel-view-controls > div {
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+}
+
+.parcel-planning-legend {
+  position: absolute;
+  z-index: 3;
+  left: 16px;
+  top: 16px;
+  padding: 10px 12px;
+  display: grid;
+  gap: 7px;
+  color: #102a3d;
+  background: rgb(255 255 255 / 95%);
+  border: 1px solid #d0dade;
+  border-radius: 9px;
+  box-shadow:
+    0 10px 28px rgb(16 42 61 / 16%);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.parcel-planning-legend > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.parcel-planning-legend p {
+  max-width: 220px;
+  margin: 4px 0 0;
+  color: #713f12;
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+
+.planning-swatch {
+  width: 17px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.planning-swatch.pfa {
+  background: #2563eb;
+}
+
+.planning-swatch.critical {
+  background: #dc2626;
+}
+
+.planning-swatch.enterprise {
+  background: #7c3aed;
+}
+
+.planning-swatch.sustainable {
+  background: #059669;
+}
+
+.planning-swatch.municipal {
+  background: #ca8a04;
+}

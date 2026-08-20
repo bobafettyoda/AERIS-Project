@@ -1,0 +1,208 @@
+schema_version: 1
+registry_version: "0.6.0"
+expected_jurisdiction_count: 24
+
+references:
+  local_planning_directory: >-
+    https://planning.maryland.gov/Pages/OurWork/PBP/local-gov-plng/LocalPlanningByCounty.aspx
+
+  comprehensive_plan_directory: >-
+    https://planning.maryland.gov/Pages/OurWork/PBP/compplans/viewplans.aspx
+
+  legal_authority_reference: >-
+    https://planning.maryland.gov/Pages/OurWork/PBP/compplans/Legal.aspx
+
+status_vocabulary:
+  - AVAILABLE
+  - STATEWIDE_BASELINE_ONLY
+  - PARTIAL
+  - SOURCE_DISCOVERY_REQUIRED
+  - MANUAL_REVIEW_REQUIRED
+  - DATA_UNAVAILABLE
+  - ERROR
+
+default_local_sources:
+  zoning:
+    status: STATEWIDE_BASELINE_ONLY
+    adapter: null
+    endpoint: null
+    authoritative_local_geometry: false
+    note: >-
+      Statewide parcel zoning is available. Local authoritative
+      zoning geometry has not yet been configured.
+
+  comprehensive_plan:
+    status: MANUAL_REVIEW_REQUIRED
+    adapter: null
+    endpoint: null
+    note: >-
+      Current comprehensive-plan documents require local verification.
+
+  active_development:
+    status: SOURCE_DISCOVERY_REQUIRED
+    adapter: null
+    endpoint: null
+    note: >-
+      Active development applications and approved plans vary by
+      jurisdiction and require a configured local source.
+
+  permits:
+    status: SOURCE_DISCOVERY_REQUIRED
+    adapter: null
+    endpoint: null
+    note: >-
+      Permit systems vary by jurisdiction and are not assumed absent
+      when automation is unavailable.
+
+jurisdictions:
+  "001":
+    name: Allegany County
+    jurisdiction_code: ALLE
+    authority_profile: CODE_HOME_RULE
+    independent_municipalities: []
+
+  "003":
+    name: Anne Arundel County
+    jurisdiction_code: ANNE
+    authority_profile: CHARTER_COUNTY
+    independent_municipalities: []
+
+  "005":
+    name: Baltimore County
+    jurisdiction_code: BACO
+    authority_profile: CHARTER_COUNTY
+    independent_municipalities: []
+
+  "009":
+    name: Calvert County
+    jurisdiction_code: CALV
+    authority_profile: DIVISION_I_NONCHARTER
+    independent_municipalities: []
+
+  "011":
+    name: Caroline County
+    jurisdiction_code: CARO
+    authority_profile: CODE_HOME_RULE
+    independent_municipalities: []
+
+  "013":
+    name: Carroll County
+    jurisdiction_code: CARR
+    authority_profile: DIVISION_I_NONCHARTER
+    independent_municipalities: []
+
+  "015":
+    name: Cecil County
+    jurisdiction_code: CECI
+    authority_profile: CHARTER_COUNTY
+    independent_municipalities: []
+
+  "017":
+    name: Charles County
+    jurisdiction_code: CHAR
+    authority_profile: CODE_HOME_RULE
+    independent_municipalities: []
+
+  "019":
+    name: Dorchester County
+    jurisdiction_code: DORC
+    authority_profile: CHARTER_COUNTY
+    independent_municipalities: []
+
+  "021":
+    name: Frederick County
+    jurisdiction_code: FRED
+    authority_profile: CHARTER_COUNTY
+    independent_municipalities: []
+
+  "023":
+    name: Garrett County
+    jurisdiction_code: GARR
+    authority_profile: DIVISION_I_NONCHARTER
+    independent_municipalities: []
+
+  "025":
+    name: Harford County
+    jurisdiction_code: HARF
+    authority_profile: CHARTER_COUNTY
+    independent_municipalities: []
+
+  "027":
+    name: Howard County
+    jurisdiction_code: HOWA
+    authority_profile: CHARTER_COUNTY
+    independent_municipalities: []
+
+  "029":
+    name: Kent County
+    jurisdiction_code: KENT
+    authority_profile: CODE_HOME_RULE
+    independent_municipalities: []
+
+  "031":
+    name: Montgomery County
+    jurisdiction_code: MONT
+    authority_profile: DIVISION_II_MNCPPC
+    independent_municipalities:
+      - Barnesville
+      - Brookeville
+      - Gaithersburg
+      - Laytonsville
+      - Poolesville
+      - Rockville
+      - Washington Grove
+
+  "033":
+    name: Prince George's County
+    jurisdiction_code: PRIN
+    authority_profile: DIVISION_II_MNCPPC
+    independent_municipalities:
+      - Laurel
+
+  "035":
+    name: Queen Anne's County
+    jurisdiction_code: QUEE
+    authority_profile: CODE_HOME_RULE
+    independent_municipalities: []
+
+  "037":
+    name: St. Mary's County
+    jurisdiction_code: STMA
+    authority_profile: DIVISION_I_NONCHARTER
+    independent_municipalities: []
+
+  "039":
+    name: Somerset County
+    jurisdiction_code: SOME
+    authority_profile: DIVISION_I_NONCHARTER
+    independent_municipalities: []
+
+  "041":
+    name: Talbot County
+    jurisdiction_code: TALB
+    authority_profile: CHARTER_COUNTY
+    independent_municipalities: []
+
+  "043":
+    name: Washington County
+    jurisdiction_code: WASH
+    authority_profile: DIVISION_I_NONCHARTER
+    independent_municipalities: []
+
+  "045":
+    name: Wicomico County
+    jurisdiction_code: WICO
+    authority_profile: CHARTER_COUNTY
+    independent_municipalities: []
+
+  "047":
+    name: Worcester County
+    jurisdiction_code: WORC
+    authority_profile: CODE_HOME_RULE
+    independent_municipalities: []
+
+  "510":
+    name: Baltimore City
+    jurisdiction_code: BACI
+    authority_profile: BALTIMORE_CITY
+    independent_municipalities: []

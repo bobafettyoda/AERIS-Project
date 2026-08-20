@@ -1,0 +1,116 @@
+schema_version: 1
+pipeline_version: "0.6.0"
+snapshot_label: "2026-08-20"
+
+registry:
+  path: configs/planning/maryland_jurisdictions.yaml
+
+inputs:
+  parcel_config:
+    path: configs/parcels/maryland_parcels.yaml
+
+  political_boundaries:
+    service_url: >-
+      https://mdgeodata.md.gov/imap/rest/services/Boundaries/MD_PoliticalBoundaries/FeatureServer
+
+    layers:
+      counties:
+        id: 1
+        output_layer: county_boundaries
+
+      municipalities:
+        id: 5
+        output_layer: municipal_boundaries
+
+  priority_funding_areas:
+    service_url: >-
+      https://mdgeodata.md.gov/imap/rest/services/PlanningCadastre/MD_PriorityFundingAreas/FeatureServer
+
+    layers:
+      priority_funding_areas:
+        id: 0
+        output_layer: priority_funding_areas
+
+  critical_areas:
+    service_url: >-
+      https://mdgeodata.md.gov/imap/rest/services/Environment/MD_CriticalAreas/FeatureServer
+
+    layers:
+      critical_area_towns:
+        id: 0
+        output_layer: critical_area_towns
+
+      critical_area_counties:
+        id: 1
+        output_layer: critical_area_counties
+
+  incentive_zones:
+    service_url: >-
+      https://mdgeodata.md.gov/imap/rest/services/BusinessEconomy/MD_IncentiveZones/FeatureServer
+
+    layers:
+      enterprise_zones:
+        id: 4
+        output_layer: enterprise_zones
+
+      sustainable_communities:
+        id: 6
+        output_layer: sustainable_communities
+
+      foreign_trade_zones:
+        id: 9
+        output_layer: foreign_trade_zones
+
+      rise_zones:
+        id: 11
+        output_layer: rise_zones
+
+      opportunity_zones:
+        id: 14
+        output_layer: opportunity_zones
+
+analysis:
+  target_crs: EPSG:26985
+  page_size: 750
+  timeout_seconds: 180
+  retry_count: 6
+
+  square_meters_per_acre: 4046.8564224
+
+  municipality_match:
+    method: representative_point
+    maximum_candidates: 5
+
+  overlay_match:
+    method: geometry_intersection
+
+  confidence:
+    high_requires_local_authoritative_zoning: true
+
+outputs:
+  statewide_foundations:
+    path: data/raw/planning/statewide/2026-08-20/maryland_planning_foundations.gpkg
+
+  statewide_manifest:
+    path: data/manifests/planning/statewide_planning_foundations.json
+
+  derived_directory:
+    path: data/derived/parcel_planning_context
+
+  manifest_directory:
+    path: data/manifests/parcel_planning_context
+
+layers:
+  parcel_analysis: parcel_planning_analysis
+  context_overlays: planning_context_overlays
+
+api:
+  overlay_simplify_m: 1.0
+
+safeguards:
+  zoning_approval_inferred: false
+  permitted_use_inferred: false
+  active_development_absence_inferred: false
+  permit_absence_inferred: false
+  entitlement_clearance_inferred: false
+  local_verification_required: true
