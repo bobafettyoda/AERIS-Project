@@ -211,7 +211,7 @@ export function StatewideFilters({
             All Maryland counties
           </option>
 
-          {summary?.counties.map(
+          {(summary?.counties ?? []).map(
             (county) => (
               <option
                 key={county.fips}

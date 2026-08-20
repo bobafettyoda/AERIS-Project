@@ -15,39 +15,44 @@ import * as maplibregl
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./parcel.css";
 
+import { AERIS_RELEASE_LABEL } from "./generated/release";
+
 import {
   fetchStatewideZones,
 } from "./statewideApi";
 
 import {
-  fetchParcelConstraints,
   fetchParcelDetail,
-  fetchParcelEnvelopes,
-  fetchParcelGridEvidence,
-  fetchParcelPlanningEvidence,
-  fetchZoneParcels,
   type ParcelDetail,
-  type ParcelEnvelopeCollection,
-  type ParcelFeatureCollection,
-  type ParcelGridEvidenceCollection,
-  type ParcelPlanningEvidenceCollection,
 } from "./parcelApi";
+
+import {
+  useParcelScope,
+} from "./parcel/useParcelScope";
+
+import {
+  applyParcelView,
+  type ParcelView,
+} from "./parcel/viewLayers";
+
+import {
+  addParcelMapLayers,
+} from "./parcel/mapSetup";
 
 import {
   ParcelDetails,
 } from "./components/ParcelDetails";
+
+import {
+  ParcelControls,
+  type ZoneOption,
+} from "./components/ParcelControls";
 
 
 const EMPTY_COLLECTION:
 FeatureCollection = {
   type: "FeatureCollection",
   features: [],
-};
-
-
-type ZoneOption = {
-  zoneId: string;
-  label: string;
 };
 
 
@@ -187,13 +192,6 @@ export default function ParcelExplorerApp() {
   ] = useState("");
 
   const [
-    parcels,
-    setParcels,
-  ] = useState<ParcelFeatureCollection | null>(
-    null,
-  );
-
-  const [
     parcelDetail,
     setParcelDetail,
   ] = useState<ParcelDetail | null>(
@@ -201,60 +199,36 @@ export default function ParcelExplorerApp() {
   );
 
   const [
-    envelopes,
-    setEnvelopes,
-  ] = useState<ParcelEnvelopeCollection | null>(
-    null,
-  );
-
-  const [
-    constraints,
-    setConstraints,
-  ] = useState<ParcelEnvelopeCollection | null>(
-    null,
-  );
-
-  const [
     parcelView,
     setParcelView,
-  ] = useState<
+  ] = useState<ParcelView>(
     "parcels"
-    | "envelopes"
-    | "constraints"
-    | "grid"
-    | "planning"
-  >("parcels");
-
-  const [
-    gridEvidence,
-    setGridEvidence,
-  ] = useState<ParcelGridEvidenceCollection | null>(
-    null,
   );
 
   const [
-    planningEvidence,
-    setPlanningEvidence,
-  ] = useState<ParcelPlanningEvidenceCollection | null>(
-    null,
+    detailError,
+    setDetailError,
+  ] = useState<string | null>(
+    null
   );
-
-  const [
-    loadingParcels,
-    setLoadingParcels,
-  ] = useState(false);
 
   const [
     loadingDetail,
     setLoadingDetail,
   ] = useState(false);
 
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(
-    null
-  );
+  const {
+    parcels,
+    envelopes,
+    constraints,
+    gridEvidence,
+    planningEvidence,
+    artifacts,
+    job,
+    loading: loadingParcels,
+    error: scopeError,
+    loadZone,
+  } = useParcelScope();
 
 
   useEffect(() => {
@@ -321,7 +295,7 @@ export default function ParcelExplorerApp() {
         }
       })
       .catch((caughtError: unknown) => {
-        setError(
+        setDetailError(
           caughtError instanceof Error
             ? caughtError.message
             : (
@@ -366,466 +340,9 @@ export default function ParcelExplorerApp() {
     );
 
     map.on("load", () => {
-      map.addSource(
-        "parcel-zones",
-        {
-          type: "geojson",
-          data: EMPTY_COLLECTION,
-        },
-      );
-
-      map.addSource(
-        "parcel-polygons",
-        {
-          type: "geojson",
-          data: EMPTY_COLLECTION,
-        },
-      );
-
-      map.addSource(
-        "parcel-envelopes",
-        {
-          type: "geojson",
-          data: EMPTY_COLLECTION,
-        },
-      );
-
-      map.addSource(
-        "parcel-constraints",
-        {
-          type: "geojson",
-          data: EMPTY_COLLECTION,
-        },
-      );
-
-      map.addSource(
-        "parcel-grid-evidence",
-        {
-          type: "geojson",
-          data: EMPTY_COLLECTION,
-        },
-      );
-
-      map.addSource(
-        "parcel-planning-evidence",
-        {
-          type: "geojson",
-          data: EMPTY_COLLECTION,
-        },
-      );
-
-      map.addLayer({
-        id: "parcel-zone-fill",
-        type: "fill",
-        source: "parcel-zones",
-        paint: {
-          "fill-color": "#7c3aed",
-          "fill-opacity": 0.12,
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-zone-line",
-        type: "line",
-        source: "parcel-zones",
-        paint: {
-          "line-color": "#6d28d9",
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            8,
-            3,
-            14,
-            5,
-          ],
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-fill",
-        type: "fill",
-        source: "parcel-polygons",
-        paint: {
-          "fill-color": [
-            "match",
-            [
-              "get",
-              "availability_status",
-            ],
-            "PUBLIC_OR_INSTITUTIONAL",
-            "#be123c",
-            "EXISTING_USE_REVIEW_REQUIRED",
-            "#d97706",
-            "POTENTIAL_FURTHER_REVIEW",
-            "#15803d",
-            "DATA_INSUFFICIENT",
-            "#64748b",
-            "#64748b",
-          ],
-          "fill-opacity": [
-            "interpolate",
-            ["linear"],
-            [
-              "coalesce",
-              [
-                "get",
-                "scope_overlap_fraction",
-              ],
-              0,
-            ],
-            0,
-            0.05,
-            0.05,
-            0.10,
-            0.25,
-            0.20,
-            0.50,
-            0.30,
-            1,
-            0.42,
-          ],
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-line",
-        type: "line",
-        source: "parcel-polygons",
-        paint: {
-          "line-color": [
-            "match",
-            [
-              "get",
-              "availability_status",
-            ],
-            "PUBLIC_OR_INSTITUTIONAL",
-            "#9f1239",
-            "EXISTING_USE_REVIEW_REQUIRED",
-            "#b45309",
-            "POTENTIAL_FURTHER_REVIEW",
-            "#166534",
-            "#475569",
-          ],
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            10,
-            0.45,
-            16,
-            2.2,
-          ],
-
-          "line-opacity": [
-            "interpolate",
-            ["linear"],
-            [
-              "coalesce",
-              [
-                "get",
-                "scope_overlap_fraction",
-              ],
-              0,
-            ],
-            0,
-            0.10,
-            0.05,
-            0.20,
-            0.25,
-            0.55,
-            0.50,
-            0.78,
-            1,
-            1,
-          ],
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-constraint-fill",
-        type: "fill",
-        source: "parcel-constraints",
-        layout: {
-          visibility: "none",
-        },
-        paint: {
-          "fill-color": [
-            "match",
-            ["get", "constraint_id"],
-            "water",
-            "#2563eb",
-            "protected_lands",
-            "#166534",
-            "sfha",
-            "#0891b2",
-            "aviation",
-            "#dc2626",
-            "aviation_review",
-            "#7c3aed",
-            "#64748b",
-          ],
-          "fill-opacity": 0.45,
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-envelope-fill",
-        type: "fill",
-        source: "parcel-envelopes",
-        layout: {
-          visibility: "none",
-        },
-        paint: {
-          "fill-color": "#0f766e",
-          "fill-opacity": 0.48,
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-envelope-line",
-        type: "line",
-        source: "parcel-envelopes",
-        layout: {
-          visibility: "none",
-        },
-        paint: {
-          "line-color": "#064e3b",
-          "line-width": 1.8,
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-grid-transmission",
-        type: "line",
-        source: "parcel-grid-evidence",
-        filter: [
-          "==",
-          ["get", "evidence_kind"],
-          "TRANSMISSION_LINE",
-        ],
-        layout: {
-          visibility: "none",
-        },
-        paint: {
-          "line-color": [
-            "match",
-            [
-              "get",
-              "transmission_voltage_class",
-            ],
-            "EXTRA_HIGH_345_KV_PLUS",
-            "#7c3aed",
-            "HIGH_230_TO_344_KV",
-            "#dc2626",
-            "REGIONAL_115_TO_229_KV",
-            "#ea580c",
-            "SUBTRANSMISSION_69_TO_114_KV",
-            "#ca8a04",
-            "BELOW_69_KV",
-            "#65a30d",
-            "#64748b",
-          ],
-          "line-width": [
-            "interpolate",
-            ["linear"],
-            [
-              "coalesce",
-              [
-                "get",
-                "transmission_voltage_kv",
-              ],
-              69,
-            ],
-            69,
-            1.5,
-            115,
-            2.25,
-            230,
-            3.25,
-            345,
-            4.25,
-            500,
-            5.25,
-          ],
-          "line-opacity": 0.9,
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-grid-connectors",
-        type: "line",
-        source: "parcel-grid-evidence",
-        filter: [
-          "any",
-          [
-            "==",
-            ["get", "evidence_kind"],
-            "TRANSMISSION_CONNECTOR",
-          ],
-          [
-            "==",
-            ["get", "evidence_kind"],
-            "SUBSTATION_CONNECTOR",
-          ],
-        ],
-        layout: {
-          visibility: "none",
-        },
-        paint: {
-          "line-color": [
-            "match",
-            ["get", "evidence_kind"],
-            "TRANSMISSION_CONNECTOR",
-            "#0f766e",
-            "#1d4ed8",
-          ],
-          "line-width": 1.1,
-          "line-dasharray": [
-            3,
-            2,
-          ],
-          "line-opacity": 0.48,
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-grid-substations",
-        type: "circle",
-        source: "parcel-grid-evidence",
-        filter: [
-          "==",
-          ["get", "evidence_kind"],
-          "SUBSTATION",
-        ],
-        layout: {
-          visibility: "none",
-        },
-        paint: {
-          "circle-radius": [
-            "interpolate",
-            ["linear"],
-            [
-              "coalesce",
-              [
-                "get",
-                "substation_max_voltage_kv",
-              ],
-              69,
-            ],
-            69,
-            6,
-            115,
-            8,
-            230,
-            10,
-            500,
-            13,
-          ],
-          "circle-color": "#1d4ed8",
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 1.2,
-          "circle-opacity": 0.92,
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-planning-fill",
-        type: "fill",
-        source: "parcel-planning-evidence",
-        layout: {
-          visibility: "none",
-        },
-        paint: {
-          "fill-color": [
-            "match",
-            [
-              "get",
-              "planning_context_kind",
-            ],
-            "priority_funding_area",
-            "#2563eb",
-            "critical_area",
-            "#dc2626",
-            "enterprise_zone",
-            "#7c3aed",
-            "sustainable_community",
-            "#059669",
-            "foreign_trade_zone",
-            "#0891b2",
-            "rise_zone",
-            "#d97706",
-            "opportunity_zone",
-            "#9333ea",
-            "municipal_boundary",
-            "#ca8a04",
-            "#64748b",
-          ],
-          "fill-opacity": [
-            "match",
-            [
-              "get",
-              "planning_context_kind",
-            ],
-            "municipal_boundary",
-            0.08,
-            0.28,
-          ],
-        },
-      });
-
-      map.addLayer({
-        id: "parcel-planning-line",
-        type: "line",
-        source: "parcel-planning-evidence",
-        layout: {
-          visibility: "none",
-        },
-        paint: {
-          "line-color": [
-            "match",
-            [
-              "get",
-              "planning_context_kind",
-            ],
-            "municipal_boundary",
-            "#ca8a04",
-            "critical_area",
-            "#dc2626",
-            "#6d28d9",
-          ],
-          "line-width": [
-            "match",
-            [
-              "get",
-              "planning_context_kind",
-            ],
-            "municipal_boundary",
-            2.5,
-            1.5,
-          ],
-          "line-opacity": 0.85,
-        },
-      });
-
-      map.moveLayer(
-        "parcel-zone-fill"
-      );
-
-      map.moveLayer(
-        "parcel-grid-transmission"
-      );
-
-      map.moveLayer(
-        "parcel-grid-connectors"
-      );
-
-      map.moveLayer(
-        "parcel-grid-substations"
-      );
-
-      map.moveLayer(
-        "parcel-zone-line"
+      addParcelMapLayers(
+        map,
+        EMPTY_COLLECTION,
       );
 
       map.on(
@@ -870,7 +387,7 @@ export default function ParcelExplorerApp() {
           }
 
           setLoadingDetail(true);
-          setError(null);
+          setDetailError(null);
 
           fetchParcelDetail(
             scopeId,
@@ -884,7 +401,7 @@ export default function ParcelExplorerApp() {
                 caughtError:
                   unknown,
               ) => {
-                setError(
+                setDetailError(
                   caughtError
                   instanceof Error
                     ? caughtError
@@ -1059,43 +576,10 @@ export default function ParcelExplorerApp() {
       return;
     }
 
-    const map = mapRef.current;
-
-    const gridVisibility =
-      parcelView === "grid"
-        ? "visible"
-        : "none";
-
-    const planningVisibility =
-      parcelView === "planning"
-        ? "visible"
-        : "none";
-
-    for (const layerId of [
-      "parcel-grid-transmission",
-      "parcel-grid-substations",
-    ]) {
-      if (map.getLayer(layerId)) {
-        map.setLayoutProperty(
-          layerId,
-          "visibility",
-          gridVisibility,
-        );
-      }
-    }
-
-    for (const layerId of [
-      "parcel-planning-fill",
-      "parcel-planning-line",
-    ]) {
-      if (map.getLayer(layerId)) {
-        map.setLayoutProperty(
-          layerId,
-          "visibility",
-          planningVisibility,
-        );
-      }
-    }
+    applyParcelView(
+      mapRef.current,
+      parcelView,
+    );
   }, [
     mapReady,
     parcelView,
@@ -1126,81 +610,11 @@ export default function ParcelExplorerApp() {
       return;
     }
 
-    setLoadingParcels(true);
-    setError(null);
     setParcelDetail(null);
-    setEnvelopes(null);
-    setConstraints(null);
-    setGridEvidence(null);
-    setPlanningEvidence(null);
-
-    fetchZoneParcels(
+    setDetailError(null);
+    void loadZone(
       selectedZoneId
-    )
-      .then(async (parcelResult) => {
-        setParcels(
-          parcelResult
-        );
-
-        const scopeId =
-          parcelResult.metadata
-            .scope.scope_id;
-
-        const [
-          envelopeResult,
-          constraintResult,
-          gridResult,
-          planningResult,
-        ] = await Promise.all([
-          fetchParcelEnvelopes(
-            scopeId
-          ),
-          fetchParcelConstraints(
-            scopeId
-          ),
-          fetchParcelGridEvidence(
-            scopeId
-          ),
-          fetchParcelPlanningEvidence(
-            scopeId
-          ),
-        ]);
-
-        setEnvelopes(
-          envelopeResult
-        );
-
-        setConstraints(
-          constraintResult
-        );
-
-        setGridEvidence(
-          gridResult
-        );
-
-        setPlanningEvidence(
-          planningResult
-        );
-      })
-      .catch(
-        (
-          caughtError:
-            unknown,
-        ) => {
-          setError(
-            caughtError
-            instanceof Error
-              ? caughtError.message
-              : (
-                "Parcel scope could "
-                + "not be loaded."
-              ),
-          );
-        },
-      )
-      .finally(() => {
-        setLoadingParcels(false);
-      });
+    );
   }
 
 
@@ -1209,7 +623,7 @@ export default function ParcelExplorerApp() {
       <header className="parcel-topbar">
         <div>
           <span className="parcel-kicker">
-            AERIS Maryland v0.3
+            AERIS Maryland {AERIS_RELEASE_LABEL}
           </span>
 
           <h1>
@@ -1371,196 +785,40 @@ export default function ParcelExplorerApp() {
 
           {loadingParcels && (
             <div className="parcel-loading">
-              Acquiring and normalizing
-              parcel geometry…
+              <strong>
+                Building {job?.current_stage ?? "parcel scope"}…
+              </strong>
+              <span>
+                {Math.round((job?.progress ?? 0) * 100)}%
+              </span>
             </div>
           )}
         </section>
 
         <aside className="parcel-sidebar">
-          {error && (
+          {(scopeError || detailError) && (
             <section className="parcel-error">
               <strong>
-                Parcel explorer error
+                Parcel explorer warning
               </strong>
 
-              <p>{error}</p>
+              <p>
+                {scopeError ?? detailError}
+              </p>
             </section>
           )}
 
-          <section className="parcel-control-card">
-            <span className="parcel-kicker">
-              Candidate-zone drill-down
-            </span>
-
-            <h2>
-              Open parcel investigation
-            </h2>
-
-            <label>
-              <span>Candidate zone</span>
-
-              <select
-                value={selectedZoneId}
-                onChange={(event) => {
-                  setSelectedZoneId(
-                    event.target.value
-                  );
-                }}
-              >
-                {zoneOptions.map(
-                  (option) => (
-                    <option
-                      key={
-                        option.zoneId
-                      }
-                      value={
-                        option.zoneId
-                      }
-                    >
-                      {option.label}
-                    </option>
-                  ),
-                )}
-              </select>
-            </label>
-
-            <button
-              type="button"
-              disabled={
-                loadingParcels
-                || !selectedZoneId
-              }
-              onClick={
-                loadSelectedZone
-              }
-            >
-              {loadingParcels
-                ? (
-                  "Loading parcels…"
-                )
-                : (
-                  "Load parcel outlines"
-                )}
-            </button>
-
-            {parcels && (
-              <div className="parcel-view-controls">
-                <span>Map layer</span>
-
-                <div>
-                  <button
-                    type="button"
-                    className={
-                      parcelView === "parcels"
-                        ? "active"
-                        : undefined
-                    }
-                    onClick={() => {
-                      setParcelView(
-                        "parcels"
-                      );
-                    }}
-                  >
-                    Parcels
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      parcelView === "envelopes"
-                        ? "active"
-                        : undefined
-                    }
-                    onClick={() => {
-                      setParcelView(
-                        "envelopes"
-                      );
-                    }}
-                  >
-                    Envelopes
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      parcelView === "constraints"
-                        ? "active"
-                        : undefined
-                    }
-                    onClick={() => {
-                      setParcelView(
-                        "constraints"
-                      );
-                    }}
-                  >
-                    Constraints
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      parcelView === "grid"
-                        ? "active"
-                        : undefined
-                    }
-                    onClick={() => {
-                      setParcelView(
-                        "grid"
-                      );
-                    }}
-                  >
-                    Grid
-                  </button>
-
-                  <button
-                    type="button"
-                    className={
-                      parcelView === "planning"
-                        ? "active"
-                        : undefined
-                    }
-                    onClick={() => {
-                      setParcelView(
-                        "planning"
-                      );
-                    }}
-                  >
-                    Planning
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {parcels && (
-              <div className="parcel-scope-note">
-                <strong>
-                  {
-                    parcels.metadata
-                      .returned_count
-                      .toLocaleString()
-                  }
-                  {" "}
-                  parcels rendered
-                </strong>
-
-                <p>
-                  {parcels.metadata
-                    .truncated
-                    ? (
-                      "The map response "
-                      + "was limited for "
-                      + "performance."
-                    )
-                    : (
-                      "All matching "
-                      + "parcels are "
-                      + "displayed."
-                    )}
-                </p>
-              </div>
-            )}
-          </section>
+          <ParcelControls
+            zoneOptions={zoneOptions}
+            selectedZoneId={selectedZoneId}
+            loading={loadingParcels}
+            parcels={parcels}
+            artifacts={artifacts}
+            parcelView={parcelView}
+            onZoneChange={setSelectedZoneId}
+            onLoad={loadSelectedZone}
+            onViewChange={setParcelView}
+          />
 
           <ParcelDetails
             parcel={parcelDetail}

@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 from typing import Any
 
+from analysis.common.geopackage import read_single_row
+from analysis.common.records import record_value
+
 import geopandas as gpd
 import pandas as pd
 
@@ -137,39 +140,16 @@ class ParcelGridFeasibilityService:
                     )
                 )
 
-            elif layer_key == (
-                "connectors"
-            ):
-                simplify_m = float(
-                    self.config[
-                        "api"
-                    ][
-                        "connector_simplify_m"
-                    ]
-                )
-
-                frame.geometry = (
-                    frame.geometry.simplify(
-                        simplify_m,
-                        preserve_topology=True,
-                    )
-                )
-
             frame = frame.to_crs(
                 "EPSG:4326"
             )
 
-            payload = json.loads(
-                frame.to_json(
-                    drop_id=True,
-                    na="null",
-                )
-            )
-
             features.extend(
-                payload[
-                    "features"
-                ]
+                frame.iterfeatures(
+                    na="null",
+                    show_bbox=False,
+                    drop_id=True,
+                )
             )
 
         return {
@@ -222,53 +202,16 @@ class ParcelGridFeasibilityService:
             "layers"
         ]["parcel_analysis"]
 
-        frame = gpd.read_file(
+        row = read_single_row(
             paths.output,
             layer=layer,
+            key_column="parcel_id",
+            key_value=parcel_id,
+            read_geometry=False,
         )
 
-        matches = frame.loc[
-            frame[
-                "parcel_id"
-            ].astype(str).eq(
-                parcel_id
-            )
-        ]
-
-        if matches.empty:
-            raise KeyError(
-                parcel_id
-            )
-
-        row = matches.iloc[0]
-
-        def value(
-            column: str,
-        ) -> Any:
-            if column not in row.index:
-                return None
-
-            result = row[column]
-
-            try:
-                if pd.isna(result):
-                    return None
-            except (
-                TypeError,
-                ValueError,
-            ):
-                pass
-
-            if hasattr(
-                result,
-                "item",
-            ):
-                try:
-                    return result.item()
-                except ValueError:
-                    pass
-
-            return result
+        def value(column: str) -> Any:
+            return record_value(row, column)
 
         return {
             "grid_feasibility_status": (

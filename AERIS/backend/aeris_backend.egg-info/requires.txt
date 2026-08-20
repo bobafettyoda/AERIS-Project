@@ -1,0 +1,15 @@
+fastapi<1,>=0.128
+geopandas<2,>=1.1
+numpy<3,>=2.2
+pandas<4,>=2.2
+pydantic<3,>=2.10
+pyogrio<1,>=0.11
+pyproj<4,>=3.7
+python-dotenv<2,>=1.0
+PyYAML<7,>=6
+requests<3,>=2.32
+shapely<3,>=2.1
+uvicorn[standard]<1,>=0.34
+
+[dev]
+ruff<1,>=0.11

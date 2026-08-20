@@ -98,7 +98,7 @@ export function StatewideDetails({
 
   if (zone) {
     const properties =
-      zone.properties;
+      zone.properties ?? {};
 
     return (
       <section className="statewide-detail-card">
@@ -195,7 +195,8 @@ export function StatewideDetails({
           <div className="statewide-value-list">
             {Object.entries(
               zone.member_summary
-                .equity_gate_counts,
+                .equity_gate_counts
+                ?? {},
             ).map(
               ([key, value]) => (
                 <div key={key}>
@@ -216,7 +217,8 @@ export function StatewideDetails({
           <div className="statewide-value-list">
             {Object.entries(
               zone.member_summary
-                .county_counts,
+                .county_counts
+                ?? {},
             ).map(
               ([key, value]) => (
                 <div key={key}>
@@ -234,6 +236,31 @@ export function StatewideDetails({
   }
 
   if (cell) {
+    const communityImpact =
+      cell.community_impact ?? {};
+
+    const exclusionReasons =
+      cell.decision
+        .exclusion_reasons ?? [];
+
+    const criteria =
+      cell.scores.criteria ?? {};
+
+    const evidence =
+      cell.evidence ?? {};
+
+    const gridEvidence =
+      evidence.grid ?? {};
+
+    const roadEvidence =
+      evidence.road ?? {};
+
+    const telecomEvidence =
+      evidence.telecom ?? {};
+
+    const environmentEvidence =
+      evidence.environment ?? {};
+
     return (
       <section className="statewide-detail-card">
         <span className="statewide-kicker">
@@ -288,7 +315,7 @@ export function StatewideDetails({
             <span>Equity gate</span>
             <strong>
               {String(
-                cell.community_impact[
+                communityImpact[
                   "equity_gate"
                 ]
                 ?? "Unavailable",
@@ -317,8 +344,7 @@ export function StatewideDetails({
 
             <p>
               {
-                cell.decision
-                  .exclusion_reasons
+                exclusionReasons
                   .join(", ")
               }
             </p>
@@ -331,7 +357,7 @@ export function StatewideDetails({
 
         <div className="statewide-criteria-grid">
           {Object.entries(
-            cell.scores.criteria,
+            criteria,
           ).map(([key, value]) => (
             <div key={key}>
               <span>
@@ -358,7 +384,7 @@ export function StatewideDetails({
 
               <strong>
                 {distance(
-                  cell.evidence.grid[
+                  gridEvidence[
                     "substation_distance_m"
                   ],
                 )}
@@ -372,7 +398,7 @@ export function StatewideDetails({
 
               <strong>
                 {distance(
-                  cell.evidence.grid[
+                  gridEvidence[
                     "transmission_distance_m"
                   ],
                 )}
@@ -386,7 +412,7 @@ export function StatewideDetails({
 
               <strong>
                 {distance(
-                  cell.evidence.road[
+                  roadEvidence[
                     "major_road_distance_m"
                   ],
                 )}
@@ -400,7 +426,7 @@ export function StatewideDetails({
 
               <strong>
                 {distance(
-                  cell.evidence.telecom[
+                  telecomEvidence[
                     "fiber_distance_m"
                   ],
                 )}
@@ -414,7 +440,7 @@ export function StatewideDetails({
 
               <strong>
                 {numberValue(
-                  cell.evidence.telecom[
+                  telecomEvidence[
                     "provider_count_5km"
                   ],
                 )}
@@ -428,7 +454,7 @@ export function StatewideDetails({
 
               <strong>
                 {distance(
-                  cell.evidence.environment[
+                  environmentEvidence[
                     "water_distance_m"
                   ],
                 )}
@@ -442,7 +468,7 @@ export function StatewideDetails({
 
               <strong>
                 {distance(
-                  cell.evidence.environment[
+                  environmentEvidence[
                     "protected_distance_m"
                   ],
                 )}
@@ -456,7 +482,7 @@ export function StatewideDetails({
 
               <strong>
                 {distance(
-                  cell.evidence.environment[
+                  environmentEvidence[
                     "sfha_distance_m"
                   ],
                 )}
@@ -478,7 +504,7 @@ export function StatewideDetails({
 
           <div className="statewide-value-list">
             {Object.entries(
-              cell.community_impact,
+              communityImpact,
             )
               .filter(
                 ([key]) =>

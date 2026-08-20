@@ -1,0 +1,44 @@
+Metadata-Version: 2.4
+Name: aeris-backend
+Version: 0.6.1
+Summary: AERIS Maryland geospatial screening and parcel diligence backend
+Requires-Python: <3.14,>=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi<1,>=0.128
+Requires-Dist: geopandas<2,>=1.1
+Requires-Dist: numpy<3,>=2.2
+Requires-Dist: pandas<4,>=2.2
+Requires-Dist: pydantic<3,>=2.10
+Requires-Dist: pyogrio<1,>=0.11
+Requires-Dist: pyproj<4,>=3.7
+Requires-Dist: python-dotenv<2,>=1.0
+Requires-Dist: PyYAML<7,>=6
+Requires-Dist: requests<3,>=2.32
+Requires-Dist: shapely<3,>=2.1
+Requires-Dist: uvicorn[standard]<1,>=0.34
+Provides-Extra: dev
+Requires-Dist: ruff<1,>=0.11; extra == "dev"
+
+# AERIS backend
+
+FastAPI and geospatial analysis services for statewide screening, scoped parcel investigation, development envelopes, public grid context, and planning context.
+
+## Setup
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+```
+
+## Run
+
+```bash
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+## Test
+
+```bash
+python -m unittest discover -s tests -v
+```

@@ -221,4 +221,3 @@ def evaluate_equity_screen(
         lat=lat,
         lon=lon,
     )
-

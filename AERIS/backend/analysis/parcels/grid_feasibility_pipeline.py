@@ -12,8 +12,7 @@ import numpy as np
 import pandas as pd
 import pyogrio
 import yaml
-from shapely import LineString, make_valid, union_all
-from shapely.ops import nearest_points
+from shapely import make_valid, union_all
 
 from analysis.parcels.pipeline import (
     file_sha256,
@@ -22,10 +21,10 @@ from analysis.parcels.pipeline import (
     read_json,
     resolve_path,
 )
-from analysis.statewide.grid_infrastructure_pipeline import (
-    atomic_write_json,
-    repair_invalid_geometries,
-)
+from analysis.common.geometry import repair_invalid_geometries
+from analysis.common.io import atomic_write_json
+from analysis.common.locking import file_lock
+from analysis.common.geopackage import write_geopackage_atomic
 
 
 @dataclass(frozen=True)
@@ -1094,163 +1093,23 @@ def radius_summary(
     return result.reset_index()
 
 
-def connector_frame(
-    *,
-    parcels: gpd.GeoDataFrame,
-    matches: gpd.GeoDataFrame,
-    features: gpd.GeoDataFrame,
-    evidence_kind: str,
-    minimum_length_m: float,
-) -> gpd.GeoDataFrame:
-    records: list[
-        dict[str, Any]
-    ] = []
-
-    for _, row in matches.iterrows():
-        right_index = row.get(
-            "index_right"
-        )
-
-        if pd.isna(right_index):
-            continue
-
-        parcel_index = int(
-            row["_parcel_index"]
-        )
-
-        feature_index = int(
-            right_index
-        )
-
-        parcel_geometry = (
-            parcels.loc[
-                parcels[
-                    "_parcel_index"
-                ].eq(parcel_index)
-            ].geometry.iloc[0]
-        )
-
-        feature_geometry = (
-            features.geometry.loc[
-                feature_index
-            ]
-        )
-
-        parcel_point, feature_point = (
-            nearest_points(
-                parcel_geometry,
-                feature_geometry,
-            )
-        )
-
-        length_m = float(
-            parcel_point.distance(
-                feature_point
-            )
-        )
-
-        if length_m < minimum_length_m:
-            continue
-
-        records.append(
-            {
-                "evidence_kind": (
-                    evidence_kind
-                ),
-                "parcel_id": str(
-                    row["parcel_id"]
-                ),
-                "grid_feature_id": str(
-                    row.get(
-                        "grid_feature_id",
-                        "",
-                    )
-                ),
-                "distance_m": (
-                    round(
-                        length_m,
-                        3,
-                    )
-                ),
-                "geometry": LineString(
-                    [
-                        parcel_point,
-                        feature_point,
-                    ]
-                ),
-            }
-        )
-
-    if not records:
-        return gpd.GeoDataFrame(
-            columns=[
-                "evidence_kind",
-                "parcel_id",
-                "grid_feature_id",
-                "distance_m",
-                "geometry",
-            ],
-            geometry="geometry",
-            crs=parcels.crs,
-        )
-
-    return gpd.GeoDataFrame(
-        records,
-        geometry="geometry",
-        crs=parcels.crs,
-    )
-
-
 def write_layers(
     *,
     path: Path,
-    layers: list[
-        tuple[
-            str,
-            gpd.GeoDataFrame,
-        ]
-    ],
+    layers: list[tuple[str, gpd.GeoDataFrame]],
 ) -> list[str]:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
+    return write_geopackage_atomic(
+        path=path,
+        layers=layers,
+        indexes=[
+            ("parcel_grid_analysis", "parcel_id"),
+            ("scope_transmission_lines", "grid_feature_id"),
+            ("scope_substations", "grid_feature_id"),
+        ],
     )
 
-    if path.exists():
-        path.unlink()
 
-    written: list[str] = []
-
-    for layer_name, frame in layers:
-        if frame.empty:
-            continue
-
-        frame.to_file(
-            path,
-            layer=layer_name,
-            driver="GPKG",
-            mode=(
-                "w"
-                if not written
-                else "a"
-            ),
-            index=False,
-        )
-
-        written.append(
-            layer_name
-        )
-
-    if not written:
-        raise RuntimeError(
-            "Grid-feasibility pipeline "
-            "produced no writable layers."
-        )
-
-    return written
-
-
-def build_grid_feasibility(
+def _build_grid_feasibility_unlocked(
     *,
     config_path: Path,
     scope_id: str,
@@ -2044,58 +1903,17 @@ def build_grid_feasibility(
         "electrical_service_feasibility_confirmed"
     ] = False
 
-    minimum_connector_length = (
-        float(
-            config[
-                "analysis"
-            ][
-                "connector_minimum_length_m"
-            ]
-        )
-    )
-
-    transmission_connectors = (
-        connector_frame(
-            parcels=parcels,
-            matches=(
-                nearest_transmission
-            ),
-            features=transmission,
-            evidence_kind=(
-                "TRANSMISSION_CONNECTOR"
-            ),
-            minimum_length_m=(
-                minimum_connector_length
-            ),
-        )
-    )
-
-    substation_connectors = (
-        connector_frame(
-            parcels=parcels,
-            matches=(
-                nearest_substation
-            ),
-            features=substations,
-            evidence_kind=(
-                "SUBSTATION_CONNECTOR"
-            ),
-            minimum_length_m=(
-                minimum_connector_length
-            ),
-        )
-    )
-
-    connectors = pd.concat(
-        [
-            transmission_connectors,
-            substation_connectors,
-        ],
-        ignore_index=True,
-    )
-
+    # Connector lines are not precomputed for every parcel. Exact nearest
+    # distances remain in parcel_analysis; a UI may draw selected-parcel
+    # connectors on demand without creating thousands of redundant features.
     connectors = gpd.GeoDataFrame(
-        connectors,
+        columns=[
+            "evidence_kind",
+            "parcel_id",
+            "grid_feature_id",
+            "distance_m",
+            "geometry",
+        ],
         geometry="geometry",
         crs=parcels.crs,
     )
@@ -2137,12 +1955,6 @@ def build_grid_feasibility(
                     "substations"
                 ],
                 substations,
-            ),
-            (
-                layer_config[
-                    "connectors"
-                ],
-                connectors,
             ),
         ],
     )
@@ -2444,3 +2256,22 @@ def build_grid_feasibility(
     )
 
     return manifest
+
+def build_grid_feasibility(
+    *,
+    config_path: Path,
+    scope_id: str,
+    refresh: bool = False,
+) -> dict[str, Any]:
+    config_path = config_path.resolve()
+    project_directory = config_path.parents[2]
+    lock_path = (
+        project_directory / "data" / "runtime" / "locks"
+        / f"grid-{scope_id}.lock"
+    )
+    with file_lock(lock_path, timeout_seconds=1800):
+        return _build_grid_feasibility_unlocked(
+            config_path=config_path,
+            scope_id=scope_id,
+            refresh=refresh,
+        )

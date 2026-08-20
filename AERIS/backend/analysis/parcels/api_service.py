@@ -4,6 +4,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from analysis.common.geojson import feature_collection
+from analysis.common.geopackage import read_single_row
+from analysis.common.records import record_value
+
 import geopandas as gpd
 import pandas as pd
 
@@ -303,14 +307,7 @@ class ParcelDataService:
             "EPSG:4326"
         )
 
-        payload = json.loads(
-            frame.to_json(
-                drop_id=True,
-                na="null",
-            )
-        )
-
-        payload["metadata"] = {
+        metadata = {
             "scope": (
                 manifest["scope"]
             ),
@@ -336,7 +333,7 @@ class ParcelDataService:
             ),
         }
 
-        return payload
+        return feature_collection(frame, metadata=metadata)
 
     def parcel_detail(
         self,
@@ -344,52 +341,22 @@ class ParcelDataService:
         scope_id: str,
         parcel_id: str,
     ) -> dict[str, Any]:
-        frame = self._frame(
-            scope_id
+        paths = parcel_scope_paths(
+            config=self.config,
+            project_directory=self.project_directory,
+            scope_id=scope_id,
         )
 
-        matches = frame.loc[
-            frame[
-                "parcel_id"
-            ].astype(str).eq(
-                parcel_id
-            )
-        ]
+        row = read_single_row(
+            paths.normalized_output,
+            layer="parcels",
+            key_column="parcel_id",
+            key_value=parcel_id,
+            read_geometry=False,
+        )
 
-        if matches.empty:
-            raise KeyError(
-                parcel_id
-            )
-
-        row = matches.iloc[0]
-
-        def value(
-            column: str,
-        ) -> Any:
-            if column not in row.index:
-                return None
-
-            result = row[column]
-
-            try:
-                if pd.isna(result):
-                    return None
-            except (
-                TypeError,
-                ValueError,
-            ):
-                pass
-
-            if hasattr(
-                result,
-                "item",
-            ):
-                try:
-                    return result.item()
-                except ValueError:
-                    pass
-
-            return result
+        def value(column: str) -> Any:
+            return record_value(row, column)
 
         return {
             "scope_id": scope_id,
@@ -529,6 +496,12 @@ class ParcelDataService:
                 ),
                 "data_confidence": value(
                     "parcel_data_confidence"
+                ),
+                "public_classification_evidence": value(
+                    "public_classification_evidence"
+                ),
+                "institutional_classification_evidence": value(
+                    "institutional_classification_evidence"
                 ),
             },
             "statewide_context": {

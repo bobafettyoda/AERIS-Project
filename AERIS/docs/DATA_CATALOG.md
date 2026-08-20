@@ -1,166 +1,106 @@
 # AERIS Data Catalog
 
----
+This catalog describes the datasets currently wired into the AERIS v0.6.1 screening workflow. Runtime manifests record the exact feature counts, checksums, source fields, and snapshot dates used by each build.
 
-## Maryland Road Centerlines - Comprehensive
+## Source-quality vocabulary
 
-**Criterion**
-- Road Access
+- **Authoritative baseline** — statewide or federal source used directly for screening.
+- **Authoritative local adapter** — local jurisdiction source verified and normalized by a configured adapter.
+- **Screening reference** — useful public geometry that may be incomplete, approximate, or dated.
+- **Derived** — AERIS output calculated from one or more source layers.
+- **Unavailable/manual review** — a category AERIS does not currently automate; absence is never interpreted as no restriction.
 
-**Purpose**
-- Calculate nearest-road distance from a candidate site.
-- Normalize road proximity into a 0–1 road access score.
+## Statewide analytical foundation
 
-**Source**
-- Maryland iMAP
-- MDOT SHA
+| Dataset | Provider | Role | Coverage/status |
+|---|---|---|---|
+| Maryland political/physical boundaries | Maryland iMAP | Land mask, counties, municipalities, statewide study area | Authoritative baseline |
+| TIGER/Line census tracts | U.S. Census Bureau | Tract geometry and ACS linkage | Authoritative baseline; cached snapshot |
+| ACS tract population | U.S. Census Bureau | Population density criterion | Authoritative baseline; cached snapshot |
+| Maryland EnviroScreen | Maryland Department of the Environment / iMAP | Equity and disparate-outcome evidence; never increases technical score | Authoritative baseline with explicit fallback classification and missing-data status |
+| Maryland 1 km land grid | AERIS derived | Common statewide analytical unit | 27,596 retained land cells |
 
-**Access Method**
-- ArcGIS REST Map Service
+## Technical suitability inputs
 
-**REST Endpoint**
-https://mdgeodata.md.gov/imap/rest/services/Transportation/MD_RoadCenterlinesComprehensive/MapServer/0
+| Criterion | Primary source | Main evidence | Notes |
+|---|---|---|---|
+| Climate | NASA POWER regional data | Annual and July mean temperature | Cached statewide climate snapshot; source-distance evidence retained |
+| Grid infrastructure | HIFLD transmission lines and electric substations | Exact/nearest distance, mapped voltage, owner/status, substation context | Screening reference; available capacity is never inferred |
+| Telecommunications | Maryland broadband service-area data | Fiber/service proximity and provider diversity | Public mapped context, not a service commitment |
+| Protected areas | Maryland Protected Lands service | Direct protected-land intersection/distance | Hard-exclusion evidence where configured |
+| Surface water | Maryland detailed rivers/streams and lakes | Water intersection/distance | Direct mapped constraint |
+| Population density | Census TIGER/ACS | People per square kilometer | Technical score independent of demographic equity attributes |
+| Road access | Maryland interstate/U.S./Maryland route layers | Major-road proximity | Proximity does not prove legal or engineering access |
+| Hydro hazard | Maryland-hosted Effective FEMA Floodplain | SFHA intersection/distance plus AERIS 91 m screening buffer | The 91 m buffer is a screening assumption, not a legal setback |
 
-**Geometry**
-- Polyline
+## Parcel backbone
 
-**Study Area**
-- Prince George's County
-- Filter: `COUNTY = 16`
+| Dataset | Provider | Role | Notes |
+|---|---|---|---|
+| Maryland Parcel Boundaries | Maryland iMAP / Maryland Department of Planning / SDAT | Statewide legal/tax-map parcel geometry and baseline attributes | Queried only for a candidate zone or bounding box; not survey-grade and does not confirm availability |
+| Parcel property attributes embedded in statewide layer | Maryland Planning / SDAT | Address, acreage, statewide zoning field, land-use/exemption/improvement indicators and source dates | Missing fields remain unavailable; no vacancy claim |
+| Statewide final AERIS grid | AERIS derived | Regional score, exclusion, equity, and eligibility inherited by parcel | Linked using maximum grid overlap with nearest fallback |
 
-**Status**
-- ✅ Connected
-- ✅ County filter verified
-- ✅ Count verified: 17,974 Prince George's County road features
-- ✅ Paging implemented
-- ✅ Distance analysis complete
-- ✅ Normalization complete
-- ✅ Weighted contribution connected to YAML decision model
+## Preliminary development-envelope inputs
 
-**Current Normalization**
-- Best: 800 m or closer
-- Worst: 5000 m or farther
-- Direction: closer is better
+| Dataset | Role in envelope | Subtractive? |
+|---|---|---:|
+| Maryland surface water snapshot | Physical mapped constraint | Yes |
+| Maryland protected lands snapshot | Protected-property constraint | Yes |
+| Effective FEMA SFHA plus configured AERIS buffer | Flood screening constraint | Yes |
+| FAA physical runway pavement derived from NASR runway endpoints and width | Physical runway conflict | Yes |
+| FAA Part 77 notice-distance screen | Height-dependent aviation review context | No |
 
-**Decision Model Weight**
-- `road_access`: `0.0795`
+The output is a **preliminary mapped-constraint envelope**, not confirmed buildable land. Wetlands, terrain, buildings, local setbacks, rights-of-way, utilities, title, and engineering are not yet fully modeled.
 
----
+## FAA aviation
 
-## HIFLD Electric Power Transmission Lines
+| Source | Provider | Role | Snapshot |
+|---|---|---|---|
+| 28 Day NASR Airports and Other Landing Facilities CSV | Federal Aviation Administration | Airport points, runway centerlines, physical runway pavement, Part 77 notice-distance screening | Cataloged in `configs/application.json` and the aviation manifest |
 
-**Criterion**
-- Grid Infrastructure
+AERIS does not infer airport property boundaries, runway protection zones, proposed-height compliance, or FAA approval.
 
-**Purpose**
-- Calculate distance to nearest electric transmission line.
-- Normalize transmission-line proximity into a 0–1 grid infrastructure score.
+## Public grid context
 
-**Source**
-- HIFLD / DOE public ArcGIS service
+| Source | Provider | Fields used |
+|---|---|---|
+| U.S. Electric Power Transmission Lines | HIFLD public ArcGIS service | Voltage, voltage class, owner, status, source/validation date, endpoint substations |
+| Electric Substations | HIFLD public ArcGIS service | Maximum/minimum voltage, line count, type, status, source/validation date |
 
-**Access Method**
-- ArcGIS REST Feature Service
+AERIS reports exact parcel-to-geometry distance and nearby feature summaries. It always records:
 
-**REST Endpoint**
-https://services2.arcgis.com/LYMgRMwHfrWWEg3s/arcgis/rest/services/HIFLD_US_Electric_Power_Transmission_Lines/FeatureServer/0
+```text
+capacity_status = UNKNOWN_NOT_IN_PUBLIC_SOURCE
+utility_confirmation_required = true
+interconnection_study_required = true
+```
 
-**Geometry**
-- Polyline
+## Statewide planning context
 
-**Study Area**
-- United States
-- To be filtered to Maryland / Prince George's County during analysis
+| Dataset | Provider | Role |
+|---|---|---|
+| County and municipal boundaries | Maryland iMAP | Jurisdiction and municipal overlap evidence |
+| Priority Funding Areas | Maryland Planning / iMAP | Statewide planning context |
+| Critical Areas | Maryland iMAP | Critical Area overlap acreage and context |
+| Enterprise Zones | Maryland business/economy GIS | Incentive/planning context |
+| Sustainable Communities | Maryland business/economy GIS | Incentive/planning context |
+| Foreign Trade Zones | Maryland business/economy GIS | Incentive/planning context |
+| RISE Zones | Maryland business/economy GIS | Incentive/planning context |
+| Opportunity Zones | Maryland business/economy GIS | Incentive/planning context |
 
-**Status**
-- ✅ Count verified: 74,553 features
-- ✅ One-feature GeoJSON test verified
-- 🔄 Distance analysis pending
-- 🔄 Normalization pending
-- 🔄 Weighted contribution pending
+The registry represents all 23 counties plus Baltimore City. Unless a local adapter is explicitly configured, local zoning, comprehensive plans, active development, and permits remain `STATEWIDE_BASELINE_ONLY`, `MANUAL_REVIEW_REQUIRED`, or `SOURCE_DISCOVERY_REQUIRED`.
 
-**Current Normalization**
-- Planned: closer is better
-- Preferred distance from decision model: `transmission_line_m = 4000`
+## Derived products
 
-**Decision Model Weight**
-- `grid_infrastructure`: `0.154`
----
+- statewide foundation, infrastructure, access, environmental, climate/final GeoPackages;
+- statewide heatmap preview;
+- candidate-zone, membership, sensitivity, score-band, and bias-audit outputs;
+- scoped normalized parcel GeoPackages;
+- preliminary parcel-envelope GeoPackages;
+- FAA aviation screening GeoPackage;
+- parcel public-grid context GeoPackages;
+- parcel planning-context GeoPackages;
+- manifests with checksums, counts, source fields, safeguards, and methodology.
 
-## FEMA National Flood Hazard Layer
-
-**Criterion**
-- Hydro Hazard
-
-**Purpose**
-- Identify whether a candidate site intersects mapped FEMA flood hazard zones.
-- Support flood-risk scoring and future hard-exclusion screening.
-
-**Source**
-- FEMA National Flood Hazard Layer (NFHL)
-
-**Access Method**
-- ArcGIS REST Feature Service
-
-**REST Endpoint**
-https://services.arcgis.com/2gdL2gxYNFY2TOUb/ArcGIS/rest/services/FEMA_National_Flood_Hazard_Layer/FeatureServer/0
-
-**Geometry**
-- Polygon
-
-**Study Area**
-- United States
-- Queried around candidate point during analysis
-
-**Status**
-- 🔄 Connector pending
-- 🔄 Point-in-polygon analysis pending
-## FEMA Effective Floodplain — Maryland
-
-**Criterion**
-- Hydro Hazard
-
-**Purpose**
-- Identify whether a candidate site intersects a mapped FEMA flood hazard polygon.
-- Identify whether a Special Flood Hazard Area is within the study-derived 91-meter buffer.
-- Support hard-exclusion screening for unsuitable candidate sites.
-
-**Source**
-- FEMA effective floodplain data hosted by Maryland iMAP
-
-**Access Method**
-- ArcGIS REST Feature Service
-
-**REST Endpoint**
-https://mdgeodata.md.gov/imap/rest/services/Hydrology/MD_Floodplain/FeatureServer/1
-
-**Important Fields**
-- `FLD_ZONE`
-- `ZONE_SUBTY`
-- `SFHA_TF`
-- `DFIRM_ID`
-- `FLD_AR_ID`
-
-**Geometry**
-- Polygon
-
-**Study Area**
-- Maryland
-- Current demonstration area: Prince George's County
-- Queried around each candidate point during analysis
-
-**Analysis**
-- Point-in-polygon flood-zone check
-- 91-meter Special Flood Hazard Area buffer check
-- Binary hard-exclusion result
-- Hydro-hazard criterion weight: `0.039`
-
-**API Endpoint**
-- `/gis/flood/fema/hazard-score`
-
-**Status**
-- ✅ Data service verified
-- ✅ Connector active
-- ✅ Point-in-polygon analysis active
-- ✅ 91-meter buffer analysis active
-- ✅ API endpoint tested successfully- 🔄 Hydro hazard scoring pending
+Large source and derived GIS artifacts are intentionally ignored by Git. They must be generated through the scripts in `AERIS/backend/scripts` and validated with the matching review commands.

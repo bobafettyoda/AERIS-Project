@@ -712,3 +712,181 @@
 .planning-swatch.municipal {
   background: #ca8a04;
 }
+
+.parcel-screening-summary {
+  margin-top: 15px;
+  padding: 13px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+}
+
+.parcel-summary-grid {
+  margin-top: 9px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.parcel-summary-grid > div,
+.parcel-next-action {
+  padding: 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+
+.parcel-summary-grid span,
+.parcel-next-action span {
+  display: block;
+  color: #64748b;
+  font-size: 0.63rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.parcel-summary-grid strong,
+.parcel-next-action strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem;
+}
+
+.parcel-summary-grid small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 0.64rem;
+  line-height: 1.35;
+}
+
+.summary-positive {
+  color: #065f46;
+  background: #ecfdf5;
+  border-color: #a7f3d0 !important;
+}
+
+.summary-caution {
+  color: #854d0e;
+  background: #fefce8;
+  border-color: #fde68a !important;
+}
+
+.summary-blocked {
+  color: #991b1b;
+  background: #fef2f2;
+  border-color: #fecaca !important;
+}
+
+.summary-unknown {
+  color: #475569;
+  background: #f1f5f9;
+  border-color: #cbd5e1 !important;
+}
+
+.parcel-next-action {
+  margin-top: 9px;
+}
+
+.parcel-summary-lists {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.parcel-summary-lists h3 {
+  margin: 0 0 5px;
+  font-size: 0.72rem;
+}
+
+.parcel-summary-lists ul {
+  margin: 0;
+  padding-left: 17px;
+  color: #475569;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.parcel-summary-lists p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.parcel-artifact-status {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.parcel-artifact-status span {
+  padding: 4px 7px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.artifact-ready {
+  color: #065f46;
+  background: #d1fae5;
+}
+
+.artifact-running,
+.artifact-pending {
+  color: #1e40af;
+  background: #dbeafe;
+}
+
+.artifact-failed,
+.artifact-missing {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.parcel-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.parcel-loading strong,
+.parcel-loading span {
+  display: block;
+}
+
+@media (max-width: 620px) {
+  .parcel-summary-grid,
+  .parcel-summary-lists {
+    grid-template-columns: 1fr;
+  }
+}
+
+.parcel-view-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.parcel-all-evidence {
+  margin-top: 12px;
+}
+
+.parcel-all-evidence > summary {
+  padding: 10px;
+  color: #0f766e;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  border-radius: 8px;
+}
+
+.parcel-all-evidence[open] > summary {
+  margin-bottom: 10px;
+}
+
+.parcel-evidence-section {
+  margin-top: 16px;
+  padding-top: 2px;
+}

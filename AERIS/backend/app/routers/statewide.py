@@ -14,6 +14,14 @@ from analysis.statewide.api_service import (
     StatewidePaths,
 )
 
+from app.schemas.parcels import GeoJSONFeatureCollection
+from app.schemas.statewide import (
+    StatewideCellDetailResponse,
+    StatewideHealthResponse,
+    StatewideSummaryResponse,
+    StatewideZoneDetailResponse,
+)
+
 
 router = APIRouter(
     prefix="/analysis/statewide",
@@ -39,7 +47,7 @@ def unavailable(
     )
 
 
-@router.get("/health")
+@router.get("/health", response_model=StatewideHealthResponse)
 def statewide_health() -> dict:
     result = service.health()
 
@@ -52,7 +60,7 @@ def statewide_health() -> dict:
     return result
 
 
-@router.get("/summary")
+@router.get("/summary", response_model=StatewideSummaryResponse)
 def statewide_summary() -> dict:
     try:
         return service.summary()
@@ -61,7 +69,7 @@ def statewide_summary() -> dict:
         raise unavailable(error) from error
 
 
-@router.get("/grid")
+@router.get("/grid", response_model=GeoJSONFeatureCollection)
 def statewide_grid(
     score_type: Literal[
         "technical",
@@ -144,7 +152,7 @@ def statewide_grid(
     )
 
 
-@router.get("/candidate-zones")
+@router.get("/candidate-zones", response_model=GeoJSONFeatureCollection)
 def statewide_candidate_zones(
     mode: Literal[
         "top",
@@ -196,7 +204,7 @@ def statewide_candidate_zones(
     )
 
 
-@router.get("/cells/{cell_id}")
+@router.get("/cells/{cell_id}", response_model=StatewideCellDetailResponse)
 def statewide_cell_detail(
     cell_id: str,
 ) -> dict:
@@ -218,7 +226,7 @@ def statewide_cell_detail(
         raise unavailable(error) from error
 
 
-@router.get("/zones/{zone_id}")
+@router.get("/zones/{zone_id}", response_model=StatewideZoneDetailResponse)
 def statewide_zone_detail(
     zone_id: str,
 ) -> dict:

@@ -8,15 +8,15 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 
-from analysis.statewide.grid_infrastructure_pipeline import (
-    StageReporter,
+from analysis.common.io import (
     atomic_write_json,
-    build_session,
     file_sha256,
     load_yaml,
     resolve_path,
-    summary_statistics,
 )
+from analysis.common.progress import StageReporter
+from analysis.common.statistics import summary_statistics
+from connectors.arcgis.client import build_session
 from analysis.statewide.scoring import (
     piecewise_linear_series,
     weighted_composite_series,

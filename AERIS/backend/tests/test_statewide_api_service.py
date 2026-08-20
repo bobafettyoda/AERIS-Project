@@ -486,6 +486,27 @@ class StatewideApiServiceTests(
             ],
         )
 
+    def test_file_cache_invalidates_when_source_changes(
+        self,
+    ) -> None:
+        path = self.root / "cache-marker.txt"
+        path.write_text("first", encoding="utf-8")
+        calls = []
+
+        def loader():
+            calls.append(path.read_text(encoding="utf-8"))
+            return calls[-1]
+
+        first = self.service._cached("test-marker", (path,), loader)
+        cached = self.service._cached("test-marker", (path,), loader)
+        path.write_text("second-value", encoding="utf-8")
+        refreshed = self.service._cached("test-marker", (path,), loader)
+
+        self.assertEqual(first, "first")
+        self.assertEqual(cached, "first")
+        self.assertEqual(refreshed, "second-value")
+        self.assertEqual(calls, ["first", "second-value"])
+
     def test_summary_exposes_audit(
         self,
     ) -> None:

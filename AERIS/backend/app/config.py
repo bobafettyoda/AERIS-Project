@@ -94,3 +94,11 @@ FIBER_COVERAGE_LAYER_URL = (
     "UtilityTelecom/MD_BroadbandServiceAreas/MapServer/3"
 )
 
+
+
+def get_build_token() -> str | None:
+    value = os.getenv(
+        "AERIS_BUILD_TOKEN",
+        "",
+    ).strip()
+    return value or None

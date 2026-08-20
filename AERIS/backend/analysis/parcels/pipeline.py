@@ -19,15 +19,16 @@ from shapely.geometry import box
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
-from analysis.statewide.grid_infrastructure_pipeline import (
-    atomic_write_json,
+from analysis.common.geometry import repair_invalid_geometries
+from analysis.common.io import atomic_write_json, file_sha256
+from analysis.common.locking import file_lock
+from analysis.common.geopackage import write_geopackage_atomic
+from connectors.arcgis.client import (
     build_session,
     chunks,
     feature_collection_to_frame,
-    file_sha256,
     object_ids_in_envelope,
     query_feature_batch,
-    repair_invalid_geometries,
     request_json,
     selected_fields,
 )
@@ -313,38 +314,73 @@ def normalize_service_status(
     return result
 
 
-def keyword_mask(
-    values: pd.Series,
+def keyword_pattern(
     keywords: list[str],
-) -> pd.Series:
+) -> re.Pattern[str] | None:
     usable = [
         keyword.strip()
         for keyword in keywords
         if keyword.strip()
     ]
-
     if not usable:
+        return None
+    pattern = "|".join(
+        re.escape(keyword)
+        for keyword in sorted(
+            usable,
+            key=len,
+            reverse=True,
+        )
+    )
+    return re.compile(
+        rf"(?<![A-Za-z0-9])(?:{pattern})(?![A-Za-z0-9])",
+        flags=re.IGNORECASE,
+    )
+
+
+def keyword_mask(
+    values: pd.Series,
+    keywords: list[str],
+) -> pd.Series:
+    pattern = keyword_pattern(keywords)
+    if pattern is None:
         return pd.Series(
             False,
             index=values.index,
             dtype=bool,
         )
-
-    pattern = "|".join(
-        re.escape(keyword)
-        for keyword in usable
-    )
-
     return (
         values.astype("string")
         .fillna("")
         .str.contains(
             pattern,
-            case=False,
             regex=True,
             na=False,
         )
     )
+
+
+def keyword_evidence(
+    values: pd.Series,
+    keywords: list[str],
+) -> pd.Series:
+    pattern = keyword_pattern(keywords)
+    if pattern is None:
+        return pd.Series(
+            "",
+            index=values.index,
+            dtype="string",
+        )
+
+    def matches(value: object) -> str:
+        text = "" if value is None else str(value)
+        found = {
+            match.group(0).casefold()
+            for match in pattern.finditer(text)
+        }
+        return "; ".join(sorted(found))
+
+    return values.map(matches).astype("string")
 
 
 def scope_from_bbox(
@@ -706,6 +742,18 @@ def download_source_snapshot(
         source["target_crs"]
     )
 
+    raw_snapshot_fingerprint = json_hash(
+        {
+            "layer_url": layer_url,
+            "target_crs": target_crs,
+            "fields": list(source["fields"]),
+            "scope_id": scope.scope_id,
+            "scope_type": scope.scope_type,
+            "bbox_wgs84": list(scope.bbox_wgs84),
+            "scope_source_checksum": scope.source_checksum,
+        }
+    )
+
     if refresh:
         shutil.rmtree(
             paths.raw_directory,
@@ -722,32 +770,32 @@ def download_source_snapshot(
         and paths.raw_metadata.exists()
         and not refresh
     ):
+        metadata = read_json(paths.raw_metadata)
+        if metadata.get("raw_snapshot_fingerprint") == raw_snapshot_fingerprint:
+            print(
+                (
+                    "[Parcels] Using cached "
+                    f"source snapshot for "
+                    f"{scope.scope_id}"
+                ),
+                flush=True,
+            )
+            frame = gpd.read_file(
+                paths.raw_snapshot,
+                layer="source_parcels",
+            )
+            metadata["used_cached_snapshot"] = True
+            return frame, metadata
+
         print(
             (
-                "[Parcels] Using cached "
-                f"source snapshot for "
-                f"{scope.scope_id}"
+                "[Parcels] Cached raw snapshot fingerprint changed; "
+                f"rebuilding {scope.scope_id}"
             ),
             flush=True,
         )
-
-        frame = gpd.read_file(
-            paths.raw_snapshot,
-            layer="source_parcels",
-        )
-
-        metadata = read_json(
-            paths.raw_metadata
-        )
-
-        metadata[
-            "used_cached_snapshot"
-        ] = True
-
-        return (
-            frame,
-            metadata,
-        )
+        shutil.rmtree(paths.raw_directory, ignore_errors=True)
+        shutil.rmtree(paths.page_directory.parent, ignore_errors=True)
 
     paths.raw_directory.mkdir(
         parents=True,
@@ -881,19 +929,17 @@ def download_source_snapshot(
             )
         )
 
-        if (
-            page_path.exists()
-            and not refresh
-        ):
-            payload = json.loads(
-                page_path.read_text(
-                    encoding="utf-8"
-                )
+        page_id_values = [int(value) for value in page_ids]
+        payload = None
+        if page_path.exists() and not refresh:
+            candidate = json.loads(
+                page_path.read_text(encoding="utf-8")
             )
+            if candidate.get("_aeris_object_ids") == page_id_values:
+                payload = candidate
+                reused_page_count += 1
 
-            reused_page_count += 1
-
-        else:
+        if payload is None:
             features = (
                 query_feature_batch(
                     session=http,
@@ -907,10 +953,10 @@ def download_source_snapshot(
             )
 
             payload = {
-                "type": (
-                    "FeatureCollection"
-                ),
+                "type": "FeatureCollection",
                 "features": features,
+                "_aeris_object_ids": page_id_values,
+                "_aeris_raw_snapshot_fingerprint": raw_snapshot_fingerprint,
             }
 
             atomic_write_json(
@@ -1005,15 +1051,15 @@ def download_source_snapshot(
             "after local scope filtering."
         )
 
-    frame.to_file(
-        paths.raw_snapshot,
-        layer="source_parcels",
-        driver="GPKG",
-        index=False,
+    write_geopackage_atomic(
+        path=paths.raw_snapshot,
+        layers=[("source_parcels", frame)],
+        indexes=[("source_parcels", "_source_object_id")],
     )
 
     metadata = {
         "schema_version": 1,
+        "raw_snapshot_fingerprint": raw_snapshot_fingerprint,
         "retrieved_at_utc": (
             utc_now()
         ),
@@ -1399,6 +1445,24 @@ def normalize_parcels(
         )
     )
 
+    public_classification_evidence = keyword_evidence(
+        classification_text,
+        list(
+            classification[
+                "public_exemption_keywords"
+            ]
+        ),
+    )
+
+    institutional_classification_evidence = keyword_evidence(
+        classification_text,
+        list(
+            classification[
+                "institutional_keywords"
+            ]
+        ),
+    )
+
     existing_development_indicator = (
         source_year_built.fillna(
             0
@@ -1592,6 +1656,12 @@ def normalize_parcels(
             ),
             "institutional_use_flag": (
                 institutional_use_flag
+            ),
+            "public_classification_evidence": (
+                public_classification_evidence
+            ),
+            "institutional_classification_evidence": (
+                institutional_classification_evidence
             ),
             "existing_development_indicator": (
                 existing_development_indicator
@@ -2205,23 +2275,14 @@ def write_geopackage(
     path: Path,
     layer: str,
 ) -> None:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    if path.exists():
-        path.unlink()
-
-    frame.to_file(
-        path,
-        layer=layer,
-        driver="GPKG",
-        index=False,
+    write_geopackage_atomic(
+        path=path,
+        layers=[(layer, frame)],
+        indexes=[(layer, "parcel_id")],
     )
 
 
-def build_parcel_scope(
+def _build_parcel_scope_unlocked(
     *,
     config_path: Path,
     zone_id: str | None = None,
@@ -2620,3 +2681,47 @@ def build_parcel_scope(
     )
 
     return manifest
+
+def build_parcel_scope(
+    *,
+    config_path: Path,
+    zone_id: str | None = None,
+    bbox: tuple[float, float, float, float] | None = None,
+    scope_name: str | None = None,
+    refresh: bool = False,
+) -> dict[str, Any]:
+    config_path = config_path.resolve()
+    config = load_config(config_path)
+    project_directory = config_path.parents[2]
+    if zone_id is not None:
+        scope = scope_from_zone(
+            config=config,
+            project_directory=project_directory,
+            zone_id=zone_id,
+        )
+    elif bbox is not None:
+        scope = scope_from_bbox(
+            west=float(bbox[0]),
+            south=float(bbox[1]),
+            east=float(bbox[2]),
+            north=float(bbox[3]),
+            scope_name=scope_name,
+        )
+    else:
+        raise ValueError("Provide either zone_id or bbox.")
+
+    lock_path = (
+        project_directory
+        / "data"
+        / "runtime"
+        / "locks"
+        / f"parcel-{scope.scope_id}.lock"
+    )
+    with file_lock(lock_path, timeout_seconds=1800):
+        return _build_parcel_scope_unlocked(
+            config_path=config_path,
+            zone_id=zone_id,
+            bbox=bbox,
+            scope_name=scope_name,
+            refresh=refresh,
+        )

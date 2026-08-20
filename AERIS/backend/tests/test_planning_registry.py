@@ -74,8 +74,8 @@ class PlanningRegistryTests(
         self.assertEqual(
             result.authority_status,
             (
-                "MUNICIPAL_PLANNING_"
-                "REVIEW_REQUIRED"
+                "COUNTY_AND_MUNICIPAL_AUTHORITY_"
+                "VERIFICATION_REQUIRED"
             ),
         )
 

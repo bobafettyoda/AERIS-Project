@@ -30,3 +30,14 @@ If you are developing a production application, we recommend enabling type-aware
 ```
 
 See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+
+## Contract generation and tests
+
+```bash
+npm run generate:api
+npm test
+npm run build
+npm run lint
+```
+
+`generate:api` refreshes OpenAPI-derived TypeScript response types and the generated application release metadata. The lightweight frontend tests use Node's built-in test runner with TypeScript type stripping; CI also performs the full TypeScript/Vite production build.

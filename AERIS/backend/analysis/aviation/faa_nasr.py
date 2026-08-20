@@ -27,6 +27,8 @@ from shapely import (
 from shapely.geometry.base import BaseGeometry
 from urllib3.util.retry import Retry
 
+from analysis.common.geopackage import write_geopackage_atomic
+
 
 @dataclass(frozen=True)
 class AviationPaths:
@@ -1567,50 +1569,12 @@ def build_runway_layers(
 def write_geopackage_layers(
     *,
     path: Path,
-    layers: list[
-        tuple[
-            str,
-            gpd.GeoDataFrame,
-        ]
-    ],
+    layers: list[tuple[str, gpd.GeoDataFrame]],
 ) -> list[str]:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
+    return write_geopackage_atomic(
+        path=path,
+        layers=layers,
     )
-
-    if path.exists():
-        path.unlink()
-
-    written: list[str] = []
-
-    for layer_name, frame in layers:
-        if frame.empty:
-            continue
-
-        frame.to_file(
-            path,
-            layer=layer_name,
-            driver="GPKG",
-            mode=(
-                "w"
-                if not written
-                else "a"
-            ),
-            index=False,
-        )
-
-        written.append(
-            layer_name
-        )
-
-    if not written:
-        raise RuntimeError(
-            "FAA aviation pipeline "
-            "produced no writable layers."
-        )
-
-    return written
 
 
 def build_faa_aviation_snapshot(

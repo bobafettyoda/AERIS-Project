@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:api": "cd ../backend && python3 scripts/export_openapi.py && python3 scripts/generate_typescript_api.py && python3 scripts/generate_release_metadata.py",
+    "test": "node --experimental-strip-types --test src/parcel/*.test.ts"
   },
   "dependencies": {
     "maplibre-gl": "^6.0.0",

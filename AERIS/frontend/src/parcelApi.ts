@@ -8,6 +8,12 @@ import {
   API_BASE_URL,
 } from "./api";
 
+import type {
+  ArtifactStatus as GeneratedArtifactStatus,
+  BuildJob as GeneratedBuildJob,
+  ParcelDetailResponse as GeneratedParcelDetail,
+} from "./generated/api";
+
 
 export type ParcelFeatureCollection =
   FeatureCollection<
@@ -35,236 +41,8 @@ export type ParcelFeatureCollection =
   };
 
 
-export type ParcelDetail = {
-  scope_id: string;
-  parcel_id: string;
-
-  identity: {
-    account_id?: string | null;
-    jurisdiction_code?: string | null;
-    county_fips?: string | null;
-    county_name?: string | null;
-    property_address?: string | null;
-  };
-
-  parcel: {
-    parcel_area_acres?: number | null;
-    source_reported_acres?: number | null;
-    geometry_area_acres?: number | null;
-    land_use_code?: string | null;
-    land_use_description?: string | null;
-    zoning_code?: string | null;
-    commercial_industrial_use?:
-      string | null;
-    public_water_status?:
-      string | null;
-    public_sewer_status?:
-      string | null;
-  };
-
-  source_development_indicators:
-    Record<string, unknown>;
-
-  classification: {
-    public_land_flag: boolean;
-    institutional_use_flag: boolean;
-    existing_development_indicator:
-      boolean;
-    availability_status?: string | null;
-    availability_reason?: string | null;
-    availability_confirmed: false;
-    data_confidence?: string | null;
-  };
-
-  statewide_context: {
-    cell_id?: string | null;
-    technical_score?: number | null;
-    effective_score?: number | null;
-    equity_gate?: string | null;
-    hard_excluded?: boolean | null;
-    auto_eligible?: boolean | null;
-    exploration_eligible?:
-      boolean | null;
-  };
-
-  scope: {
-    candidate_zone_id?: string | null;
-    candidate_zone_mode?: string | null;
-    overlap_fraction?: number | null;
-    overlap_area_acres?: number | null;
-    statewide_link_method?: string | null;
-    statewide_context_distance_m?: number | null;
-  };
-
-  source_dates: Record<
-    string,
-    string | null
-  >;
-
-  development_envelope?: {
-    status?: string | null;
-    analysis_area_acres?: number | null;
-    water_overlap_acres?: number | null;
-    protected_lands_overlap_acres?:
-      number | null;
-    sfha_overlap_acres?: number | null;
-    aviation_overlap_acres?: number | null;
-    aviation_notice_screening_overlap_acres?:
-      number | null;
-    aviation_notice_screening_status?:
-      string | null;
-    faa_determination_made: false;
-    mapped_constrained_area_acres?:
-      number | null;
-    preliminary_unconstrained_area_acres?:
-      number | null;
-    preliminary_unconstrained_fraction?:
-      number | null;
-    largest_contiguous_unconstrained_acres?:
-      number | null;
-    largest_contiguous_fraction?:
-      number | null;
-    unconstrained_component_count?:
-      number | null;
-    mapped_constraint_types?:
-      string | null;
-    preliminary_envelope_only: true;
-  } | null;
-
-  grid_feasibility?: {
-    grid_feasibility_status?: string | null;
-    public_grid_context_class?: string | null;
-    grid_data_confidence?: string | null;
-    statewide_grid_infrastructure_score?:
-      number | null;
-
-    nearest_transmission: {
-      distance_m?: number | null;
-      id?: string | null;
-      type?: string | null;
-      status?: string | null;
-      owner?: string | null;
-      voltage_kv?: number | null;
-      voltage_class?: string | null;
-      source_voltage_class?: string | null;
-      inferred?: boolean | null;
-      substation_1?: string | null;
-      substation_2?: string | null;
-      source_date?: string | null;
-      validation_method?: string | null;
-      data_confidence?: string | null;
-    };
-
-    transmission_within_5km: {
-      feature_count?: number | null;
-      known_voltage_count?: number | null;
-      maximum_voltage_kv?: number | null;
-      distinct_owner_count?: number | null;
-      owners?: string | null;
-    };
-
-    nearest_substation: {
-      distance_m?: number | null;
-      id?: string | null;
-      name?: string | null;
-      type?: string | null;
-      status?: string | null;
-      line_count?: number | null;
-      maximum_voltage_kv?: number | null;
-      minimum_voltage_kv?: number | null;
-      voltage_class?: string | null;
-      source_date?: string | null;
-      validation_method?: string | null;
-      data_confidence?: string | null;
-    };
-
-    substations_within_10km: {
-      feature_count?: number | null;
-      known_voltage_count?: number | null;
-      maximum_voltage_kv?: number | null;
-    };
-
-    capacity: {
-      status: string;
-      available_capacity_mw: null;
-      utility_confirmation_required: true;
-      interconnection_study_required: true;
-      electrical_service_feasibility_confirmed:
-        false;
-    };
-
-    warning: string;
-  } | null;
-
-  planning_context?: {
-    jurisdiction: {
-      county_fips?: string | null;
-      county_name?: string | null;
-      municipality_name?: string | null;
-      authority_profile?: string | null;
-      authority_level?: string | null;
-      authority_name?: string | null;
-      authority_status?: string | null;
-    };
-
-    zoning: {
-      statewide_code?: string | null;
-      statewide_status?: string | null;
-      local_source_status?: string | null;
-      local_source_note?: string | null;
-      local_verified: false;
-      permitted_use_determined: false;
-    };
-
-    planning_sources: {
-      comprehensive_plan?: string | null;
-      active_development?: string | null;
-      permits?: string | null;
-    };
-
-    statewide_context: {
-      priority_funding_area?: string | null;
-      critical_area_overlap: boolean;
-      critical_area_overlap_acres?:
-        number | null;
-      enterprise_zone_count?:
-        number | null;
-      enterprise_zone_names?:
-        string | null;
-      sustainable_community_count?:
-        number | null;
-      sustainable_community_names?:
-        string | null;
-      foreign_trade_zone_count?:
-        number | null;
-      foreign_trade_zone_names?:
-        string | null;
-      rise_zone_count?: number | null;
-      rise_zone_names?: string | null;
-      opportunity_zone_count?:
-        number | null;
-      opportunity_zone_names?:
-        string | null;
-    };
-
-    decision: {
-      planning_review_status?:
-        string | null;
-      data_confidence?: string | null;
-      manual_local_verification_required:
-        true;
-      active_development_clear: false;
-      permit_clearance_determined:
-        false;
-      entitlement_clearance_determined:
-        false;
-    };
-
-    warning: string;
-  } | null;
-
-  warning: string;
-};
+export type ParcelDetail =
+  GeneratedParcelDetail;
 
 
 async function fetchJson<T>(
@@ -501,6 +279,97 @@ export async function fetchParcelPlanningEvidence(
       "/analysis/parcels/scopes/"
       + encodeURIComponent(scopeId)
       + "/planning-evidence"
+    ),
+  );
+}
+
+
+export type ArtifactStatus =
+  GeneratedArtifactStatus;
+
+
+export type ParcelBuildJob =
+  GeneratedBuildJob;
+
+
+export type ParcelScopeBundle = {
+  scope_id: string;
+  artifacts: Record<string, ArtifactStatus>;
+  parcels: ParcelFeatureCollection;
+  envelopes: ParcelEnvelopeCollection | null;
+  constraints: ParcelEnvelopeCollection | null;
+  grid: ParcelGridEvidenceCollection | null;
+  planning: ParcelPlanningEvidenceCollection | null;
+};
+
+
+async function postJson<T>(
+  path: string,
+  body: unknown,
+): Promise<T> {
+  const response = await fetch(
+    `${API_BASE_URL}${path}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+
+    throw new Error(
+      (
+        `Parcel API returned HTTP `
+        + `${response.status}: `
+        + text.slice(0, 400)
+      ),
+    );
+  }
+
+  return (await response.json()) as T;
+}
+
+
+export async function startZoneParcelBuild(
+  zoneId: string,
+  refresh = false,
+): Promise<ParcelBuildJob> {
+  return postJson<ParcelBuildJob>(
+    (
+      "/analysis/parcels/build/zone/"
+      + encodeURIComponent(zoneId)
+    ),
+    {
+      refresh,
+    },
+  );
+}
+
+
+export async function fetchParcelBuildJob(
+  jobId: string,
+): Promise<ParcelBuildJob> {
+  return fetchJson<ParcelBuildJob>(
+    (
+      "/analysis/parcels/jobs/"
+      + encodeURIComponent(jobId)
+    ),
+  );
+}
+
+
+export async function fetchParcelScopeBundle(
+  scopeId: string,
+): Promise<ParcelScopeBundle> {
+  return fetchJson<ParcelScopeBundle>(
+    (
+      "/analysis/parcels/scopes/"
+      + encodeURIComponent(scopeId)
+      + "/bundle"
     ),
   );
 }

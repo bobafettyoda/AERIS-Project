@@ -1,0 +1,4975 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AERIS Backend",
+    "description": "Maryland statewide site screening, scoped parcel investigation, mapped physical constraints, public grid context, and planning context.",
+    "version": "0.6.1"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/data-center-demo": {
+      "post": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Run Data Center Demo",
+        "operationId": "run_data_center_demo_analysis_data_center_demo_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/data-center-demo/validate": {
+      "get": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Validate Data Center Model",
+        "operationId": "validate_data_center_model_analysis_data_center_demo_validate_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/data-center-demo/sample-score": {
+      "get": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Sample Data Center Score",
+        "operationId": "sample_data_center_score_analysis_data_center_demo_sample_score_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/data-center-demo/normalize-road-distance": {
+      "get": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Normalize Road Distance",
+        "operationId": "normalize_road_distance_analysis_data_center_demo_normalize_road_distance_get",
+        "parameters": [
+          {
+            "name": "distance_m",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Distance M"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/data-center-demo/candidate-site": {
+      "get": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Evaluate Candidate Site",
+        "operationId": "evaluate_candidate_site_analysis_data_center_demo_candidate_site_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Evaluate Candidate Site Analysis Data Center Demo Candidate Site Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/data-center-demo/equity-screen": {
+      "get": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Evaluate Equity Screen",
+        "operationId": "evaluate_equity_screen_analysis_data_center_demo_equity_screen_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Evaluate Equity Screen Analysis Data Center Demo Equity Screen Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/decision-models/data-center-demo": {
+      "get": {
+        "tags": [
+          "decision-models"
+        ],
+        "summary": "Get Data Center Model",
+        "operationId": "get_data_center_model_decision_models_data_center_demo_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/roads/prince-georges": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Get Prince Georges Roads",
+        "operationId": "get_prince_georges_roads_gis_roads_prince_georges_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/roads/prince-georges/count": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Count Prince Georges Roads",
+        "operationId": "count_prince_georges_roads_gis_roads_prince_georges_count_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/roads/prince-georges/page": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Get Prince Georges Roads Page",
+        "operationId": "get_prince_georges_roads_page_gis_roads_prince_georges_page_get",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/roads/prince-georges/paged-sample": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Get Prince Georges Roads Paged Sample",
+        "operationId": "get_prince_georges_roads_paged_sample_gis_roads_prince_georges_paged_sample_get",
+        "parameters": [
+          {
+            "name": "max_features",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "title": "Max Features"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/roads/prince-georges/access-score": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Get Prince Georges Road Access Score",
+        "operationId": "get_prince_georges_road_access_score_gis_roads_prince_georges_access_score_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/power/transmission/access-score": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Get Transmission Access Score",
+        "operationId": "get_transmission_access_score_gis_power_transmission_access_score_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/power/substations/access-score": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Get Substation Access Score",
+        "operationId": "get_substation_access_score_gis_power_substations_access_score_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/flood/fema/hazard-score": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Fema Flood Hazard Score",
+        "operationId": "fema_flood_hazard_score_gis_flood_fema_hazard_score_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Fema Flood Hazard Score Gis Flood Fema Hazard Score Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/protected-areas/hazard-score": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Protected Areas Score",
+        "operationId": "protected_areas_score_gis_protected_areas_hazard_score_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Protected Areas Score Gis Protected Areas Hazard Score Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/water-bodies/proximity": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Water Bodies Proximity",
+        "operationId": "water_bodies_proximity_gis_water_bodies_proximity_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Water Bodies Proximity Gis Water Bodies Proximity Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/population-density/local-tract-score": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Population Density Score",
+        "operationId": "population_density_score_gis_population_density_local_tract_score_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Population Density Score Gis Population Density Local Tract Score Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/telecom/fiber-availability-score": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Telecom Fiber Availability Score",
+        "operationId": "telecom_fiber_availability_score_gis_telecom_fiber_availability_score_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Telecom Fiber Availability Score Gis Telecom Fiber Availability Score Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/climate/cooling-burden-score": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Climate Cooling Burden Score",
+        "operationId": "climate_cooling_burden_score_gis_climate_cooling_burden_score_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Climate Cooling Burden Score Gis Climate Cooling Burden Score Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/power/grid-infrastructure-score": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Get Grid Infrastructure Score",
+        "operationId": "get_grid_infrastructure_score_gis_power_grid_infrastructure_score_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Grid Infrastructure Score Gis Power Grid Infrastructure Score Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/study-area/maryland": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Get Maryland Study Area",
+        "operationId": "get_maryland_study_area_gis_study_area_maryland_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Get Maryland Study Area Gis Study Area Maryland Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gis/site-evidence": {
+      "get": {
+        "tags": [
+          "gis"
+        ],
+        "summary": "Get Site Map Evidence",
+        "operationId": "get_site_map_evidence_gis_site_evidence_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Lon"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Get Site Map Evidence Gis Site Evidence Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/statewide/health": {
+      "get": {
+        "tags": [
+          "statewide"
+        ],
+        "summary": "Statewide Health",
+        "operationId": "statewide_health_analysis_statewide_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatewideHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/statewide/summary": {
+      "get": {
+        "tags": [
+          "statewide"
+        ],
+        "summary": "Statewide Summary",
+        "operationId": "statewide_summary_analysis_statewide_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatewideSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/statewide/grid": {
+      "get": {
+        "tags": [
+          "statewide"
+        ],
+        "summary": "Statewide Grid",
+        "operationId": "statewide_grid_analysis_statewide_grid_get",
+        "parameters": [
+          {
+            "name": "score_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "technical",
+                "effective"
+              ],
+              "type": "string",
+              "default": "technical",
+              "title": "Score Type"
+            }
+          },
+          {
+            "name": "minimum_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.0,
+              "title": "Minimum Score"
+            }
+          },
+          {
+            "name": "maximum_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 1.0,
+              "title": "Maximum Score"
+            }
+          },
+          {
+            "name": "eligibility",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "all",
+                "auto",
+                "exploration"
+              ],
+              "type": "string",
+              "default": "all",
+              "title": "Eligibility"
+            }
+          },
+          {
+            "name": "equity_gate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Equity Gate"
+            }
+          },
+          {
+            "name": "excluded",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Excluded"
+            }
+          },
+          {
+            "name": "county",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "County"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 30000,
+              "minimum": 1,
+              "default": 30000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/statewide/candidate-zones": {
+      "get": {
+        "tags": [
+          "statewide"
+        ],
+        "summary": "Statewide Candidate Zones",
+        "operationId": "statewide_candidate_zones_analysis_statewide_candidate_zones_get",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "top",
+                "auto",
+                "exploration"
+              ],
+              "type": "string",
+              "default": "top",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "minimum_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 0.0,
+              "title": "Minimum Score"
+            }
+          },
+          {
+            "name": "maximum_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "default": 1.0,
+              "title": "Maximum Score"
+            }
+          },
+          {
+            "name": "county",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "County"
+            }
+          },
+          {
+            "name": "top_n",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Top N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/statewide/cells/{cell_id}": {
+      "get": {
+        "tags": [
+          "statewide"
+        ],
+        "summary": "Statewide Cell Detail",
+        "operationId": "statewide_cell_detail_analysis_statewide_cells__cell_id__get",
+        "parameters": [
+          {
+            "name": "cell_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cell Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatewideCellDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/statewide/zones/{zone_id}": {
+      "get": {
+        "tags": [
+          "statewide"
+        ],
+        "summary": "Statewide Zone Detail",
+        "operationId": "statewide_zone_detail_analysis_statewide_zones__zone_id__get",
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Zone Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatewideZoneDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/statewide/score-bands": {
+      "get": {
+        "tags": [
+          "statewide"
+        ],
+        "summary": "Statewide Score Bands",
+        "operationId": "statewide_score_bands_analysis_statewide_score_bands_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Statewide Score Bands Analysis Statewide Score Bands Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/statewide/bias-audit": {
+      "get": {
+        "tags": [
+          "statewide"
+        ],
+        "summary": "Statewide Bias Audit",
+        "operationId": "statewide_bias_audit_analysis_statewide_bias_audit_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Statewide Bias Audit Analysis Statewide Bias Audit Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/health": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Health",
+        "operationId": "parcel_health_analysis_parcels_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Parcel Health Analysis Parcels Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Scopes",
+        "operationId": "parcel_scopes_analysis_parcels_scopes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Parcel Scopes Analysis Parcels Scopes Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/build/zone/{zone_id}": {
+      "post": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Build Zone Scope",
+        "operationId": "build_zone_scope_analysis_parcels_build_zone__zone_id__post",
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Zone Id"
+            }
+          },
+          {
+            "name": "X-AERIS-Build-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aeris-Build-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildZoneRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/build/bbox": {
+      "post": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Build Bbox Scope",
+        "operationId": "build_bbox_scope_analysis_parcels_build_bbox_post",
+        "parameters": [
+          {
+            "name": "X-AERIS-Build-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aeris-Build-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildBBoxRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Build Job",
+        "operationId": "parcel_build_job_analysis_parcels_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/status": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Scope Status",
+        "operationId": "parcel_scope_status_analysis_parcels_scopes__scope_id__status_get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Parcel Scope Status Analysis Parcels Scopes  Scope Id  Status Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/bundle": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Scope Bundle",
+        "operationId": "parcel_scope_bundle_analysis_parcels_scopes__scope_id__bundle_get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8000,
+              "minimum": 1,
+              "default": 8000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeBundle"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/zone/{zone_id}": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcels For Zone",
+        "operationId": "parcels_for_zone_analysis_parcels_zone__zone_id__get",
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Zone Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8000,
+              "minimum": 1,
+              "default": 8000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/bbox": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcels For Bbox",
+        "operationId": "parcels_for_bbox_analysis_parcels_bbox_get",
+        "parameters": [
+          {
+            "name": "west",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "West"
+            }
+          },
+          {
+            "name": "south",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "South"
+            }
+          },
+          {
+            "name": "east",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "East"
+            }
+          },
+          {
+            "name": "north",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "North"
+            }
+          },
+          {
+            "name": "scope_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scope Name"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 8000,
+              "minimum": 1,
+              "default": 8000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/parcels/{parcel_id}": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Detail",
+        "operationId": "parcel_detail_analysis_parcels_scopes__scope_id__parcels__parcel_id__get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          },
+          {
+            "name": "parcel_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Parcel Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/development-envelopes": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Development Envelopes",
+        "operationId": "development_envelopes_analysis_parcels_scopes__scope_id__development_envelopes_get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/largest-components": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Largest Components",
+        "operationId": "largest_components_analysis_parcels_scopes__scope_id__largest_components_get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/constraints": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Constraints",
+        "operationId": "parcel_constraints_analysis_parcels_scopes__scope_id__constraints_get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/grid-evidence": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Grid Evidence",
+        "operationId": "parcel_grid_evidence_analysis_parcels_scopes__scope_id__grid_evidence_get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/planning/registry": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Planning Registry",
+        "operationId": "planning_registry_analysis_parcels_planning_registry_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanningRegistrySummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/planning-evidence": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Planning Evidence",
+        "operationId": "planning_evidence_analysis_parcels_scopes__scope_id__planning_evidence_get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ArtifactStatus": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "ready",
+              "missing",
+              "failed"
+            ],
+            "title": "State"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "updated_at_utc": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At Utc"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "state"
+        ],
+        "title": "ArtifactStatus"
+      },
+      "BuildBBoxRequest": {
+        "properties": {
+          "west": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "West"
+          },
+          "south": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "South"
+          },
+          "east": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "East"
+          },
+          "north": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "North"
+          },
+          "scope_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Name"
+          },
+          "refresh": {
+            "type": "boolean",
+            "title": "Refresh",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "west",
+          "south",
+          "east",
+          "north"
+        ],
+        "title": "BuildBBoxRequest"
+      },
+      "BuildJob": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "completed",
+              "partial_failure",
+              "failed"
+            ],
+            "title": "State"
+          },
+          "target": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Target"
+          },
+          "refresh": {
+            "type": "boolean",
+            "title": "Refresh"
+          },
+          "created_at_utc": {
+            "type": "string",
+            "title": "Created At Utc"
+          },
+          "updated_at_utc": {
+            "type": "string",
+            "title": "Updated At Utc"
+          },
+          "current_stage": {
+            "type": "string",
+            "title": "Current Stage"
+          },
+          "progress": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Progress"
+          },
+          "artifacts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ArtifactStatus"
+            },
+            "type": "object",
+            "title": "Artifacts"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "job_id",
+          "scope_id",
+          "state",
+          "target",
+          "refresh",
+          "created_at_utc",
+          "updated_at_utc",
+          "current_stage",
+          "progress",
+          "artifacts"
+        ],
+        "title": "BuildJob"
+      },
+      "BuildZoneRequest": {
+        "properties": {
+          "refresh": {
+            "type": "boolean",
+            "title": "Refresh",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "BuildZoneRequest"
+      },
+      "CapacityEvidence": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "UNKNOWN_NOT_IN_PUBLIC_SOURCE",
+            "title": "Status"
+          },
+          "available_capacity_mw": {
+            "type": "null",
+            "title": "Available Capacity Mw"
+          },
+          "utility_confirmation_required": {
+            "type": "boolean",
+            "title": "Utility Confirmation Required",
+            "default": true
+          },
+          "interconnection_study_required": {
+            "type": "boolean",
+            "title": "Interconnection Study Required",
+            "default": true
+          },
+          "electrical_service_feasibility_confirmed": {
+            "type": "boolean",
+            "title": "Electrical Service Feasibility Confirmed",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "CapacityEvidence"
+      },
+      "DevelopmentEnvelopeEvidence": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "analysis_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Area Acres"
+          },
+          "water_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Water Overlap Acres"
+          },
+          "protected_lands_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protected Lands Overlap Acres"
+          },
+          "sfha_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sfha Overlap Acres"
+          },
+          "aviation_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aviation Overlap Acres"
+          },
+          "aviation_notice_screening_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aviation Notice Screening Overlap Acres"
+          },
+          "aviation_notice_screening_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aviation Notice Screening Status"
+          },
+          "faa_determination_made": {
+            "type": "boolean",
+            "title": "Faa Determination Made",
+            "default": false
+          },
+          "mapped_constrained_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapped Constrained Area Acres"
+          },
+          "preliminary_unconstrained_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preliminary Unconstrained Area Acres"
+          },
+          "preliminary_unconstrained_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preliminary Unconstrained Fraction"
+          },
+          "largest_contiguous_unconstrained_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Largest Contiguous Unconstrained Acres"
+          },
+          "largest_contiguous_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Largest Contiguous Fraction"
+          },
+          "unconstrained_component_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unconstrained Component Count"
+          },
+          "mapped_constraint_types": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapped Constraint Types"
+          },
+          "preliminary_envelope_only": {
+            "type": "boolean",
+            "title": "Preliminary Envelope Only",
+            "default": true
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "DevelopmentEnvelopeEvidence"
+      },
+      "GeoJSONFeatureCollection": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "FeatureCollection",
+            "title": "Type",
+            "default": "FeatureCollection"
+          },
+          "features": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Features"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "features"
+        ],
+        "title": "GeoJSONFeatureCollection"
+      },
+      "GridFeasibilityEvidence": {
+        "properties": {
+          "grid_feasibility_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grid Feasibility Status"
+          },
+          "public_grid_context_class": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "VERY_STRONG_MAPPED_GRID_CONTEXT",
+                  "STRONG_MAPPED_GRID_CONTEXT",
+                  "MODERATE_MAPPED_GRID_CONTEXT",
+                  "LIMITED_MAPPED_GRID_CONTEXT",
+                  "INSUFFICIENT_MAPPED_GRID_DATA"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Grid Context Class"
+          },
+          "grid_data_confidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "HIGH",
+                  "MEDIUM",
+                  "LOW",
+                  "INSUFFICIENT"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grid Data Confidence"
+          },
+          "statewide_grid_infrastructure_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statewide Grid Infrastructure Score"
+          },
+          "nearest_transmission": {
+            "$ref": "#/components/schemas/NearestTransmissionEvidence"
+          },
+          "transmission_within_5km": {
+            "$ref": "#/components/schemas/TransmissionSummaryEvidence"
+          },
+          "nearest_substation": {
+            "$ref": "#/components/schemas/NearestSubstationEvidence"
+          },
+          "substations_within_10km": {
+            "$ref": "#/components/schemas/SubstationSummaryEvidence"
+          },
+          "capacity": {
+            "$ref": "#/components/schemas/CapacityEvidence"
+          },
+          "warning": {
+            "type": "string",
+            "title": "Warning"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "nearest_transmission",
+          "transmission_within_5km",
+          "nearest_substation",
+          "substations_within_10km",
+          "capacity",
+          "warning"
+        ],
+        "title": "GridFeasibilityEvidence"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NearestSubstationEvidence": {
+        "properties": {
+          "distance_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance M"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "line_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Count"
+          },
+          "maximum_voltage_kv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum Voltage Kv"
+          },
+          "minimum_voltage_kv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Voltage Kv"
+          },
+          "voltage_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voltage Class"
+          },
+          "source_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Date"
+          },
+          "validation_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Method"
+          },
+          "data_confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Confidence"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "NearestSubstationEvidence"
+      },
+      "NearestTransmissionEvidence": {
+        "properties": {
+          "distance_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance M"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "voltage_kv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voltage Kv"
+          },
+          "voltage_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voltage Class"
+          },
+          "source_voltage_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Voltage Class"
+          },
+          "inferred": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inferred"
+          },
+          "substation_1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substation 1"
+          },
+          "substation_2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substation 2"
+          },
+          "source_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Date"
+          },
+          "validation_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Validation Method"
+          },
+          "data_confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Confidence"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "NearestTransmissionEvidence"
+      },
+      "ParcelClassification": {
+        "properties": {
+          "public_land_flag": {
+            "type": "boolean",
+            "title": "Public Land Flag"
+          },
+          "institutional_use_flag": {
+            "type": "boolean",
+            "title": "Institutional Use Flag"
+          },
+          "existing_development_indicator": {
+            "type": "boolean",
+            "title": "Existing Development Indicator"
+          },
+          "availability_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "PUBLIC_OR_INSTITUTIONAL",
+                  "EXISTING_USE_REVIEW_REQUIRED",
+                  "DATA_INSUFFICIENT",
+                  "POTENTIAL_FURTHER_REVIEW"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availability Status"
+          },
+          "availability_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availability Reason"
+          },
+          "availability_confirmed": {
+            "type": "boolean",
+            "title": "Availability Confirmed",
+            "default": false
+          },
+          "data_confidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "HIGH",
+                  "MEDIUM",
+                  "LOW",
+                  "INSUFFICIENT"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Confidence"
+          },
+          "public_classification_evidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Classification Evidence"
+          },
+          "institutional_classification_evidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institutional Classification Evidence"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "public_land_flag",
+          "institutional_use_flag",
+          "existing_development_indicator"
+        ],
+        "title": "ParcelClassification"
+      },
+      "ParcelCore": {
+        "properties": {
+          "parcel_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Area Acres"
+          },
+          "source_reported_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Reported Acres"
+          },
+          "geometry_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry Area Acres"
+          },
+          "land_use_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Land Use Code"
+          },
+          "land_use_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Land Use Description"
+          },
+          "zoning_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zoning Code"
+          },
+          "commercial_industrial_use": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commercial Industrial Use"
+          },
+          "public_water_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Water Status"
+          },
+          "public_sewer_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Sewer Status"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ParcelCore"
+      },
+      "ParcelDetailResponse": {
+        "properties": {
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "parcel_id": {
+            "type": "string",
+            "title": "Parcel Id"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/ParcelIdentity"
+          },
+          "parcel": {
+            "$ref": "#/components/schemas/ParcelCore"
+          },
+          "source_development_indicators": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Source Development Indicators"
+          },
+          "classification": {
+            "$ref": "#/components/schemas/ParcelClassification"
+          },
+          "statewide_context": {
+            "$ref": "#/components/schemas/ParcelStatewideContext"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ParcelScopeContext"
+          },
+          "source_dates": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Source Dates"
+          },
+          "development_envelope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DevelopmentEnvelopeEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "grid_feasibility": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GridFeasibilityEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "planning_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanningContextEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "warning": {
+            "type": "string",
+            "title": "Warning"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "scope_id",
+          "parcel_id",
+          "identity",
+          "parcel",
+          "source_development_indicators",
+          "classification",
+          "statewide_context",
+          "scope",
+          "source_dates",
+          "warning"
+        ],
+        "title": "ParcelDetailResponse"
+      },
+      "ParcelIdentity": {
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "jurisdiction_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jurisdiction Code"
+          },
+          "county_fips": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "County Fips"
+          },
+          "county_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "County Name"
+          },
+          "property_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property Address"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ParcelIdentity"
+      },
+      "ParcelScopeContext": {
+        "properties": {
+          "candidate_zone_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Zone Id"
+          },
+          "candidate_zone_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Zone Mode"
+          },
+          "overlap_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overlap Fraction"
+          },
+          "overlap_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overlap Area Acres"
+          },
+          "statewide_link_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statewide Link Method"
+          },
+          "statewide_context_distance_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statewide Context Distance M"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ParcelScopeContext"
+      },
+      "ParcelStatewideContext": {
+        "properties": {
+          "cell_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cell Id"
+          },
+          "technical_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technical Score"
+          },
+          "effective_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Score"
+          },
+          "equity_gate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Equity Gate"
+          },
+          "hard_excluded": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hard Excluded"
+          },
+          "auto_eligible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Eligible"
+          },
+          "exploration_eligible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exploration Eligible"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ParcelStatewideContext"
+      },
+      "PlanningAdapterEvidence": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "default": false
+          },
+          "zoning_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zoning Status"
+          },
+          "active_development_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Development Status"
+          },
+          "permit_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permit Status"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanningAdapterEvidence"
+      },
+      "PlanningContextEvidence": {
+        "properties": {
+          "jurisdiction": {
+            "$ref": "#/components/schemas/PlanningJurisdictionEvidence"
+          },
+          "zoning": {
+            "$ref": "#/components/schemas/PlanningZoningEvidence"
+          },
+          "planning_sources": {
+            "$ref": "#/components/schemas/PlanningSourcesEvidence"
+          },
+          "adapter": {
+            "$ref": "#/components/schemas/PlanningAdapterEvidence"
+          },
+          "statewide_context": {
+            "$ref": "#/components/schemas/PlanningOverlayEvidence"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/PlanningDecisionEvidence"
+          },
+          "warning": {
+            "type": "string",
+            "title": "Warning"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "jurisdiction",
+          "zoning",
+          "planning_sources",
+          "adapter",
+          "statewide_context",
+          "decision",
+          "warning"
+        ],
+        "title": "PlanningContextEvidence"
+      },
+      "PlanningDecisionEvidence": {
+        "properties": {
+          "planning_review_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planning Review Status"
+          },
+          "data_confidence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "HIGH",
+                  "MEDIUM",
+                  "LOW",
+                  "INSUFFICIENT"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Confidence"
+          },
+          "manual_local_verification_required": {
+            "type": "boolean",
+            "title": "Manual Local Verification Required",
+            "default": true
+          },
+          "active_development_clear": {
+            "type": "boolean",
+            "title": "Active Development Clear",
+            "default": false
+          },
+          "permit_clearance_determined": {
+            "type": "boolean",
+            "title": "Permit Clearance Determined",
+            "default": false
+          },
+          "entitlement_clearance_determined": {
+            "type": "boolean",
+            "title": "Entitlement Clearance Determined",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanningDecisionEvidence"
+      },
+      "PlanningJurisdictionEvidence": {
+        "properties": {
+          "county_fips": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "County Fips"
+          },
+          "county_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "County Name"
+          },
+          "municipality_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality Name"
+          },
+          "municipality_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality Overlap Acres"
+          },
+          "municipality_overlap_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality Overlap Fraction"
+          },
+          "municipality_assignment_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality Assignment Method"
+          },
+          "authority_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authority Profile"
+          },
+          "authority_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authority Level"
+          },
+          "authority_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authority Name"
+          },
+          "authority_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authority Status"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanningJurisdictionEvidence"
+      },
+      "PlanningOverlayEvidence": {
+        "properties": {
+          "priority_funding_area": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Funding Area"
+          },
+          "priority_funding_area_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Funding Area Overlap Acres"
+          },
+          "priority_funding_area_overlap_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Funding Area Overlap Fraction"
+          },
+          "priority_funding_area_assignment_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority Funding Area Assignment Method"
+          },
+          "critical_area_overlap": {
+            "type": "boolean",
+            "title": "Critical Area Overlap",
+            "default": false
+          },
+          "critical_area_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Critical Area Overlap Acres"
+          },
+          "enterprise_zone_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enterprise Zone Count"
+          },
+          "enterprise_zone_names": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enterprise Zone Names"
+          },
+          "sustainable_community_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sustainable Community Count"
+          },
+          "sustainable_community_names": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sustainable Community Names"
+          },
+          "foreign_trade_zone_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foreign Trade Zone Count"
+          },
+          "foreign_trade_zone_names": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foreign Trade Zone Names"
+          },
+          "rise_zone_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rise Zone Count"
+          },
+          "rise_zone_names": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rise Zone Names"
+          },
+          "opportunity_zone_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opportunity Zone Count"
+          },
+          "opportunity_zone_names": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opportunity Zone Names"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanningOverlayEvidence"
+      },
+      "PlanningRegistrySummary": {
+        "properties": {
+          "jurisdiction_count": {
+            "type": "integer",
+            "title": "Jurisdiction Count"
+          },
+          "county_fips": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "County Fips"
+          },
+          "source_status_counts": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Source Status Counts"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "jurisdiction_count",
+          "county_fips",
+          "source_status_counts"
+        ],
+        "title": "PlanningRegistrySummary"
+      },
+      "PlanningSourcesEvidence": {
+        "properties": {
+          "comprehensive_plan": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "AVAILABLE",
+                  "STATEWIDE_BASELINE_ONLY",
+                  "PARTIAL",
+                  "SOURCE_DISCOVERY_REQUIRED",
+                  "MANUAL_REVIEW_REQUIRED",
+                  "DATA_UNAVAILABLE",
+                  "ERROR"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comprehensive Plan"
+          },
+          "active_development": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "AVAILABLE",
+                  "STATEWIDE_BASELINE_ONLY",
+                  "PARTIAL",
+                  "SOURCE_DISCOVERY_REQUIRED",
+                  "MANUAL_REVIEW_REQUIRED",
+                  "DATA_UNAVAILABLE",
+                  "ERROR"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Development"
+          },
+          "permits": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "AVAILABLE",
+                  "STATEWIDE_BASELINE_ONLY",
+                  "PARTIAL",
+                  "SOURCE_DISCOVERY_REQUIRED",
+                  "MANUAL_REVIEW_REQUIRED",
+                  "DATA_UNAVAILABLE",
+                  "ERROR"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permits"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanningSourcesEvidence"
+      },
+      "PlanningZoningEvidence": {
+        "properties": {
+          "statewide_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statewide Code"
+          },
+          "statewide_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statewide Status"
+          },
+          "local_source_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "AVAILABLE",
+                  "STATEWIDE_BASELINE_ONLY",
+                  "PARTIAL",
+                  "SOURCE_DISCOVERY_REQUIRED",
+                  "MANUAL_REVIEW_REQUIRED",
+                  "DATA_UNAVAILABLE",
+                  "ERROR"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Source Status"
+          },
+          "local_source_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Source Note"
+          },
+          "local_verified": {
+            "type": "boolean",
+            "title": "Local Verified",
+            "default": false
+          },
+          "permitted_use_determined": {
+            "type": "boolean",
+            "title": "Permitted Use Determined",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "PlanningZoningEvidence"
+      },
+      "ScopeBundle": {
+        "properties": {
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "artifacts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ArtifactStatus"
+            },
+            "type": "object",
+            "title": "Artifacts"
+          },
+          "parcels": {
+            "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+          },
+          "envelopes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "constraints": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "grid": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "planning": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "scope_id",
+          "artifacts",
+          "parcels"
+        ],
+        "title": "ScopeBundle"
+      },
+      "StatewideAuditSummary": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "release_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Status"
+          },
+          "screening_shortlist_ready": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screening Shortlist Ready"
+          },
+          "automated_recommendation_ready": {
+            "type": "boolean",
+            "title": "Automated Recommendation Ready",
+            "default": false
+          },
+          "material_flags": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Material Flags"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "StatewideAuditSummary"
+      },
+      "StatewideBounds": {
+        "properties": {
+          "west": {
+            "type": "number",
+            "title": "West"
+          },
+          "south": {
+            "type": "number",
+            "title": "South"
+          },
+          "east": {
+            "type": "number",
+            "title": "East"
+          },
+          "north": {
+            "type": "number",
+            "title": "North"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "west",
+          "south",
+          "east",
+          "north"
+        ],
+        "title": "StatewideBounds"
+      },
+      "StatewideCellDetailResponse": {
+        "properties": {
+          "cell_id": {
+            "type": "string",
+            "title": "Cell Id"
+          },
+          "location": {
+            "$ref": "#/components/schemas/StatewideLocation"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/StatewideDecision"
+          },
+          "scores": {
+            "$ref": "#/components/schemas/StatewideScores"
+          },
+          "evidence": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Evidence"
+          },
+          "community_impact": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Community Impact"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "cell_id",
+          "location",
+          "decision",
+          "scores"
+        ],
+        "title": "StatewideCellDetailResponse"
+      },
+      "StatewideCounty": {
+        "properties": {
+          "fips": {
+            "type": "string",
+            "title": "Fips"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "fips",
+          "name"
+        ],
+        "title": "StatewideCounty"
+      },
+      "StatewideDecision": {
+        "properties": {
+          "model_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Status"
+          },
+          "hard_excluded": {
+            "type": "boolean",
+            "title": "Hard Excluded"
+          },
+          "exclusion_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Exclusion Reasons"
+          },
+          "auto_screen_eligible": {
+            "type": "boolean",
+            "title": "Auto Screen Eligible"
+          },
+          "exploration_screen_eligible": {
+            "type": "boolean",
+            "title": "Exploration Screen Eligible"
+          },
+          "automated_recommendation_ready": {
+            "type": "boolean",
+            "title": "Automated Recommendation Ready"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "hard_excluded",
+          "auto_screen_eligible",
+          "exploration_screen_eligible",
+          "automated_recommendation_ready"
+        ],
+        "title": "StatewideDecision"
+      },
+      "StatewideGridSummary": {
+        "properties": {
+          "cell_count": {
+            "type": "integer",
+            "title": "Cell Count"
+          },
+          "complete_cells": {
+            "type": "integer",
+            "title": "Complete Cells"
+          },
+          "insufficient_data_cells": {
+            "type": "integer",
+            "title": "Insufficient Data Cells"
+          },
+          "hard_excluded_cells": {
+            "type": "integer",
+            "title": "Hard Excluded Cells"
+          },
+          "auto_screen_eligible_cells": {
+            "type": "integer",
+            "title": "Auto Screen Eligible Cells"
+          },
+          "exploration_screen_eligible_cells": {
+            "type": "integer",
+            "title": "Exploration Screen Eligible Cells"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "cell_count",
+          "complete_cells",
+          "insufficient_data_cells",
+          "hard_excluded_cells",
+          "auto_screen_eligible_cells",
+          "exploration_screen_eligible_cells"
+        ],
+        "title": "StatewideGridSummary"
+      },
+      "StatewideHealthResponse": {
+        "properties": {
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "root": {
+            "type": "string",
+            "title": "Root"
+          },
+          "files": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Files"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "ready",
+          "root",
+          "files"
+        ],
+        "title": "StatewideHealthResponse"
+      },
+      "StatewideLocation": {
+        "properties": {
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "county_fips": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "County Fips"
+          },
+          "county_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "County Name"
+          },
+          "tract_geoid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tract Geoid"
+          },
+          "land_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Land Fraction"
+          },
+          "cell_area_sq_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cell Area Sq Km"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "StatewideLocation"
+      },
+      "StatewideScoreBand": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "minimum": {
+            "type": "number",
+            "title": "Minimum"
+          },
+          "maximum": {
+            "type": "number",
+            "title": "Maximum"
+          },
+          "auto_cell_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Cell Count"
+          },
+          "exploration_cell_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exploration Cell Count"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "minimum",
+          "maximum"
+        ],
+        "title": "StatewideScoreBand"
+      },
+      "StatewideScores": {
+        "properties": {
+          "technical_suitability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technical Suitability"
+          },
+          "effective_suitability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Suitability"
+          },
+          "criteria": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Criteria"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "StatewideScores"
+      },
+      "StatewideSummaryResponse": {
+        "properties": {
+          "project": {
+            "type": "string",
+            "title": "Project"
+          },
+          "analysis": {
+            "type": "string",
+            "title": "Analysis"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "grid": {
+            "$ref": "#/components/schemas/StatewideGridSummary"
+          },
+          "zones": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Zones"
+          },
+          "audit": {
+            "$ref": "#/components/schemas/StatewideAuditSummary"
+          },
+          "score_statistics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Score Statistics"
+          },
+          "effective_score_statistics": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Effective Score Statistics"
+          },
+          "score_bands": {
+            "items": {
+              "$ref": "#/components/schemas/StatewideScoreBand"
+            },
+            "type": "array",
+            "title": "Score Bands"
+          },
+          "bounds": {
+            "$ref": "#/components/schemas/StatewideBounds"
+          },
+          "counties": {
+            "items": {
+              "$ref": "#/components/schemas/StatewideCounty"
+            },
+            "type": "array",
+            "title": "Counties"
+          },
+          "terminology": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Terminology"
+          },
+          "required_next_stage": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Required Next Stage"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "project",
+          "analysis",
+          "grid",
+          "audit",
+          "bounds"
+        ],
+        "title": "StatewideSummaryResponse"
+      },
+      "StatewideZoneDetailResponse": {
+        "properties": {
+          "zone_id": {
+            "type": "string",
+            "title": "Zone Id"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Properties"
+          },
+          "membership": {
+            "$ref": "#/components/schemas/ZoneMembership"
+          },
+          "member_summary": {
+            "$ref": "#/components/schemas/ZoneMemberSummary"
+          },
+          "interpretation": {
+            "type": "string",
+            "title": "Interpretation"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "zone_id",
+          "mode",
+          "membership",
+          "member_summary",
+          "interpretation"
+        ],
+        "title": "StatewideZoneDetailResponse"
+      },
+      "SubstationSummaryEvidence": {
+        "properties": {
+          "feature_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Count"
+          },
+          "known_voltage_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Voltage Count"
+          },
+          "maximum_voltage_kv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum Voltage Kv"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SubstationSummaryEvidence"
+      },
+      "TransmissionSummaryEvidence": {
+        "properties": {
+          "feature_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feature Count"
+          },
+          "known_voltage_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Voltage Count"
+          },
+          "maximum_voltage_kv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum Voltage Kv"
+          },
+          "distinct_owner_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distinct Owner Count"
+          },
+          "owners": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owners"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TransmissionSummaryEvidence"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ZoneMemberSummary": {
+        "properties": {
+          "technical_score": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Technical Score"
+          },
+          "equity_gate_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Equity Gate Counts"
+          },
+          "county_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "County Counts"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ZoneMemberSummary"
+      },
+      "ZoneMembership": {
+        "properties": {
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count"
+          },
+          "member_cell_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Member Cell Ids"
+          },
+          "member_cell_ids_truncated": {
+            "type": "boolean",
+            "title": "Member Cell Ids Truncated"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "member_count",
+          "member_cell_ids_truncated"
+        ],
+        "title": "ZoneMembership"
+      }
+    }
+  }
+}

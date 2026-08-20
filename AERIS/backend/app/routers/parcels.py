@@ -1,524 +1,342 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
-from fastapi import (
-    APIRouter,
-    HTTPException,
-    Query,
-)
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Header, HTTPException, Query, Response, status
 
-from analysis.parcels.api_service import (
-    ParcelDataService,
-)
-from analysis.parcels.envelope_api_service import (
-    ParcelEnvelopeService,
-)
+from analysis.parcels.api_service import ParcelDataService
+from analysis.parcels.build_jobs import ScopeBuildCoordinator
+from analysis.parcels.envelope_api_service import ParcelEnvelopeService
 from analysis.parcels.grid_feasibility_api_service import (
     ParcelGridFeasibilityService,
 )
-from analysis.planning.planning_api_service import (
-    PlanningContextService,
+from analysis.parcels.pipeline import scope_from_bbox, scope_from_zone
+from analysis.planning.planning_api_service import PlanningContextService
+from app.config import get_build_token
+from app.schemas.parcels import (
+    BuildBBoxRequest,
+    BuildJob,
+    BuildZoneRequest,
+    GeoJSONFeatureCollection,
+    ParcelDetailResponse,
+    PlanningRegistrySummary,
+    ScopeBundle,
 )
 
 
-PROJECT_DIRECTORY = (
-    Path(__file__).resolve().parents[3]
-)
+PROJECT_DIRECTORY = Path(__file__).resolve().parents[3]
 
-CONFIG_PATH = (
-    PROJECT_DIRECTORY
-    / "configs"
-    / "parcels"
-    / "maryland_parcels.yaml"
-)
-
-
-router = APIRouter(
-    prefix="/analysis/parcels",
-    tags=["parcels"],
-)
-
-service = ParcelDataService(
-    CONFIG_PATH
-)
-
+CONFIG_PATH = PROJECT_DIRECTORY / "configs" / "parcels" / "maryland_parcels.yaml"
 ENVELOPE_CONFIG_PATH = (
-    PROJECT_DIRECTORY
-    / "configs"
-    / "parcels"
-    / "development_envelopes.yaml"
+    PROJECT_DIRECTORY / "configs" / "parcels" / "development_envelopes.yaml"
 )
-
-envelope_service = (
-    ParcelEnvelopeService(
-        ENVELOPE_CONFIG_PATH
-    )
-)
-
 GRID_FEASIBILITY_CONFIG_PATH = (
-    PROJECT_DIRECTORY
-    / "configs"
-    / "parcels"
-    / "grid_feasibility.yaml"
+    PROJECT_DIRECTORY / "configs" / "parcels" / "grid_feasibility.yaml"
 )
-
-grid_feasibility_service = (
-    ParcelGridFeasibilityService(
-        GRID_FEASIBILITY_CONFIG_PATH
-    )
-)
-
 PLANNING_CONFIG_PATH = (
-    PROJECT_DIRECTORY
-    / "configs"
-    / "planning"
-    / "statewide_planning.yaml"
+    PROJECT_DIRECTORY / "configs" / "planning" / "statewide_planning.yaml"
 )
 
-planning_service = (
-    PlanningContextService(
-        PLANNING_CONFIG_PATH
-    )
+router = APIRouter(prefix="/analysis/parcels", tags=["parcels"])
+
+service = ParcelDataService(CONFIG_PATH)
+envelope_service = ParcelEnvelopeService(ENVELOPE_CONFIG_PATH)
+grid_feasibility_service = ParcelGridFeasibilityService(
+    GRID_FEASIBILITY_CONFIG_PATH
 )
+planning_service = PlanningContextService(PLANNING_CONFIG_PATH)
+build_coordinator = ScopeBuildCoordinator(
+    parcel_service=service,
+    envelope_service=envelope_service,
+    grid_service=grid_feasibility_service,
+    planning_service=planning_service,
+    runtime_directory=PROJECT_DIRECTORY / "data" / "runtime" / "parcel_builds",
+)
+
+
+def cache_response(response: Response) -> None:
+    response.headers["Cache-Control"] = "public, max-age=300"
+
+
+
+def require_build_authorization(
+    supplied_token: str | None,
+) -> None:
+    configured_token = get_build_token()
+    if configured_token is None:
+        return
+    if supplied_token != configured_token:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Build authorization failed.",
+        )
+
+
+def build_required(scope_id: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={
+            "status": "scope_build_required",
+            "scope_id": scope_id,
+            "message": (
+                "Build the scope with POST /analysis/parcels/build/zone/{zone_id} "
+                "or POST /analysis/parcels/build/bbox before reading artifacts."
+            ),
+        },
+    )
 
 
 @router.get("/health")
-def parcel_health() -> dict:
+def parcel_health() -> dict[str, Any]:
     result = service.health()
-
     if not result["ready"]:
-        raise HTTPException(
-            status_code=503,
-            detail=result,
-        )
-
+        raise HTTPException(status_code=503, detail=result)
     return result
 
 
 @router.get("/scopes")
-def parcel_scopes() -> dict:
-    return {
-        "scopes": (
-            service.list_scopes()
-        )
-    }
+def parcel_scopes() -> dict[str, Any]:
+    return {"scopes": service.list_scopes()}
 
 
-@router.get("/zone/{zone_id}")
-def parcels_for_zone(
+@router.post(
+    "/build/zone/{zone_id}",
+    response_model=BuildJob,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def build_zone_scope(
     zone_id: str,
-    refresh: bool = False,
-    limit: int = Query(
-        default=8000,
-        ge=1,
-        le=8000,
-    ),
-) -> JSONResponse:
+    options: BuildZoneRequest,
+    build_token: str | None = Header(default=None, alias="X-AERIS-Build-Token"),
+) -> dict[str, Any]:
+    require_build_authorization(build_token)
     try:
-        manifest = (
-            service.build_zone(
-                zone_id=zone_id,
-                refresh=refresh,
-            )
+        return build_coordinator.submit_zone(
+            zone_id=zone_id,
+            refresh=options.refresh,
         )
-
-        scope_id = manifest[
-            "scope"
-        ]["scope_id"]
-
-        payload = (
-            service.feature_collection(
-                scope_id=scope_id,
-                limit=limit,
-            )
-        )
-
-        return JSONResponse(
-            content=payload,
-            headers={
-                "Cache-Control": (
-                    "public, max-age=300"
-                ),
-            },
-        )
-
     except KeyError as error:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Candidate zone "
-                f"{zone_id!r} was not found."
-            ),
+            detail=f"Candidate zone {zone_id!r} was not found.",
         ) from error
 
+
+@router.post(
+    "/build/bbox",
+    response_model=BuildJob,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def build_bbox_scope(
+    options: BuildBBoxRequest,
+    build_token: str | None = Header(default=None, alias="X-AERIS-Build-Token"),
+) -> dict[str, Any]:
+    require_build_authorization(build_token)
+    try:
+        return build_coordinator.submit_bbox(
+            west=options.west,
+            south=options.south,
+            east=options.east,
+            north=options.north,
+            scope_name=options.scope_name,
+            refresh=options.refresh,
+        )
     except ValueError as error:
-        raise HTTPException(
-            status_code=422,
-            detail=str(error),
-        ) from error
-
-    except RuntimeError as error:
-        raise HTTPException(
-            status_code=503,
-            detail=str(error),
-        ) from error
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
-@router.get("/bbox")
+@router.get("/jobs/{job_id}", response_model=BuildJob)
+def parcel_build_job(job_id: str) -> dict[str, Any]:
+    try:
+        return build_coordinator.get(job_id)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail="Build job was not found.") from error
+
+
+@router.get("/scopes/{scope_id}/status")
+def parcel_scope_status(scope_id: str) -> dict[str, Any]:
+    return {
+        "scope_id": scope_id,
+        "artifacts": build_coordinator.artifact_status(scope_id),
+    }
+
+
+@router.get("/scopes/{scope_id}/bundle", response_model=ScopeBundle)
+def parcel_scope_bundle(
+    scope_id: str,
+    response: Response,
+    limit: int = Query(default=8000, ge=1, le=8000),
+) -> dict[str, Any]:
+    try:
+        payload = build_coordinator.bundle(scope_id=scope_id, limit=limit)
+    except KeyError as error:
+        raise build_required(scope_id) from error
+    cache_response(response)
+    return payload
+
+
+@router.get("/zone/{zone_id}", response_model=GeoJSONFeatureCollection)
+def parcels_for_zone(
+    zone_id: str,
+    response: Response,
+    limit: int = Query(default=8000, ge=1, le=8000),
+) -> dict[str, Any]:
+    try:
+        scope = scope_from_zone(
+            config=service.config,
+            project_directory=service.project_directory,
+            zone_id=zone_id,
+        )
+        payload = service.feature_collection(scope_id=scope.scope_id, limit=limit)
+    except KeyError as error:
+        scope_id = f"zone-{zone_id.strip().lower()}"
+        raise build_required(scope_id) from error
+    cache_response(response)
+    return payload
+
+
+@router.get("/bbox", response_model=GeoJSONFeatureCollection)
 def parcels_for_bbox(
+    response: Response,
     west: float,
     south: float,
     east: float,
     north: float,
     scope_name: str | None = None,
-    refresh: bool = False,
-    limit: int = Query(
-        default=8000,
-        ge=1,
-        le=8000,
-    ),
-) -> JSONResponse:
+    limit: int = Query(default=8000, ge=1, le=8000),
+) -> dict[str, Any]:
     try:
-        manifest = (
-            service.build_bbox(
-                west=west,
-                south=south,
-                east=east,
-                north=north,
-                scope_name=scope_name,
-                refresh=refresh,
-            )
+        scope = scope_from_bbox(
+            west=west,
+            south=south,
+            east=east,
+            north=north,
+            scope_name=scope_name,
         )
-
-        scope_id = manifest[
-            "scope"
-        ]["scope_id"]
-
-        payload = (
-            service.feature_collection(
-                scope_id=scope_id,
-                limit=limit,
-            )
-        )
-
-        return JSONResponse(
-            content=payload,
-            headers={
-                "Cache-Control": (
-                    "public, max-age=300"
-                ),
-            },
-        )
-
+        payload = service.feature_collection(scope_id=scope.scope_id, limit=limit)
     except ValueError as error:
-        raise HTTPException(
-            status_code=422,
-            detail=str(error),
-        ) from error
-
-    except RuntimeError as error:
-        raise HTTPException(
-            status_code=503,
-            detail=str(error),
-        ) from error
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except KeyError as error:
+        raise build_required(scope.scope_id) from error
+    cache_response(response)
+    return payload
 
 
 @router.get(
-    "/scopes/{scope_id}/"
-    "parcels/{parcel_id}"
+    "/scopes/{scope_id}/parcels/{parcel_id}",
+    response_model=ParcelDetailResponse,
 )
-def parcel_detail(
-    scope_id: str,
-    parcel_id: str,
-) -> dict:
+def parcel_detail(scope_id: str, parcel_id: str) -> dict[str, Any]:
     try:
-        result = service.parcel_detail(
-            scope_id=scope_id,
-            parcel_id=parcel_id,
-        )
+        result = service.parcel_detail(scope_id=scope_id, parcel_id=parcel_id)
+        try:
+            result["development_envelope"] = envelope_service.parcel_metrics(
+                scope_id=scope_id,
+                parcel_id=parcel_id,
+            )
+        except KeyError:
+            result["development_envelope"] = None
 
         try:
-            result[
-                "development_envelope"
-            ] = (
-                envelope_service
-                .parcel_metrics(
-                    scope_id=scope_id,
-                    parcel_id=parcel_id,
-                )
+            result["grid_feasibility"] = grid_feasibility_service.parcel_metrics(
+                scope_id=scope_id,
+                parcel_id=parcel_id,
             )
-
         except KeyError:
-            result[
-                "development_envelope"
-            ] = None
+            result["grid_feasibility"] = None
 
         try:
-            result[
-                "grid_feasibility"
-            ] = (
-                grid_feasibility_service
-                .parcel_metrics(
-                    scope_id=scope_id,
-                    parcel_id=parcel_id,
-                )
+            result["planning_context"] = planning_service.parcel_metrics(
+                scope_id=scope_id,
+                parcel_id=parcel_id,
             )
-
         except KeyError:
-            result[
-                "grid_feasibility"
-            ] = None
-
-        try:
-            result[
-                "planning_context"
-            ] = (
-                planning_service
-                .parcel_metrics(
-                    scope_id=scope_id,
-                    parcel_id=parcel_id,
-                )
-            )
-
-        except KeyError:
-            result[
-                "planning_context"
-            ] = None
-
+            result["planning_context"] = None
         return result
-
     except KeyError as error:
         raise HTTPException(
             status_code=404,
-            detail=(
-                "Parcel or parcel scope "
-                "was not found."
-            ),
+            detail="Parcel or parcel scope was not found.",
         ) from error
 
-@router.get(
-    "/scopes/{scope_id}/"
-    "development-envelopes"
-)
-def development_envelopes(
+
+def read_envelope_layer(
+    *,
     scope_id: str,
-    refresh: bool = False,
-) -> JSONResponse:
+    layer: str,
+    response: Response,
+) -> dict[str, Any]:
     try:
-        envelope_service.build(
-            scope_id=scope_id,
-            refresh=refresh,
-        )
-
-        payload = (
-            envelope_service
-            .feature_collection(
-                scope_id=scope_id,
-                layer=(
-                    "development_envelopes"
-                ),
-            )
-        )
-
-        return JSONResponse(
-            content=payload,
-            headers={
-                "Cache-Control": (
-                    "public, max-age=300"
-                ),
-            },
-        )
-
+        payload = envelope_service.feature_collection(scope_id=scope_id, layer=layer)
     except KeyError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=(
-                "Parcel scope was not found."
-            ),
-        ) from error
-
-    except RuntimeError as error:
-        raise HTTPException(
-            status_code=503,
-            detail=str(error),
-        ) from error
+        raise build_required(scope_id) from error
+    cache_response(response)
+    return payload
 
 
 @router.get(
-    "/scopes/{scope_id}/"
-    "largest-components"
+    "/scopes/{scope_id}/development-envelopes",
+    response_model=GeoJSONFeatureCollection,
 )
-def largest_components(
-    scope_id: str,
-) -> JSONResponse:
-    try:
-        envelope_service.build(
-            scope_id=scope_id,
-        )
-
-        payload = (
-            envelope_service
-            .feature_collection(
-                scope_id=scope_id,
-                layer=(
-                    "largest_components"
-                ),
-            )
-        )
-
-        return JSONResponse(
-            content=payload,
-            headers={
-                "Cache-Control": (
-                    "public, max-age=300"
-                ),
-            },
-        )
-
-    except (
-        KeyError,
-        RuntimeError,
-    ) as error:
-        raise HTTPException(
-            status_code=503,
-            detail=str(error),
-        ) from error
-
-
-@router.get(
-    "/scopes/{scope_id}/"
-    "constraints"
-)
-def parcel_constraints(
-    scope_id: str,
-) -> JSONResponse:
-    try:
-        envelope_service.build(
-            scope_id=scope_id,
-        )
-
-        payload = (
-            envelope_service
-            .feature_collection(
-                scope_id=scope_id,
-                layer=(
-                    "scope_constraints"
-                ),
-            )
-        )
-
-        return JSONResponse(
-            content=payload,
-            headers={
-                "Cache-Control": (
-                    "public, max-age=300"
-                ),
-            },
-        )
-
-    except (
-        KeyError,
-        RuntimeError,
-    ) as error:
-        raise HTTPException(
-            status_code=503,
-            detail=str(error),
-        ) from error
-
-@router.get(
-    "/scopes/{scope_id}/"
-    "grid-evidence"
-)
-def parcel_grid_evidence(
-    scope_id: str,
-    refresh: bool = False,
-) -> JSONResponse:
-    try:
-        grid_feasibility_service.build(
-            scope_id=scope_id,
-            refresh=refresh,
-        )
-
-        payload = (
-            grid_feasibility_service
-            .grid_evidence(
-                scope_id=scope_id
-            )
-        )
-
-        return JSONResponse(
-            content=payload,
-            headers={
-                "Cache-Control": (
-                    "public, max-age=300"
-                ),
-            },
-        )
-
-    except KeyError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=(
-                "Parcel scope was not found."
-            ),
-        ) from error
-
-    except RuntimeError as error:
-        raise HTTPException(
-            status_code=503,
-            detail=str(error),
-        ) from error
-
-@router.get("/planning/registry")
-def planning_registry() -> dict:
-    return (
-        planning_service
-        .registry_summary()
+def development_envelopes(scope_id: str, response: Response) -> dict[str, Any]:
+    return read_envelope_layer(
+        scope_id=scope_id,
+        layer="development_envelopes",
+        response=response,
     )
 
 
 @router.get(
-    "/scopes/{scope_id}/"
-    "planning-evidence"
+    "/scopes/{scope_id}/largest-components",
+    response_model=GeoJSONFeatureCollection,
 )
-def planning_evidence(
-    scope_id: str,
-    refresh: bool = False,
-) -> JSONResponse:
+def largest_components(scope_id: str, response: Response) -> dict[str, Any]:
+    return read_envelope_layer(
+        scope_id=scope_id,
+        layer="largest_components",
+        response=response,
+    )
+
+
+@router.get(
+    "/scopes/{scope_id}/constraints",
+    response_model=GeoJSONFeatureCollection,
+)
+def parcel_constraints(scope_id: str, response: Response) -> dict[str, Any]:
+    return read_envelope_layer(
+        scope_id=scope_id,
+        layer="scope_constraints",
+        response=response,
+    )
+
+
+@router.get(
+    "/scopes/{scope_id}/grid-evidence",
+    response_model=GeoJSONFeatureCollection,
+)
+def parcel_grid_evidence(scope_id: str, response: Response) -> dict[str, Any]:
     try:
-        planning_service.build(
-            scope_id=scope_id,
-            refresh=refresh,
-        )
-
-        payload = (
-            planning_service.overlays(
-                scope_id=scope_id
-            )
-        )
-
-        return JSONResponse(
-            content=payload,
-            headers={
-                "Cache-Control": (
-                    "public, max-age=300"
-                ),
-            },
-        )
-
+        payload = grid_feasibility_service.grid_evidence(scope_id=scope_id)
     except KeyError as error:
-        raise HTTPException(
-            status_code=404,
-            detail=(
-                "Parcel scope was not found."
-            ),
-        ) from error
+        raise build_required(scope_id) from error
+    cache_response(response)
+    return payload
 
-    except RuntimeError as error:
-        raise HTTPException(
-            status_code=503,
-            detail=str(error),
-        ) from error
 
+@router.get("/planning/registry", response_model=PlanningRegistrySummary)
+def planning_registry() -> dict[str, Any]:
+    return planning_service.registry_summary()
+
+
+@router.get(
+    "/scopes/{scope_id}/planning-evidence",
+    response_model=GeoJSONFeatureCollection,
+)
+def planning_evidence(scope_id: str, response: Response) -> dict[str, Any]:
+    try:
+        payload = planning_service.overlays(scope_id=scope_id)
+    except KeyError as error:
+        raise build_required(scope_id) from error
+    cache_response(response)
+    return payload

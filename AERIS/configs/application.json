@@ -1,0 +1,14 @@
+{
+  "name": "AERIS",
+  "full_name": "Assessment of Environmental Risk and Incident Siting",
+  "version": "0.6.1",
+  "release_label": "v0.6.1",
+  "release_stage": "stabilization",
+  "snapshot_catalog": {
+    "statewide_foundations": "2025-07-24",
+    "statewide_infrastructure": "2026-07-30",
+    "statewide_environmental": "2026-07-30",
+    "faa_nasr": "2026-08-06",
+    "statewide_planning": "2026-08-20"
+  }
+}

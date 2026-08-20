@@ -724,6 +724,9 @@ function App() {
 
     mapRef.current = map;
 
+    const savedMarkers =
+      savedMarkersRef.current;
+
     map.addControl(
       new maplibregl
         .NavigationControl(),
@@ -740,11 +743,6 @@ function App() {
       "load",
       async () => {
         addEvidenceLayers(map);
-
-        applyEvidenceVisibility(
-          map,
-          visibility
-        );
 
         placeMarker(
           INITIAL_POINT
@@ -881,14 +879,12 @@ function App() {
 
       for (
         const marker
-        of savedMarkersRef.current
-          .values()
+        of savedMarkers.values()
       ) {
         marker.remove();
       }
 
-      savedMarkersRef.current
-        .clear();
+      savedMarkers.clear();
 
       markerRef.current?.remove();
       markerRef.current = null;

@@ -8,6 +8,12 @@ import {
   API_BASE_URL,
 } from "./api";
 
+import type {
+  StatewideCellDetailResponse,
+  StatewideSummaryResponse,
+  StatewideZoneDetailResponse,
+} from "./generated/api";
+
 
 export type StatewideScoreType =
   | "technical"
@@ -37,64 +43,7 @@ export type StatewideFilterState = {
 };
 
 
-export type StatewideSummary = {
-  project: string;
-  analysis: string;
-  model_version?: string;
-
-  grid: {
-    cell_count: number;
-    complete_cells: number;
-    insufficient_data_cells: number;
-    hard_excluded_cells: number;
-    auto_screen_eligible_cells: number;
-    exploration_screen_eligible_cells: number;
-  };
-
-  zones: Record<string, number>;
-
-  audit: {
-    status: string;
-    release_status: string;
-    screening_shortlist_ready: boolean;
-    automated_recommendation_ready: boolean;
-    material_flags: Record<string, unknown>;
-  };
-
-  score_statistics: Record<
-    string,
-    number | null
-  >;
-
-  effective_score_statistics: Record<
-    string,
-    number | null
-  >;
-
-  score_bands: Array<{
-    id: string;
-    label: string;
-    minimum: number;
-    maximum: number;
-    auto_cell_count?: number;
-    exploration_cell_count?: number;
-  }>;
-
-  bounds: {
-    west: number;
-    south: number;
-    east: number;
-    north: number;
-  };
-
-  counties: Array<{
-    fips: string;
-    name: string;
-  }>;
-
-  terminology: Record<string, unknown>;
-  required_next_stage: string[];
-};
+export type StatewideSummary = StatewideSummaryResponse;
 
 
 export type StatewideFeatureCollection =
@@ -109,83 +58,10 @@ export type StatewideFeatureCollection =
   };
 
 
-export type StatewideCellDetail = {
-  cell_id: string;
-
-  location: {
-    latitude?: number | null;
-    longitude?: number | null;
-    county_fips?: string | null;
-    county_name?: string | null;
-    tract_geoid?: string | null;
-    land_fraction?: number | null;
-    cell_area_sq_km?: number | null;
-  };
-
-  decision: {
-    model_status?: string | null;
-    hard_excluded: boolean;
-    exclusion_reasons: string[];
-    auto_screen_eligible: boolean;
-    exploration_screen_eligible: boolean;
-    automated_recommendation_ready: boolean;
-  };
-
-  scores: {
-    technical_suitability?: number | null;
-    effective_suitability?: number | null;
-    criteria: Record<
-      string,
-      number | null
-    >;
-  };
-
-  evidence: Record<
-    string,
-    Record<string, unknown>
-  >;
-
-  community_impact: Record<
-    string,
-    unknown
-  >;
-};
+export type StatewideCellDetail = StatewideCellDetailResponse;
 
 
-export type StatewideZoneDetail = {
-  zone_id: string;
-  mode: string;
-
-  properties: Record<
-    string,
-    unknown
-  >;
-
-  membership: {
-    member_count: number;
-    member_cell_ids: string[];
-    member_cell_ids_truncated: boolean;
-  };
-
-  member_summary: {
-    technical_score: Record<
-      string,
-      number | null
-    >;
-
-    equity_gate_counts: Record<
-      string,
-      number
-    >;
-
-    county_counts: Record<
-      string,
-      number
-    >;
-  };
-
-  interpretation: string;
-};
+export type StatewideZoneDetail = StatewideZoneDetailResponse;
 
 
 async function fetchJson<T>(

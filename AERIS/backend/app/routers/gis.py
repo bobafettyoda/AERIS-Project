@@ -273,4 +273,3 @@ def get_site_map_evidence(
         lat=lat,
         lon=lon,
     )
-

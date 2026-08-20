@@ -4,8 +4,13 @@ import json
 from pathlib import Path
 from typing import Any
 
+from analysis.common.geopackage import read_single_row
+from analysis.common.records import record_value
+
 import geopandas as gpd
 import pandas as pd
+
+from analysis.common.geojson import feature_collection
 
 from analysis.planning.planning_pipeline import (
     build_planning_context,
@@ -132,14 +137,7 @@ class PlanningContextService:
             "EPSG:4326"
         )
 
-        payload = json.loads(
-            frame.to_json(
-                drop_id=True,
-                na="null",
-            )
-        )
-
-        payload["metadata"] = {
+        metadata = {
             "scope_id": scope_id,
             "returned_count": (
                 len(frame)
@@ -164,7 +162,7 @@ class PlanningContextService:
             ),
         }
 
-        return payload
+        return feature_collection(frame, metadata=metadata)
 
     def parcel_metrics(
         self,
@@ -183,55 +181,16 @@ class PlanningContextService:
                 scope_id
             )
 
-        frame = gpd.read_file(
+        row = read_single_row(
             output_path,
-            layer=self.config[
-                "layers"
-            ]["parcel_analysis"],
+            layer=self.config["layers"]["parcel_analysis"],
+            key_column="parcel_id",
+            key_value=parcel_id,
+            read_geometry=False,
         )
 
-        matches = frame.loc[
-            frame[
-                "parcel_id"
-            ].astype(str).eq(
-                parcel_id
-            )
-        ]
-
-        if matches.empty:
-            raise KeyError(
-                parcel_id
-            )
-
-        row = matches.iloc[0]
-
-        def value(
-            column: str,
-        ) -> Any:
-            if column not in row.index:
-                return None
-
-            result = row[column]
-
-            try:
-                if pd.isna(result):
-                    return None
-            except (
-                TypeError,
-                ValueError,
-            ):
-                pass
-
-            if hasattr(
-                result,
-                "item",
-            ):
-                try:
-                    return result.item()
-                except ValueError:
-                    pass
-
-            return result
+        def value(column: str) -> Any:
+            return record_value(row, column)
 
         return {
             "jurisdiction": {
@@ -241,11 +200,10 @@ class PlanningContextService:
                 "county_name": value(
                     "county_name"
                 ),
-                "municipality_name": (
-                    value(
-                        "municipality_name"
-                    )
-                ),
+                "municipality_name": value("municipality_name"),
+                "municipality_overlap_acres": value("municipality_overlap_acres"),
+                "municipality_overlap_fraction": value("municipality_overlap_fraction"),
+                "municipality_assignment_method": value("municipality_assignment_method"),
                 "authority_profile": (
                     value(
                         "authority_profile"
@@ -292,12 +250,21 @@ class PlanningContextService:
                     "permit_source_status"
                 ),
             },
-            "statewide_context": {
-                "priority_funding_area": (
-                    value(
-                        "pfa_status"
-                    )
+            "adapter": {
+                "name": value("planning_adapter_name"),
+                "available": bool(value("planning_adapter_available") or False),
+                "zoning_status": value("planning_adapter_zoning_status"),
+                "active_development_status": value(
+                    "planning_adapter_active_development_status"
                 ),
+                "permit_status": value("planning_adapter_permit_status"),
+                "warning": value("planning_adapter_warning"),
+            },
+            "statewide_context": {
+                "priority_funding_area": value("pfa_status"),
+                "priority_funding_area_overlap_acres": value("pfa_overlap_acres"),
+                "priority_funding_area_overlap_fraction": value("pfa_overlap_fraction"),
+                "priority_funding_area_assignment_method": value("pfa_assignment_method"),
                 "critical_area_overlap": (
                     bool(
                         value(

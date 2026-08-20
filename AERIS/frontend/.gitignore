@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# AERIS generated planning-context outputs
+AERIS/data/raw/planning/
+AERIS/data/derived/parcel_planning_context/
+AERIS/data/manifests/parcel_planning_context/
+AERIS/data/manifests/planning/

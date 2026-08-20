@@ -12,19 +12,20 @@ from pyproj import Transformer
 from shapely import STRtree
 from shapely.ops import unary_union
 
-from analysis.statewide.grid_infrastructure_pipeline import (
-    StageReporter,
+from analysis.common.io import (
     atomic_write_json,
-    build_session,
-    download_snapshot,
-    envelope_wgs84,
     file_sha256,
     load_yaml,
+    resolve_path,
+)
+from analysis.common.progress import StageReporter
+from analysis.common.statistics import summary_statistics
+from connectors.arcgis.client import build_session, request_json
+from analysis.statewide.grid_infrastructure_pipeline import (
+    download_snapshot,
+    envelope_wgs84,
     nearest_attributes,
     regional_counts,
-    request_json,
-    resolve_path,
-    summary_statistics,
 )
 from analysis.statewide.scoring import (
     inverse_distance_score_series,

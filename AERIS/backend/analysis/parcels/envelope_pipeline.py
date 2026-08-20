@@ -31,10 +31,10 @@ from analysis.parcels.pipeline import (
     resolve_path,
     scope_from_zone,
 )
-from analysis.statewide.grid_infrastructure_pipeline import (
-    atomic_write_json,
-    repair_invalid_geometries,
-)
+from analysis.common.geometry import repair_invalid_geometries
+from analysis.common.io import atomic_write_json
+from analysis.common.locking import file_lock
+from analysis.common.geopackage import write_geopackage_atomic
 
 
 SQUARE_METERS_PER_ACRE = 4046.8564224
@@ -1016,53 +1016,20 @@ def analyze_parcel_geometries(
 def write_layers(
     *,
     path: Path,
-    layers: list[
-        tuple[
-            str,
-            gpd.GeoDataFrame,
-        ]
-    ],
+    layers: list[tuple[str, gpd.GeoDataFrame]],
 ) -> list[str]:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
+    return write_geopackage_atomic(
+        path=path,
+        layers=layers,
+        indexes=[
+            ("parcel_analysis", "parcel_id"),
+            ("development_envelopes", "parcel_id"),
+            ("largest_components", "parcel_id"),
+        ],
     )
 
-    if path.exists():
-        path.unlink()
 
-    written_layers: list[str] = []
-
-    for layer_name, frame in layers:
-        if frame.empty:
-            continue
-
-        frame.to_file(
-            path,
-            layer=layer_name,
-            driver="GPKG",
-            index=False,
-            mode=(
-                "w"
-                if not written_layers
-                else "a"
-            ),
-        )
-
-        written_layers.append(
-            layer_name
-        )
-
-    if not written_layers:
-        raise RuntimeError(
-            "Envelope pipeline produced "
-            "no writable layers."
-        )
-
-    return written_layers
-
-
-def build_scope_envelopes(
+def _build_scope_envelopes_unlocked(
     *,
     config_path: Path,
     scope_id: str,
@@ -1750,3 +1717,22 @@ def build_scope_envelopes(
     )
 
     return manifest
+
+def build_scope_envelopes(
+    *,
+    config_path: Path,
+    scope_id: str,
+    refresh: bool = False,
+) -> dict[str, Any]:
+    config_path = config_path.resolve()
+    project_directory = config_path.parents[2]
+    lock_path = (
+        project_directory / "data" / "runtime" / "locks"
+        / f"envelope-{scope_id}.lock"
+    )
+    with file_lock(lock_path, timeout_seconds=1800):
+        return _build_scope_envelopes_unlocked(
+            config_path=config_path,
+            scope_id=scope_id,
+            refresh=refresh,
+        )

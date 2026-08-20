@@ -1,45 +1,43 @@
-
-# Python
+# Local development environments and Python runtime artifacts
 .venv/
+**/.venv/
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
-# AERIS statewide generated data
-AERIS/data/derived/*.gpkg
-AERIS/data/derived/*.parquet
-AERIS/data/derived/*.geojson
-AERIS/data/derived/*.pmtiles
+# Frontend dependencies and build products
+node_modules/
+AERIS/frontend/dist/
 
-# AERIS downloaded statewide source data
+# AERIS downloaded and intermediate source data
 AERIS/data/raw/
 AERIS/data/cache/
 AERIS/data/interim/
 
-# Partial and temporary data files
+# AERIS generated statewide and parcel-analysis outputs
+AERIS/data/derived/*.gpkg
+AERIS/data/derived/*.parquet
+AERIS/data/derived/*.geojson
+AERIS/data/derived/*.pmtiles
+AERIS/data/derived/*.csv
+AERIS/data/derived/parcels/
+AERIS/data/derived/parcel_envelopes/
+AERIS/data/derived/parcel_grid_feasibility/
+AERIS/data/derived/parcel_planning_context/
+AERIS/data/manifests/parcels/
+AERIS/data/manifests/parcel_envelopes/
+AERIS/data/manifests/parcel_grid_feasibility/
+AERIS/data/manifests/parcel_planning_context/
+AERIS/data/manifests/aviation/
+AERIS/data/manifests/planning/
+
+# Background-build state
+AERIS/data/runtime/
+
+# Partial and temporary files
 *.part
 *.tmp
 
-# AERIS generated statewide tables
-AERIS/data/derived/*.csv
-
-# AERIS parcel-analysis runtime outputs
-AERIS/data/derived/parcels/
-AERIS/data/derived/parcel_envelopes/
-AERIS/data/manifests/parcels/
-AERIS/data/manifests/parcel_envelopes/
-AERIS/data/raw/parcels/
-AERIS/data/cache/parcels/
-AERIS/data/interim/parcels/
-
-# AERIS generated FAA aviation snapshots
-AERIS/data/raw/aviation/
 AERIS/data/derived/aviation/
-AERIS/data/manifests/aviation/
-
-# AERIS generated parcel grid-feasibility outputs
-AERIS/data/derived/parcel_grid_feasibility/
-AERIS/data/manifests/parcel_grid_feasibility/
-
-# Python runtime artifacts
-__pycache__/
-*.py[cod]

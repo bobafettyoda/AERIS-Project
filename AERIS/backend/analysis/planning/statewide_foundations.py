@@ -17,12 +17,13 @@ from analysis.parcels.pipeline import (
     file_sha256,
     resolve_path,
 )
-from analysis.statewide.grid_infrastructure_pipeline import (
-    atomic_write_json,
+from analysis.common.geometry import repair_invalid_geometries
+from analysis.common.io import atomic_write_json
+from analysis.common.geopackage import write_geopackage_atomic
+from connectors.arcgis.client import (
     chunks,
     feature_collection_to_frame,
     query_feature_batch,
-    repair_invalid_geometries,
 )
 
 
@@ -398,44 +399,12 @@ def download_layer(
 
 def write_layers(
     path: Path,
-    layers: list[
-        tuple[
-            str,
-            gpd.GeoDataFrame,
-        ]
-    ],
+    layers: list[tuple[str, gpd.GeoDataFrame]],
 ) -> list[str]:
-    path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
+    return write_geopackage_atomic(
+        path=path,
+        layers=layers,
     )
-
-    if path.exists():
-        path.unlink()
-
-    written: list[str] = []
-
-    for layer_name, frame in layers:
-        if frame.empty:
-            continue
-
-        frame.to_file(
-            path,
-            layer=layer_name,
-            driver="GPKG",
-            mode=(
-                "w"
-                if not written
-                else "a"
-            ),
-            index=False,
-        )
-
-        written.append(
-            layer_name
-        )
-
-    return written
 
 
 def acquire_foundations(

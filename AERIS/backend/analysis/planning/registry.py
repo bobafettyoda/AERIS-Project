@@ -364,17 +364,20 @@ class PlanningRegistry:
                 manual_local_verification_required=True,
             )
 
+        # A mapped municipal boundary does not, by itself, establish which
+        # zoning/planning powers that municipality exercises. Keep both the
+        # county and municipality visible until an authoritative authority
+        # matrix or local adapter verifies the governing role.
         return PlanningAuthorityResolution(
             county_fips=record.county_fips,
             county_name=record.name,
             municipality_name=municipality,
-            authority_profile=(
-                record.authority_profile
-            ),
-            authority_level="MUNICIPALITY",
-            authority_name=municipality,
+            authority_profile=record.authority_profile,
+            authority_level="COUNTY_AND_MUNICIPALITY",
+            authority_name=f"{record.name} / {municipality}",
             authority_status=(
-                "MUNICIPAL_PLANNING_REVIEW_REQUIRED"
+                "COUNTY_AND_MUNICIPAL_AUTHORITY_"
+                "VERIFICATION_REQUIRED"
             ),
             manual_local_verification_required=True,
         )

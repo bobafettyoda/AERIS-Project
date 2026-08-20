@@ -19,6 +19,8 @@ from analysis.parcels.pipeline import (
     read_json,
     resolve_path,
 )
+from analysis.planning.adapters.base import AdapterScope
+from analysis.planning.adapters.factory import adapter_for_jurisdiction
 from analysis.planning.registry import (
     PlanningRegistry,
 )
@@ -26,10 +28,10 @@ from analysis.planning.statewide_foundations import (
     acquire_foundations,
     load_yaml,
 )
-from analysis.statewide.grid_infrastructure_pipeline import (
-    atomic_write_json,
-    repair_invalid_geometries,
-)
+from analysis.common.geometry import repair_invalid_geometries
+from analysis.common.io import atomic_write_json
+from analysis.common.locking import file_lock
+from analysis.common.geopackage import write_geopackage_atomic
 
 
 def utc_now() -> str:
@@ -384,8 +386,8 @@ def derive_planning_status(
 
     if authority_status in {
         "MUNICIPAL_PLANNING_REVIEW_REQUIRED",
-        "INDEPENDENT_MUNICIPAL_"
-        "PLANNING_REVIEW_REQUIRED",
+        "INDEPENDENT_MUNICIPAL_PLANNING_REVIEW_REQUIRED",
+        "COUNTY_AND_MUNICIPAL_AUTHORITY_VERIFICATION_REQUIRED",
     }:
         return (
             "MUNICIPAL_AUTHORITY_"
@@ -441,7 +443,7 @@ def planning_confidence(
     return "INSUFFICIENT"
 
 
-def build_planning_context(
+def _build_planning_context_unlocked(
     *,
     config_path: Path,
     scope_id: str,
@@ -785,6 +787,31 @@ def build_planning_context(
         )
     )
 
+    parcel_area_acres = (
+        result.geometry.area
+        / square_meters_per_acre
+    ).replace(0, np.nan)
+
+    result["municipality_overlap_acres"] = overlap_acres(
+        parcels=result,
+        overlay=municipality_overlay,
+        square_meters_per_acre=square_meters_per_acre,
+    ).round(6)
+    result["municipality_overlap_fraction"] = (
+        result["municipality_overlap_acres"] / parcel_area_acres
+    ).clip(lower=0, upper=1).fillna(0).round(6)
+    result["municipality_assignment_method"] = "REPRESENTATIVE_POINT_WITH_OVERLAP_EVIDENCE"
+
+    result["pfa_overlap_acres"] = overlap_acres(
+        parcels=result,
+        overlay=pfa,
+        square_meters_per_acre=square_meters_per_acre,
+    ).round(6)
+    result["pfa_overlap_fraction"] = (
+        result["pfa_overlap_acres"] / parcel_area_acres
+    ).clip(lower=0, upper=1).fillna(0).round(6)
+    result["pfa_assignment_method"] = "REPRESENTATIVE_POINT_WITH_OVERLAP_EVIDENCE"
+
     critical = pd.concat(
         [
             overlays[
@@ -862,6 +889,41 @@ def build_planning_context(
             validate="one_to_one",
         )
 
+    adapter_evidence: dict[str, dict[str, Any]] = {}
+    adapter_execution_counts: dict[str, int] = {}
+
+    for county_fips, county_parcels in result.groupby(
+        result["county_fips"].astype("string"),
+        dropna=True,
+    ):
+        normalized_fips = str(county_fips).zfill(3)
+        if normalized_fips not in registry.records:
+            continue
+
+        record = registry.get(normalized_fips)
+        adapter = adapter_for_jurisdiction(record)
+        adapter_execution_counts[adapter.adapter_name] = (
+            adapter_execution_counts.get(adapter.adapter_name, 0) + 1
+        )
+        scope = AdapterScope(
+            county_fips=normalized_fips,
+            authority_name=record.name,
+            geometry=union_all(list(county_parcels.geometry)),
+            target_crs=target_crs,
+        )
+        zoning = adapter.zoning(parcels=county_parcels, scope=scope)
+        active = adapter.active_development(parcels=county_parcels, scope=scope)
+        permits = adapter.permits(parcels=county_parcels, scope=scope)
+
+        for parcel_id in county_parcels["parcel_id"].astype(str):
+            adapter_evidence[parcel_id] = {
+                "adapter_name": adapter.adapter_name,
+                "adapter_available": adapter.available(),
+                "zoning": zoning.get(parcel_id),
+                "active": active.get(parcel_id),
+                "permits": permits.get(parcel_id),
+            }
+
     authority_values = []
 
     local_zoning_statuses = []
@@ -871,6 +933,12 @@ def build_planning_context(
     permit_statuses = []
     planning_statuses = []
     confidence_values = []
+    adapter_names = []
+    adapter_available_values = []
+    adapter_zoning_statuses = []
+    adapter_active_statuses = []
+    adapter_permit_statuses = []
+    adapter_warnings = []
 
     for _, row in result.iterrows():
         county_fips = clean_text(
@@ -931,6 +999,12 @@ def build_planning_context(
             confidence_values.append(
                 "INSUFFICIENT"
             )
+            adapter_names.append("none")
+            adapter_available_values.append(False)
+            adapter_zoning_statuses.append("DATA_UNAVAILABLE")
+            adapter_active_statuses.append("DATA_UNAVAILABLE")
+            adapter_permit_statuses.append("DATA_UNAVAILABLE")
+            adapter_warnings.append("Jurisdiction could not be resolved.")
 
             continue
 
@@ -1034,6 +1108,28 @@ def build_planning_context(
             )
         )
 
+        evidence = adapter_evidence.get(str(row["parcel_id"]), {})
+        zoning_evidence = evidence.get("zoning")
+        active_evidence = evidence.get("active")
+        permit_evidence = evidence.get("permits")
+        adapter_names.append(str(evidence.get("adapter_name", "none")))
+        adapter_available_values.append(bool(evidence.get("adapter_available", False)))
+        adapter_zoning_statuses.append(
+            zoning_evidence.status if zoning_evidence else "DATA_UNAVAILABLE"
+        )
+        adapter_active_statuses.append(
+            active_evidence.status if active_evidence else "DATA_UNAVAILABLE"
+        )
+        adapter_permit_statuses.append(
+            permit_evidence.status if permit_evidence else "DATA_UNAVAILABLE"
+        )
+        warnings = [
+            item.warning
+            for item in (zoning_evidence, active_evidence, permit_evidence)
+            if item is not None and item.warning
+        ]
+        adapter_warnings.append("; ".join(dict.fromkeys(warnings)))
+
     authority_frame = pd.DataFrame(
         authority_values
     )
@@ -1096,6 +1192,13 @@ def build_planning_context(
     result[
         "planning_data_confidence"
     ] = confidence_values
+
+    result["planning_adapter_name"] = adapter_names
+    result["planning_adapter_available"] = adapter_available_values
+    result["planning_adapter_zoning_status"] = adapter_zoning_statuses
+    result["planning_adapter_active_development_status"] = adapter_active_statuses
+    result["planning_adapter_permit_status"] = adapter_permit_statuses
+    result["planning_adapter_warning"] = adapter_warnings
 
     result[
         "local_zoning_verified"
@@ -1223,33 +1326,28 @@ def build_planning_context(
         errors="ignore",
     )
 
-    output_path.parent.mkdir(
-        parents=True,
-        exist_ok=True,
+    output_layers = [
+        (
+            config["layers"]["parcel_analysis"],
+            gpd.GeoDataFrame(
+                result,
+                geometry="geometry",
+                crs=parcels.crs,
+            ),
+        ),
+        (
+            config["layers"]["context_overlays"],
+            context_overlays,
+        ),
+    ]
+
+    write_geopackage_atomic(
+        path=output_path,
+        layers=output_layers,
+        indexes=[
+            (config["layers"]["parcel_analysis"], "parcel_id"),
+        ],
     )
-
-    if output_path.exists():
-        output_path.unlink()
-
-    result.to_file(
-        output_path,
-        layer=config[
-            "layers"
-        ]["parcel_analysis"],
-        driver="GPKG",
-        index=False,
-    )
-
-    if not context_overlays.empty:
-        context_overlays.to_file(
-            output_path,
-            layer=config[
-                "layers"
-            ]["context_overlays"],
-            driver="GPKG",
-            mode="a",
-            index=False,
-        )
 
     manifest = {
         "schema_version": 1,
@@ -1322,6 +1420,7 @@ def build_planning_context(
         "registry_coverage": (
             registry.coverage_summary()
         ),
+        "adapter_execution_counts": adapter_execution_counts,
         "safeguards": (
             config[
                 "safeguards"
@@ -1405,3 +1504,22 @@ def build_planning_context(
     )
 
     return manifest
+
+def build_planning_context(
+    *,
+    config_path: Path,
+    scope_id: str,
+    refresh: bool = False,
+) -> dict[str, Any]:
+    config_path = config_path.resolve()
+    project_directory = config_path.parents[2]
+    lock_path = (
+        project_directory / "data" / "runtime" / "locks"
+        / f"planning-{scope_id}.lock"
+    )
+    with file_lock(lock_path, timeout_seconds=1800):
+        return _build_planning_context_unlocked(
+            config_path=config_path,
+            scope_id=scope_id,
+            refresh=refresh,
+        )

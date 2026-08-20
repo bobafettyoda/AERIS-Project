@@ -33,8 +33,6 @@ analysis:
   transmission_summary_radius_m: 5000
   substation_summary_radius_m: 10000
 
-  connector_minimum_length_m: 0.10
-
   voltage_classes:
     extra_high_minimum_kv: 345
     high_minimum_kv: 230
@@ -68,11 +66,9 @@ layers:
   parcel_analysis: parcel_grid_analysis
   transmission_lines: scope_transmission_lines
   substations: scope_substations
-  connectors: grid_evidence_connectors
 
 api:
   line_simplify_m: 1.0
-  connector_simplify_m: 0.5
 
 safeguards:
   capacity_status: UNKNOWN_NOT_IN_PUBLIC_SOURCE

@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal
 
@@ -11,6 +10,8 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyogrio
+
+from analysis.common.geojson import feature_collection
 
 
 ScoreType = Literal[
@@ -277,6 +278,31 @@ class StatewideDataService:
         paths: StatewidePaths,
     ) -> None:
         self.paths = paths
+        self._file_cache: dict[str, tuple[tuple[tuple[int, int], ...], Any]] = {}
+
+    @staticmethod
+    def _fingerprint(*paths: Path) -> tuple[tuple[int, int], ...]:
+        return tuple(
+            (path.stat().st_mtime_ns, path.stat().st_size)
+            for path in paths
+        )
+
+    def _cached(
+        self,
+        key: str,
+        paths: tuple[Path, ...],
+        loader,
+    ):
+        fingerprint = self._fingerprint(*paths)
+        cached = self._file_cache.get(key)
+        if cached is not None and cached[0] == fingerprint:
+            return cached[1]
+        value = loader()
+        self._file_cache[key] = (fingerprint, value)
+        return value
+
+    def clear_cache(self) -> None:
+        self._file_cache.clear()
 
     def required_files(
         self,
@@ -376,8 +402,7 @@ class StatewideDataService:
 
         return value
 
-    @lru_cache(maxsize=1)
-    def final_grid(
+    def _load_final_grid(
         self,
     ) -> pd.DataFrame:
         self._require(
@@ -446,8 +471,7 @@ class StatewideDataService:
 
         return frame
 
-    @lru_cache(maxsize=1)
-    def grid_preview(
+    def _load_grid_preview(
         self,
     ) -> gpd.GeoDataFrame:
         self._require(
@@ -506,8 +530,7 @@ class StatewideDataService:
             crs="EPSG:4326",
         )
 
-    @lru_cache(maxsize=3)
-    def zones(
+    def _load_zones(
         self,
         mode: ZoneMode,
     ) -> gpd.GeoDataFrame:
@@ -547,8 +570,7 @@ class StatewideDataService:
 
         return frame
 
-    @lru_cache(maxsize=1)
-    def membership(
+    def _load_membership(
         self,
     ) -> pd.DataFrame:
         self._require(
@@ -565,6 +587,45 @@ class StatewideDataService:
         )
 
         return frame
+
+    def final_grid(self) -> pd.DataFrame:
+        self._require(self.paths.final_grid)
+        return self._cached(
+            "final_grid",
+            (self.paths.final_grid,),
+            self._load_final_grid,
+        )
+
+    def grid_preview(self) -> gpd.GeoDataFrame:
+        self._require(self.paths.final_preview)
+        self._require(self.paths.final_grid)
+        return self._cached(
+            "grid_preview",
+            (self.paths.final_preview, self.paths.final_grid),
+            self._load_grid_preview,
+        )
+
+    def zones(self, mode: ZoneMode) -> gpd.GeoDataFrame:
+        if mode == "top":
+            path = self.paths.top_zones
+        elif mode == "auto":
+            path = self.paths.auto_zones
+        else:
+            path = self.paths.exploration_zones
+        self._require(path)
+        return self._cached(
+            f"zones:{mode}",
+            (path,),
+            lambda: self._load_zones(mode),
+        )
+
+    def membership(self) -> pd.DataFrame:
+        self._require(self.paths.zone_membership)
+        return self._cached(
+            "membership",
+            (self.paths.zone_membership,),
+            self._load_membership,
+        )
 
     def summary(
         self,
@@ -766,18 +827,10 @@ class StatewideDataService:
                 "EPSG:4326"
             )
 
-        payload = json.loads(
-            frame.to_json(
-                drop_id=True,
-                na="null",
-            )
+        return feature_collection(
+            frame,
+            metadata=metadata,
         )
-
-        payload["metadata"] = (
-            json_scalar(metadata)
-        )
-
-        return payload
 
     def grid_feature_collection(
         self,

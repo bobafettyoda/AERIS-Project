@@ -282,4 +282,3 @@ def provider_diversity_score_series(
         lower=0.0,
         upper=1.0,
     )
-

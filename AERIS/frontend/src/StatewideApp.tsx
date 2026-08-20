@@ -14,6 +14,8 @@ import * as maplibregl
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./statewide.css";
 
+import { AERIS_RELEASE_LABEL } from "./generated/release";
+
 import {
   fetchStatewideCell,
   fetchStatewideGrid,
@@ -686,7 +688,7 @@ export default function StatewideApp() {
       <header className="statewide-topbar">
         <div>
           <span className="statewide-kicker">
-            AERIS Maryland v0.2
+            AERIS Maryland {AERIS_RELEASE_LABEL}
           </span>
 
           <h1>

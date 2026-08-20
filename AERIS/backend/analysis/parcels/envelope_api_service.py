@@ -4,8 +4,13 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
+from analysis.common.geopackage import read_single_row
+from analysis.common.records import record_value
+
 import geopandas as gpd
 import pandas as pd
+
+from analysis.common.geojson import feature_collection
 
 from analysis.parcels.envelope_pipeline import (
     build_scope_envelopes,
@@ -165,14 +170,7 @@ class ParcelEnvelopeService:
             "EPSG:4326"
         )
 
-        payload = json.loads(
-            frame.to_json(
-                drop_id=True,
-                na="null",
-            )
-        )
-
-        payload["metadata"] = {
+        metadata = {
             "scope_id": scope_id,
             "layer": layer,
             "returned_count": (
@@ -212,7 +210,7 @@ class ParcelEnvelopeService:
             },
         }
 
-        return payload
+        return feature_collection(frame, metadata=metadata)
 
     def parcel_metrics(
         self,
@@ -229,53 +227,16 @@ class ParcelEnvelopeService:
                 scope_id
             )
 
-        frame = gpd.read_file(
+        row = read_single_row(
             paths.output,
             layer="parcel_analysis",
+            key_column="parcel_id",
+            key_value=parcel_id,
+            read_geometry=False,
         )
 
-        matches = frame.loc[
-            frame[
-                "parcel_id"
-            ].astype(str).eq(
-                parcel_id
-            )
-        ]
-
-        if matches.empty:
-            raise KeyError(
-                parcel_id
-            )
-
-        row = matches.iloc[0]
-
-        def value(
-            column: str,
-        ) -> Any:
-            if column not in row.index:
-                return None
-
-            result = row[column]
-
-            try:
-                if pd.isna(result):
-                    return None
-            except (
-                TypeError,
-                ValueError,
-            ):
-                pass
-
-            if hasattr(
-                result,
-                "item",
-            ):
-                try:
-                    return result.item()
-                except ValueError:
-                    pass
-
-            return result
+        def value(column: str) -> Any:
+            return record_value(row, column)
 
         return {
             "status": value(
