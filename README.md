@@ -21,6 +21,8 @@ Scoped statewide parcel acquisition
         ↓
 Preliminary mapped-constraint envelopes
         ↓
+Terrain, wetlands, road access, and parcel assemblages
+        ↓
 FAA aviation screening
         ↓
 Public transmission/substation context
@@ -110,6 +112,7 @@ Builds are protected by per-scope interprocess locks and GeoPackages are publish
 - [Statewide bias audit](AERIS/docs/STATEWIDE_BIAS_AUDIT.md)
 - [User guide and comprehension quiz](AERIS/docs/USER_GUIDE.md)
 - [v0.6.1 stabilization](AERIS/docs/V061_STABILIZATION.md)
+- [v0.7 physical site feasibility](AERIS/docs/V07_SITE_FEASIBILITY.md)
 
 ## Data
 

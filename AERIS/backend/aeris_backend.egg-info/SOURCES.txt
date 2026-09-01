@@ -51,6 +51,12 @@ analysis/planning/adapters/__init__.py
 analysis/planning/adapters/base.py
 analysis/planning/adapters/factory.py
 analysis/planning/adapters/null_adapter.py
+analysis/site_feasibility/__init__.py
+analysis/site_feasibility/api_service.py
+analysis/site_feasibility/assemblages.py
+analysis/site_feasibility/pipeline.py
+analysis/site_feasibility/raster.py
+analysis/site_feasibility/sources.py
 analysis/statewide/__init__.py
 analysis/statewide/access_connectivity_pipeline.py
 analysis/statewide/acquisition.py
@@ -97,6 +103,12 @@ tests/test_parcel_pipeline.py
 tests/test_planning_adapters.py
 tests/test_planning_context.py
 tests/test_planning_registry.py
+tests/test_site_feasibility_assemblages.py
+tests/test_site_feasibility_buildings.py
+tests/test_site_feasibility_pipeline.py
+tests/test_site_feasibility_raster.py
+tests/test_site_feasibility_roads.py
+tests/test_site_feasibility_sources.py
 tests/test_statewide_access_scoring.py
 tests/test_statewide_acquisition.py
 tests/test_statewide_api_service.py

@@ -8,6 +8,7 @@ pyproj<4,>=3.7
 python-dotenv<2,>=1.0
 PyYAML<7,>=6
 requests<3,>=2.32
+rasterio<2,>=1.4
 shapely<3,>=2.1
 uvicorn[standard]<1,>=0.34
 

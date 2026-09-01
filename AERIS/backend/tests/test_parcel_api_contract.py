@@ -35,6 +35,7 @@ class ParcelApiContractTests(unittest.TestCase):
             "/analysis/parcels/scopes/{scope_id}/constraints",
             "/analysis/parcels/scopes/{scope_id}/grid-evidence",
             "/analysis/parcels/scopes/{scope_id}/planning-evidence",
+            "/analysis/parcels/scopes/{scope_id}/site-evidence",
         ):
             parameters = self.openapi["paths"][path]["get"].get(
                 "parameters",
@@ -44,6 +45,31 @@ class ParcelApiContractTests(unittest.TestCase):
                 "refresh",
                 {parameter["name"] for parameter in parameters},
             )
+
+
+    def test_site_candidate_routes_have_typed_contracts(self) -> None:
+        list_operation = self.openapi["paths"][
+            "/analysis/parcels/scopes/{scope_id}/site-candidates"
+        ]["get"]
+        compare_operation = self.openapi["paths"][
+            "/analysis/parcels/scopes/{scope_id}/compare-site-candidates"
+        ]["post"]
+
+        list_schema = list_operation["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]
+        compare_schema = compare_operation["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]
+
+        self.assertEqual(
+            list_schema["$ref"],
+            "#/components/schemas/SiteCandidateListResponse",
+        )
+        self.assertEqual(
+            compare_schema["$ref"],
+            "#/components/schemas/SiteCandidateComparisonResponse",
+        )
 
     def test_parcel_service_has_shared_geojson_builder(
         self,

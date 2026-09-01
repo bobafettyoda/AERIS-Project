@@ -66,6 +66,9 @@ GET /analysis/parcels/scopes/{scope_id}/parcels/{parcel_id}
 GET /analysis/parcels/scopes/{scope_id}/development-envelopes
 GET /analysis/parcels/scopes/{scope_id}/largest-components
 GET /analysis/parcels/scopes/{scope_id}/constraints
+GET /analysis/parcels/scopes/{scope_id}/site-evidence
+GET /analysis/parcels/scopes/{scope_id}/site-candidates
+POST /analysis/parcels/scopes/{scope_id}/compare-site-candidates
 GET /analysis/parcels/scopes/{scope_id}/grid-evidence
 GET /analysis/parcels/scopes/{scope_id}/planning-evidence
 ```
@@ -87,3 +90,9 @@ This reports statewide 24-jurisdiction registry coverage and source-status count
 - Parcel detail returns `null` for an unbuilt optional domain.
 - Capacity is never inferred from voltage/distance.
 - Local zoning approval, permitted use, and entitlement clearance are never inferred from statewide planning context.
+
+## Physical site feasibility
+
+`site-evidence` returns final preliminary site envelopes, mapped site constraints, scoped roads, and multi-parcel assemblages. Candidate list/compare endpoints expose only candidates that pass the configured public/institutional, statewide hard-exclusion, and minimum physical-area comparison gates. The candidate score remains a transparent physical-screening aid rather than an approval or acquisition decision.
+
+These endpoints do not confirm wetland delineation, legal road access, grading feasibility, parcel control, or buildability.

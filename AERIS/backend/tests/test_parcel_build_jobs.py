@@ -46,6 +46,7 @@ class ParcelBuildJobTests(unittest.TestCase):
                 envelope_service=FakeArtifactService(),
                 grid_service=FakeArtifactService(fail=True),
                 planning_service=FakeArtifactService(),
+                site_service=FakeArtifactService(),
                 runtime_directory=root / "runtime",
                 max_workers=1,
             )
@@ -63,6 +64,38 @@ class ParcelBuildJobTests(unittest.TestCase):
             self.assertEqual(finished["artifacts"]["parcels"]["state"], "ready")
             self.assertEqual(finished["artifacts"]["grid"]["state"], "failed")
             self.assertEqual(finished["artifacts"]["planning"]["state"], "ready")
+            self.assertEqual(finished["artifacts"]["site"]["state"], "ready")
+
+    def test_site_dependency_fails_when_envelope_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            coordinator = ScopeBuildCoordinator(
+                parcel_service=FakeParcelService(root),
+                envelope_service=FakeArtifactService(fail=True),
+                grid_service=FakeArtifactService(),
+                planning_service=FakeArtifactService(),
+                site_service=FakeArtifactService(),
+                runtime_directory=root / "runtime",
+                max_workers=1,
+            )
+            job = coordinator.submit_bbox(
+                west=-77,
+                south=38,
+                east=-76,
+                north=39,
+                scope_name="test-site-dependency",
+            )
+            finished = self.wait(coordinator, job["job_id"])
+            coordinator.shutdown()
+
+            self.assertEqual(finished["state"], "partial_failure")
+            self.assertEqual(finished["artifacts"]["envelopes"]["state"], "failed")
+            self.assertEqual(finished["artifacts"]["site"]["state"], "failed")
+            self.assertIn(
+                "DependencyError",
+                finished["artifacts"]["site"]["error"],
+            )
+
 
 
 if __name__ == "__main__":

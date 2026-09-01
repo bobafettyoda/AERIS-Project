@@ -12,6 +12,7 @@ import type {
   ArtifactStatus as GeneratedArtifactStatus,
   BuildJob as GeneratedBuildJob,
   ParcelDetailResponse as GeneratedParcelDetail,
+  SiteCandidate as GeneratedSiteCandidate,
 } from "./generated/api";
 
 
@@ -284,6 +285,89 @@ export async function fetchParcelPlanningEvidence(
 }
 
 
+export type SiteCandidate = GeneratedSiteCandidate;
+
+
+export type ParcelSiteEvidenceCollection =
+  FeatureCollection<
+    Geometry,
+    GeoJsonProperties
+  > & {
+    metadata: {
+      scope_id: string;
+      returned_count: number;
+      counts: Record<string, number>;
+      domain_status: Record<
+        string,
+        {
+          state: string;
+          error?: string | null;
+        }
+      >;
+      site_feasibility_class_counts:
+        Record<string, number>;
+      top_candidates: SiteCandidate[];
+      safeguards: Record<string, boolean>;
+      interpretation: Record<string, unknown>;
+    };
+  };
+
+
+export async function fetchParcelSiteEvidence(
+  scopeId: string,
+): Promise<ParcelSiteEvidenceCollection> {
+  return fetchJson<ParcelSiteEvidenceCollection>(
+    (
+      "/analysis/parcels/scopes/"
+      + encodeURIComponent(scopeId)
+      + "/site-evidence"
+    ),
+  );
+}
+
+
+export async function fetchSiteCandidates(
+  scopeId: string,
+  limit = 25,
+): Promise<SiteCandidate[]> {
+  const payload = await fetchJson<{
+    scope_id: string;
+    candidates: SiteCandidate[];
+  }>(
+    (
+      "/analysis/parcels/scopes/"
+      + encodeURIComponent(scopeId)
+      + "/site-candidates?limit="
+      + encodeURIComponent(limit.toString())
+    ),
+  );
+
+  return payload.candidates;
+}
+
+
+export async function compareSiteCandidates(
+  scopeId: string,
+  candidateIds: string[],
+): Promise<SiteCandidate[]> {
+  const payload = await postJson<{
+    scope_id: string;
+    candidates: SiteCandidate[];
+  }>(
+    (
+      "/analysis/parcels/scopes/"
+      + encodeURIComponent(scopeId)
+      + "/compare-site-candidates"
+    ),
+    {
+      candidate_ids: candidateIds,
+    },
+  );
+
+  return payload.candidates;
+}
+
+
 export type ArtifactStatus =
   GeneratedArtifactStatus;
 
@@ -298,6 +382,7 @@ export type ParcelScopeBundle = {
   parcels: ParcelFeatureCollection;
   envelopes: ParcelEnvelopeCollection | null;
   constraints: ParcelEnvelopeCollection | null;
+  site: ParcelSiteEvidenceCollection | null;
   grid: ParcelGridEvidenceCollection | null;
   planning: ParcelPlanningEvidenceCollection | null;
 };

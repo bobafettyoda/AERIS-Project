@@ -41,3 +41,8 @@ AERIS/data/runtime/
 *.tmp
 
 AERIS/data/derived/aviation/
+AERIS/data/raw/site_feasibility/
+AERIS/data/cache/site_feasibility/
+AERIS/data/derived/parcel_site_feasibility/
+AERIS/data/manifests/parcel_site_feasibility/
+AERIS/data/manifests/site_feasibility_source_audit.json

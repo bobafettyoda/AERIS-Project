@@ -91,6 +91,7 @@ class ScopeBundle(ApiModel):
     parcels: GeoJSONFeatureCollection
     envelopes: GeoJSONFeatureCollection | None = None
     constraints: GeoJSONFeatureCollection | None = None
+    site: GeoJSONFeatureCollection | None = None
     grid: GeoJSONFeatureCollection | None = None
     planning: GeoJSONFeatureCollection | None = None
 
@@ -308,6 +309,108 @@ class PlanningContextEvidence(ApiModel):
     warning: str
 
 
+class SiteTerrainEvidence(ApiModel):
+    status: str | None = None
+    elevation_minimum_m: float | None = None
+    elevation_maximum_m: float | None = None
+    elevation_mean_m: float | None = None
+    elevation_range_m: float | None = None
+    slope_mean_percent: float | None = None
+    slope_median_percent: float | None = None
+    slope_p90_percent: float | None = None
+    steep_slope_overlap_acres: float | None = None
+    steep_slope_fraction: float | None = None
+    severe_slope_pixel_fraction: float | None = None
+    engineering_complete: bool = False
+
+
+class SiteWetlandsEvidence(ApiModel):
+    status: str | None = None
+    mapped_overlap_acres: float | None = None
+    mapped_overlap_fraction: float | None = None
+    special_state_concern_screening_overlap_acres: float | None = None
+    field_delineation_confirmed: bool = False
+    permitting_complete: bool = False
+
+
+class SiteRoadAccessEvidence(ApiModel):
+    status: str | None = None
+    nearest_road_distance_m: float | None = None
+    nearest_road_name: str | None = None
+    nearest_road_class: str | None = None
+    nearest_primary_road_distance_m: float | None = None
+    nearest_accessible_road_distance_m: float | None = None
+    frontage_proxy_m: float | None = None
+    limited_access_adjacency_proxy_m: float | None = None
+    site_envelope_to_road_distance_m: float | None = None
+    legal_access_confirmed: bool = False
+    driveway_approval_confirmed: bool = False
+
+
+class SiteExistingDevelopmentEvidence(ApiModel):
+    building_reference_status: str | None = None
+    building_reference_count: int | None = None
+    building_reference_overlap_acres: float | None = None
+    building_reference_fraction: float | None = None
+    redevelopment_burden_class: str | None = None
+    building_geometry_survey_grade: bool = False
+
+
+class SiteFeasibilityEvidence(ApiModel):
+    site_feasibility_class: str | None = None
+    site_candidate_score: float | None = None
+    candidate_eligible: bool | None = None
+    candidate_status: str | None = None
+    candidate_status_reason: str | None = None
+    base_development_envelope_acres: float | None = None
+    final_site_area_acres: float | None = None
+    final_site_fraction_of_base_envelope: float | None = None
+    largest_contiguous_site_acres: float | None = None
+    site_component_count: int | None = None
+    terrain: SiteTerrainEvidence
+    wetlands: SiteWetlandsEvidence
+    road_access: SiteRoadAccessEvidence
+    existing_development: SiteExistingDevelopmentEvidence
+    safeguards: dict[str, bool]
+    warning: str
+
+
+class SiteCandidate(ApiModel):
+    candidate_id: str
+    candidate_kind: str
+    candidate_score: float | None = None
+    candidate_eligible: bool | None = None
+    candidate_status: str | None = None
+    candidate_status_reason: str | None = None
+    parcel_id: str | None = None
+    assemblage_id: str | None = None
+    parcel_count: int | None = None
+    parcel_ids: str | None = None
+    site_feasibility_class: str | None = None
+    final_site_area_acres: float | None = None
+    total_site_area_acres: float | None = None
+    largest_contiguous_site_acres: float | None = None
+    road_access_status: str | None = None
+    mapped_wetland_fraction: float | None = None
+    steep_slope_fraction: float | None = None
+    building_reference_fraction: float | None = None
+    redevelopment_burden_class: str | None = None
+
+
+class SiteCandidateListResponse(ApiModel):
+    scope_id: str
+    candidates: list[SiteCandidate]
+
+
+class SiteCandidateComparisonRequest(ApiModel):
+    candidate_ids: list[str] = Field(min_length=2, max_length=5)
+
+
+class SiteCandidateComparisonResponse(ApiModel):
+    scope_id: str
+    candidates: list[SiteCandidate]
+
+
 class ParcelDetailResponse(ApiModel):
     scope_id: str
     parcel_id: str
@@ -321,6 +424,7 @@ class ParcelDetailResponse(ApiModel):
     development_envelope: DevelopmentEnvelopeEvidence | None = None
     grid_feasibility: GridFeasibilityEvidence | None = None
     planning_context: PlanningContextEvidence | None = None
+    site_feasibility: SiteFeasibilityEvidence | None = None
     warning: str
 
 

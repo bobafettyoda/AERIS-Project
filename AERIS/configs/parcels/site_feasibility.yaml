@@ -1,0 +1,188 @@
+schema_version: 1
+pipeline_version: "0.7.0"
+snapshot_label: "2026-08-31"
+
+inputs:
+  parcel_config:
+    path: configs/parcels/maryland_parcels.yaml
+
+  envelope_config:
+    path: configs/parcels/development_envelopes.yaml
+
+  terrain:
+    enabled: true
+    image_server_url: >-
+      https://mdgeodata.md.gov/lidar/rest/services/Statewide/MD_statewide_dem_m/ImageServer
+    source_name: Maryland Statewide LiDAR DEM Mosaic
+    source_last_updated: "2025-05"
+    dem_raster_function: None
+    slope_raster_function: Slope
+    target_pixel_size_m: 10.0
+    maximum_pixel_size_m: 30.0
+    maximum_total_pixels: 18000000
+    maximum_tile_pixels: 3500
+    timeout_seconds: 300
+    steep_slope_threshold_percent: 15.0
+    severe_slope_threshold_percent: 25.0
+    minimum_polygon_area_acres: 0.05
+    subtract_steep_slope_from_site_envelope: true
+
+  wetlands:
+    enabled: true
+    service_url: >-
+      https://mdgeodata.md.gov/imap/rest/services/Hydrology/MD_Wetlands/MapServer
+    page_size: 750
+    timeout_seconds: 180
+    scope_buffer_m: 100.0
+    layers:
+      dnr_polygon:
+        id: 1
+        name: Maryland DNR Wetlands Polygon
+        where: >-
+          Type IN ('Estuarine', 'Lacustrine', 'Marine', 'Palustrine', 'Riverine')
+        fields:
+          - OBJECTID
+          - Type
+          - Class
+        subtract_from_site_envelope: true
+        source_last_updated: "1995-04-05"
+      national_wetlands_inventory:
+        id: 2
+        name: National Wetlands Inventory
+        fields:
+          - OBJECTID
+          - Legend
+          - Decoder
+          - Wetland
+          - Code
+        subtract_from_site_envelope: true
+        source_last_updated: "1992"
+      special_state_concern:
+        id: 3
+        name: Wetlands of Special State Concern
+        fields:
+          - OBJECTID
+          - Type
+        buffer_m: 30.48
+        subtract_from_site_envelope: true
+        source_last_updated: "2017-08"
+
+  roads:
+    enabled: true
+    service_url: >-
+      https://mdgeodata.md.gov/imap/rest/services/Transportation/MD_RoadCenterlines/MapServer
+    page_size: 1000
+    timeout_seconds: 180
+    scope_buffer_m: 2000.0
+    frontage_tolerance_m: 25.0
+    minimum_frontage_proxy_m: 15.0
+    direct_frontage_excluded_classes:
+      - INTERSTATE
+    near_road_threshold_m: 100.0
+    remote_road_threshold_m: 500.0
+    layers:
+      interstate:
+        id: 0
+        rank: 1
+      us_route:
+        id: 1
+        rank: 2
+      maryland_route:
+        id: 2
+        rank: 3
+      local_other:
+        id: 3
+        rank: 4
+    fields:
+      - OBJECTID
+      - COUNTY
+      - ROADNAMESHA
+      - ID_PREFIX
+      - ID_RTE_NO
+      - ROUTEID
+      - ROUTEID_RH
+      - MAIN_LINE
+      - CENTERLINEID
+
+  buildings:
+    enabled: true
+    layer_url: >-
+      https://mdgeodata.md.gov/imap/rest/services/PlanningCadastre/MD_BuildingFootprints/MapServer/0
+    source_name: Maryland Statewide Building Footprints
+    source_role: reference_only
+    page_size: 2000
+    timeout_seconds: 180
+    scope_buffer_m: 25.0
+    maximum_scope_features: 100000
+    subtract_from_site_envelope: false
+
+analysis:
+  target_crs: EPSG:26985
+  square_meters_per_acre: 4046.8564224
+  geometry_precision_m: 0.10
+  minimum_site_component_acres: 0.25
+
+  assemblages:
+    enabled: true
+    adjacency_gap_m: 8.0
+    minimum_parcel_site_acres: 2.0
+    minimum_total_site_acres: 10.0
+    minimum_parcel_count: 2
+    maximum_parcel_count: 40
+    maximum_candidates: 100
+
+  candidate_classes:
+    strong:
+      largest_contiguous_acres: 50.0
+      maximum_steep_fraction: 0.10
+      maximum_wetland_fraction: 0.02
+      maximum_building_fraction: 0.05
+      road_access:
+        - DIRECT_MAPPED_ROAD_FRONTAGE_PROXY
+    promising:
+      largest_contiguous_acres: 25.0
+      maximum_steep_fraction: 0.25
+      maximum_wetland_fraction: 0.10
+      road_access:
+        - DIRECT_MAPPED_ROAD_FRONTAGE_PROXY
+        - NEAR_MAPPED_PUBLIC_ROAD
+    limited_minimum_acres: 5.0
+
+outputs:
+  raw_scope_directory:
+    path: data/raw/site_feasibility
+  cache_directory:
+    path: data/cache/site_feasibility
+  derived_directory:
+    path: data/derived/parcel_site_feasibility
+  manifest_directory:
+    path: data/manifests/parcel_site_feasibility
+
+layers:
+  parcel_analysis: parcel_site_analysis
+  site_envelopes: site_envelopes
+  largest_components: largest_site_components
+  site_constraints: site_constraints
+  roads: site_roads
+  buildings_reference: site_buildings_reference
+  assemblages: site_assemblages
+
+api:
+  site_simplify_m: 0.75
+  constraint_simplify_m: 1.0
+  road_simplify_m: 1.5
+  building_simplify_m: 0.75
+  maximum_top_candidates: 100
+
+safeguards:
+  legal_buildability_confirmed: false
+  wetland_delineation_confirmed: false
+  wetland_permitting_complete: false
+  road_access_confirmed: false
+  driveway_or_curb_cut_approved: false
+  terrain_engineering_complete: false
+  grading_plan_complete: false
+  building_geometry_survey_grade: false
+  parcel_assembly_control_confirmed: false
+  parcel_availability_confirmed: false
+  acquisition_feasibility_confirmed: false

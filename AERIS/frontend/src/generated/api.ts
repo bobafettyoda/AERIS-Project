@@ -178,6 +178,7 @@ export type ParcelDetailResponse = {
   development_envelope?: DevelopmentEnvelopeEvidence | null;
   grid_feasibility?: GridFeasibilityEvidence | null;
   planning_context?: PlanningContextEvidence | null;
+  site_feasibility?: SiteFeasibilityEvidence | null;
   warning: string;
   [key: string]: unknown;
 };
@@ -313,8 +314,122 @@ export type ScopeBundle = {
   parcels: GeoJSONFeatureCollection;
   envelopes?: GeoJSONFeatureCollection | null;
   constraints?: GeoJSONFeatureCollection | null;
+  site?: GeoJSONFeatureCollection | null;
   grid?: GeoJSONFeatureCollection | null;
   planning?: GeoJSONFeatureCollection | null;
+  [key: string]: unknown;
+};
+
+export type SiteCandidate = {
+  candidate_id: string;
+  candidate_kind: string;
+  candidate_score?: number | null;
+  candidate_eligible?: boolean | null;
+  candidate_status?: string | null;
+  candidate_status_reason?: string | null;
+  parcel_id?: string | null;
+  assemblage_id?: string | null;
+  parcel_count?: number | null;
+  parcel_ids?: string | null;
+  site_feasibility_class?: string | null;
+  final_site_area_acres?: number | null;
+  total_site_area_acres?: number | null;
+  largest_contiguous_site_acres?: number | null;
+  road_access_status?: string | null;
+  mapped_wetland_fraction?: number | null;
+  steep_slope_fraction?: number | null;
+  building_reference_fraction?: number | null;
+  redevelopment_burden_class?: string | null;
+  [key: string]: unknown;
+};
+
+export type SiteCandidateComparisonRequest = {
+  candidate_ids: Array<string>;
+  [key: string]: unknown;
+};
+
+export type SiteCandidateComparisonResponse = {
+  scope_id: string;
+  candidates: Array<SiteCandidate>;
+  [key: string]: unknown;
+};
+
+export type SiteCandidateListResponse = {
+  scope_id: string;
+  candidates: Array<SiteCandidate>;
+  [key: string]: unknown;
+};
+
+export type SiteExistingDevelopmentEvidence = {
+  building_reference_status?: string | null;
+  building_reference_count?: number | null;
+  building_reference_overlap_acres?: number | null;
+  building_reference_fraction?: number | null;
+  redevelopment_burden_class?: string | null;
+  building_geometry_survey_grade?: boolean;
+  [key: string]: unknown;
+};
+
+export type SiteFeasibilityEvidence = {
+  site_feasibility_class?: string | null;
+  site_candidate_score?: number | null;
+  candidate_eligible?: boolean | null;
+  candidate_status?: string | null;
+  candidate_status_reason?: string | null;
+  base_development_envelope_acres?: number | null;
+  final_site_area_acres?: number | null;
+  final_site_fraction_of_base_envelope?: number | null;
+  largest_contiguous_site_acres?: number | null;
+  site_component_count?: number | null;
+  terrain: SiteTerrainEvidence;
+  wetlands: SiteWetlandsEvidence;
+  road_access: SiteRoadAccessEvidence;
+  existing_development: SiteExistingDevelopmentEvidence;
+  safeguards: {
+  [key: string]: boolean;
+};
+  warning: string;
+  [key: string]: unknown;
+};
+
+export type SiteRoadAccessEvidence = {
+  status?: string | null;
+  nearest_road_distance_m?: number | null;
+  nearest_road_name?: string | null;
+  nearest_road_class?: string | null;
+  nearest_primary_road_distance_m?: number | null;
+  nearest_accessible_road_distance_m?: number | null;
+  frontage_proxy_m?: number | null;
+  limited_access_adjacency_proxy_m?: number | null;
+  site_envelope_to_road_distance_m?: number | null;
+  legal_access_confirmed?: boolean;
+  driveway_approval_confirmed?: boolean;
+  [key: string]: unknown;
+};
+
+export type SiteTerrainEvidence = {
+  status?: string | null;
+  elevation_minimum_m?: number | null;
+  elevation_maximum_m?: number | null;
+  elevation_mean_m?: number | null;
+  elevation_range_m?: number | null;
+  slope_mean_percent?: number | null;
+  slope_median_percent?: number | null;
+  slope_p90_percent?: number | null;
+  steep_slope_overlap_acres?: number | null;
+  steep_slope_fraction?: number | null;
+  severe_slope_pixel_fraction?: number | null;
+  engineering_complete?: boolean;
+  [key: string]: unknown;
+};
+
+export type SiteWetlandsEvidence = {
+  status?: string | null;
+  mapped_overlap_acres?: number | null;
+  mapped_overlap_fraction?: number | null;
+  special_state_concern_screening_overlap_acres?: number | null;
+  field_delineation_confirmed?: boolean;
+  permitting_complete?: boolean;
   [key: string]: unknown;
 };
 

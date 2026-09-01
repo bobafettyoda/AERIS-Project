@@ -6,6 +6,7 @@ import type {
 export type ParcelView =
   | "parcels"
   | "envelopes"
+  | "site"
   | "constraints"
   | "grid"
   | "planning";
@@ -20,6 +21,15 @@ Record<ParcelView, readonly string[]> = {
   envelopes: [
     "parcel-envelope-fill",
     "parcel-envelope-line",
+  ],
+  site: [
+    "parcel-site-envelope-fill",
+    "parcel-site-envelope-line",
+    "parcel-site-largest-line",
+    "parcel-site-constraint-fill",
+    "parcel-site-road-line",
+    "parcel-site-assemblage-fill",
+    "parcel-site-assemblage-line",
   ],
   constraints: [
     "parcel-constraint-fill",

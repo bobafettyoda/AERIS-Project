@@ -48,6 +48,10 @@ import {
   type ZoneOption,
 } from "./components/ParcelControls";
 
+import {
+  SiteCandidateComparison,
+} from "./components/SiteCandidateComparison";
+
 
 const EMPTY_COLLECTION:
 FeatureCollection = {
@@ -223,6 +227,7 @@ export default function ParcelExplorerApp() {
     constraints,
     gridEvidence,
     planningEvidence,
+    siteEvidence,
     artifacts,
     job,
     loading: loadingParcels,
@@ -345,82 +350,93 @@ export default function ParcelExplorerApp() {
         EMPTY_COLLECTION,
       );
 
-      map.on(
-        "mousemove",
+      const pointerLayers = [
         "parcel-fill",
-        () => {
-          map.getCanvas().style.cursor =
-            "pointer";
-        },
-      );
+        "parcel-site-envelope-fill",
+      ];
 
-      map.on(
-        "mouseleave",
-        "parcel-fill",
-        () => {
-          map.getCanvas().style.cursor =
-            "";
-        },
-      );
+      const openParcel = (
+        event: maplibregl.MapLayerMouseEvent,
+      ) => {
+        const feature =
+          event.features?.[0];
 
-      map.on(
-        "click",
-        "parcel-fill",
-        (event) => {
-          const feature =
-            event.features?.[0];
+        const parcelId =
+          feature?.properties?.[
+            "parcel_id"
+          ];
 
-          const parcelId =
-            feature?.properties?.[
-              "parcel_id"
-            ];
+        const scopeId =
+          parcelScopeIdRef.current;
 
-          const scopeId =
-            parcelScopeIdRef.current;
+        if (
+          typeof parcelId
+            !== "string"
+          || !scopeId
+        ) {
+          return;
+        }
 
-          if (
-            typeof parcelId
-              !== "string"
-            || !scopeId
-          ) {
-            return;
-          }
+        setLoadingDetail(true);
+        setDetailError(null);
 
-          setLoadingDetail(true);
-          setDetailError(null);
-
-          fetchParcelDetail(
-            scopeId,
-            parcelId,
+        fetchParcelDetail(
+          scopeId,
+          parcelId,
+        )
+          .then(
+            setParcelDetail
           )
-            .then(
-              setParcelDetail
-            )
-            .catch(
-              (
-                caughtError:
-                  unknown,
-              ) => {
-                setDetailError(
-                  caughtError
-                  instanceof Error
-                    ? caughtError
-                        .message
-                    : (
-                      "Parcel detail "
-                      + "could not be "
-                      + "loaded."
-                    ),
-                );
-              },
-            )
-            .finally(() => {
-              setLoadingDetail(
-                false
+          .catch(
+            (
+              caughtError:
+                unknown,
+            ) => {
+              setDetailError(
+                caughtError
+                instanceof Error
+                  ? caughtError
+                      .message
+                  : (
+                    "Parcel detail "
+                    + "could not be "
+                    + "loaded."
+                  ),
               );
-            });
-        },
-      );
+            },
+          )
+          .finally(() => {
+            setLoadingDetail(
+              false
+            );
+          });
+      };
+
+      for (const layerId of pointerLayers) {
+        map.on(
+          "mousemove",
+          layerId,
+          () => {
+            map.getCanvas().style.cursor =
+              "pointer";
+          },
+        );
+
+        map.on(
+          "mouseleave",
+          layerId,
+          () => {
+            map.getCanvas().style.cursor =
+              "";
+          },
+        );
+
+        map.on(
+          "click",
+          layerId,
+          openParcel,
+        );
+      }
 
       setMapReady(true);
     });
@@ -576,6 +592,25 @@ export default function ParcelExplorerApp() {
       return;
     }
 
+    sourceData(
+      mapRef.current,
+      "parcel-site-evidence",
+      siteEvidence ?? EMPTY_COLLECTION,
+    );
+  }, [
+    siteEvidence,
+    mapReady,
+  ]);
+
+
+  useEffect(() => {
+    if (
+      !mapReady
+      || !mapRef.current
+    ) {
+      return;
+    }
+
     applyParcelView(
       mapRef.current,
       parcelView,
@@ -677,6 +712,55 @@ export default function ParcelExplorerApp() {
               Insufficient data
             </div>
           </div>
+
+          {parcelView === "site" && (
+            <div className="parcel-site-legend">
+              <strong>
+                Physical site feasibility
+              </strong>
+
+              <div>
+                <span className="site-swatch strong" />
+                Strong preliminary site
+              </div>
+
+              <div>
+                <span className="site-swatch promising" />
+                Promising preliminary site
+              </div>
+
+              <div>
+                <span className="site-swatch constrained" />
+                Physical review required
+              </div>
+
+              <div>
+                <span className="site-swatch ineligible" />
+                Not eligible for site comparison
+              </div>
+
+              <div>
+                <span className="site-swatch wetlands" />
+                Mapped wetlands
+              </div>
+
+              <div>
+                <span className="site-swatch slope" />
+                Steep-slope screen
+              </div>
+
+              <div>
+                <span className="site-swatch assemblage" />
+                Multi-parcel assemblage
+              </div>
+
+              <p>
+                Site geometry is preliminary. Field delineation, legal
+                access, grading, survey, and parcel control remain
+                unconfirmed.
+              </p>
+            </div>
+          )}
 
           {parcelView === "planning" && (
             <div className="parcel-planning-legend">
@@ -818,6 +902,17 @@ export default function ParcelExplorerApp() {
             onZoneChange={setSelectedZoneId}
             onLoad={loadSelectedZone}
             onViewChange={setParcelView}
+          />
+
+          <SiteCandidateComparison
+            scopeId={
+              parcels?.metadata.scope.scope_id
+              ?? null
+            }
+            candidates={
+              siteEvidence?.metadata.top_candidates
+              ?? []
+            }
           />
 
           <ParcelDetails

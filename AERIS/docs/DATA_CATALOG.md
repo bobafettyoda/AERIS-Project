@@ -1,6 +1,6 @@
 # AERIS Data Catalog
 
-This catalog describes the datasets currently wired into the AERIS v0.6.1 screening workflow. Runtime manifests record the exact feature counts, checksums, source fields, and snapshot dates used by each build.
+This catalog describes the datasets currently wired into the AERIS v0.7.0 screening workflow. Runtime manifests record the exact feature counts, checksums, source fields, and snapshot dates used by each build.
 
 ## Source-quality vocabulary
 
@@ -51,7 +51,7 @@ This catalog describes the datasets currently wired into the AERIS v0.6.1 screen
 | FAA physical runway pavement derived from NASR runway endpoints and width | Physical runway conflict | Yes |
 | FAA Part 77 notice-distance screen | Height-dependent aviation review context | No |
 
-The output is a **preliminary mapped-constraint envelope**, not confirmed buildable land. Wetlands, terrain, buildings, local setbacks, rights-of-way, utilities, title, and engineering are not yet fully modeled.
+The v0.4 output is a **preliminary mapped-constraint envelope**, not confirmed buildable land. v0.7 adds mapped wetlands, terrain/slope, road-access proxies, reference building evidence, and parcel assemblages; local setbacks, rights-of-way, utilities, title, field delineation, and engineering remain unresolved.
 
 ## FAA aviation
 
@@ -104,3 +104,26 @@ The registry represents all 23 counties plus Baltimore City. Unless a local adap
 - manifests with checksums, counts, source fields, safeguards, and methodology.
 
 Large source and derived GIS artifacts are intentionally ignored by Git. They must be generated through the scripts in `AERIS/backend/scripts` and validated with the matching review commands.
+
+## v0.7 physical site-feasibility inputs
+
+| Dataset | Provider | Role | Source quality / limitation |
+|---|---|---|---|
+| Maryland statewide LiDAR DEM mosaic | Maryland iMAP LiDAR ImageServer | Scoped elevation export and AERIS-derived slope-percent raster | Authoritative statewide elevation mosaic used for screening; not a project survey or grading design |
+| Maryland DNR wetlands polygons | Maryland iMAP | Mapped wetland subtraction from preliminary site envelope | Screening baseline; field delineation and permitting remain required |
+| National Wetlands Inventory | U.S. Fish and Wildlife Service via Maryland iMAP | Supplemental mapped wetland subtraction | Screening baseline; source vintage varies and does not replace jurisdictional delineation |
+| Wetlands of Special State Concern | Maryland DNR / iMAP | Conservative special-concern screening and configured buffer | Review layer; configured buffer is an AERIS assumption, not a universal legal setback |
+| Maryland Road Centerlines | Maryland iMAP | Nearest-road, primary-road, non-interstate frontage, and limited-access adjacency proxies | Interstate adjacency is not treated as direct access; legal/engineered access is not confirmed |
+| Maryland statewide building footprints | Maryland iMAP | Existing-development reference and redevelopment-burden proxy | Reference-only geometry; not survey-grade and not subtracted from site envelope |
+
+## v0.7 derived products
+
+- scoped DEM and slope-percent GeoTIFFs;
+- parcel terrain and slope statistics;
+- mapped wetland and steep-slope overlap metrics;
+- final preliminary site envelopes and largest contiguous components;
+- road-access and frontage proxies;
+- reference building-overlap and redevelopment-burden metrics;
+- preliminary multi-parcel assemblages;
+- transparent parcel/assemblage candidate comparison records;
+- source fingerprints, domain status, safeguards, and output checksums.

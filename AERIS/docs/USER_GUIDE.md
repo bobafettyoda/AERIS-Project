@@ -16,6 +16,7 @@ AERIS adds separate evidence domains:
 
 - **Envelopes** — preliminary land remaining after configured mapped constraints;
 - **Constraints** — water, protected land, SFHA screening, runway pavement, and FAA notice context;
+- **Site** — terrain, wetlands, road-access proxies, reference development burden, and multi-parcel assemblages;
 - **Grid** — mapped line/substation distance and voltage, with capacity explicitly unknown;
 - **Planning** — jurisdiction, statewide zoning field, planning overlays, and local-source coverage status.
 
@@ -25,7 +26,8 @@ AERIS adds separate evidence domains:
 |---|---|---|
 | Parcels | Legal/tax-map screening polygons and source attributes | ownership availability or vacancy |
 | Envelopes | Preliminary mapped-constraint land inside the analysis scope | legal buildability |
-| Constraints | The mapped geometries used for physical screening | a complete permitting determination |
+| Constraints | The mapped geometries used for the v0.4 envelope | a complete permitting determination |
+| Site | Final preliminary site envelopes, terrain/wetland screens, roads, and assemblages | field delineation, legal access, grading approval, or parcel control |
 | Grid | Publicly mapped transmission and substation context | available MW or interconnection approval |
 | Planning | Statewide jurisdiction and planning context | permitted use or zoning approval |
 
@@ -35,7 +37,9 @@ AERIS adds separate evidence domains:
 - **Candidate zone:** A contiguous group of promising grid cells.
 - **Census tract:** Demographic and equity geography.
 - **Parcel:** A property/tax-map polygon.
-- **Development envelope:** The parcel portion remaining after configured mapped constraints.
+- **Development envelope:** The parcel portion remaining after configured v0.4 mapped constraints.
+- **Site envelope:** The development envelope further screened for mapped wetlands and configured steep slopes.
+- **Assemblage:** A preliminary group of adjacent parcel site envelopes; it does not establish common control.
 
 ## Status interpretation
 
@@ -62,12 +66,14 @@ Parcel source attributes indicate a public or institutional use. It is a conserv
 3. Read the preliminary screening summary before opening detailed evidence.
 4. Reject or pause on obvious hard exclusions, public/institutional conflicts, or negligible contiguous land.
 5. Review grid evidence without inferring capacity.
-6. Review planning evidence and identify which local sources remain manual.
-7. Produce a diligence question list before spending money on detailed studies.
+6. Use Site mode to review slope, wetlands, non-interstate road-access proxies, limited-access adjacency, redevelopment burden, and preliminary assemblages.
+7. Compare top physical candidates without treating the candidate score as approval. Public/institutional parcels, statewide hard-excluded parcels, and physically undersized parcels remain visible but are excluded from the comparison shortlist.
+8. Review planning evidence and identify which local sources remain manual.
+9. Produce a diligence question list before spending money on detailed studies.
 
 ## What AERIS can responsibly say today
 
-> This region is technically promising. These parcels intersect the candidate zone. This amount of land remains after the configured mapped constraints. Public grid infrastructure is mapped nearby. These planning and jurisdictional facts are known, and these specific questions remain unresolved.
+> This region is technically promising. These parcels intersect the candidate zone. This amount of land remains after the configured mapped constraints and preliminary terrain/wetland screening. Public grid infrastructure is mapped nearby. These planning and jurisdictional facts are known, and these specific questions remain unresolved.
 
 ## What AERIS cannot responsibly say today
 

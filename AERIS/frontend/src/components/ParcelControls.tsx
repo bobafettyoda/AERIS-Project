@@ -31,6 +31,7 @@ const ARTIFACT_FOR_VIEW: Record<ParcelView, string> = {
   parcels: "parcels",
   envelopes: "envelopes",
   constraints: "envelopes",
+  site: "site",
   grid: "grid",
   planning: "planning",
 };
@@ -42,6 +43,7 @@ const VIEWS: Array<{
 }> = [
   { id: "parcels", label: "Parcels" },
   { id: "envelopes", label: "Envelopes" },
+  { id: "site", label: "Site" },
   { id: "constraints", label: "Constraints" },
   { id: "grid", label: "Grid" },
   { id: "planning", label: "Planning" },

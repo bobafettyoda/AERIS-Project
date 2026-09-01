@@ -3,7 +3,7 @@
   "info": {
     "title": "AERIS Backend",
     "description": "Maryland statewide site screening, scoped parcel investigation, mapped physical constraints, public grid context, and planning context.",
-    "version": "0.6.1"
+    "version": "0.7.0"
   },
   "paths": {
     "/health": {
@@ -2141,6 +2141,154 @@
           }
         }
       }
+    },
+    "/analysis/parcels/scopes/{scope_id}/site-evidence": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Site Evidence",
+        "operationId": "parcel_site_evidence_analysis_parcels_scopes__scope_id__site_evidence_get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/site-candidates": {
+      "get": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Parcel Site Candidates",
+        "operationId": "parcel_site_candidates_analysis_parcels_scopes__scope_id__site_candidates_get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCandidateListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/parcels/scopes/{scope_id}/compare-site-candidates": {
+      "post": {
+        "tags": [
+          "parcels"
+        ],
+        "summary": "Compare Site Candidates",
+        "operationId": "compare_site_candidates_analysis_parcels_scopes__scope_id__compare_site_candidates_post",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteCandidateComparisonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCandidateComparisonResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3268,6 +3416,16 @@
               }
             ]
           },
+          "site_feasibility": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SiteFeasibilityEvidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "warning": {
             "type": "string",
             "title": "Warning"
@@ -4168,6 +4326,16 @@
               }
             ]
           },
+          "site": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GeoJSONFeatureCollection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "grid": {
             "anyOf": [
               {
@@ -4197,6 +4365,800 @@
           "parcels"
         ],
         "title": "ScopeBundle"
+      },
+      "SiteCandidate": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id"
+          },
+          "candidate_kind": {
+            "type": "string",
+            "title": "Candidate Kind"
+          },
+          "candidate_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Score"
+          },
+          "candidate_eligible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Eligible"
+          },
+          "candidate_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Status"
+          },
+          "candidate_status_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Status Reason"
+          },
+          "parcel_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Id"
+          },
+          "assemblage_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assemblage Id"
+          },
+          "parcel_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Count"
+          },
+          "parcel_ids": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Ids"
+          },
+          "site_feasibility_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Feasibility Class"
+          },
+          "final_site_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Site Area Acres"
+          },
+          "total_site_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Site Area Acres"
+          },
+          "largest_contiguous_site_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Largest Contiguous Site Acres"
+          },
+          "road_access_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Access Status"
+          },
+          "mapped_wetland_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapped Wetland Fraction"
+          },
+          "steep_slope_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steep Slope Fraction"
+          },
+          "building_reference_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Reference Fraction"
+          },
+          "redevelopment_burden_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redevelopment Burden Class"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "candidate_kind"
+        ],
+        "title": "SiteCandidate"
+      },
+      "SiteCandidateComparisonRequest": {
+        "properties": {
+          "candidate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 2,
+            "title": "Candidate Ids"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "candidate_ids"
+        ],
+        "title": "SiteCandidateComparisonRequest"
+      },
+      "SiteCandidateComparisonResponse": {
+        "properties": {
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/SiteCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "scope_id",
+          "candidates"
+        ],
+        "title": "SiteCandidateComparisonResponse"
+      },
+      "SiteCandidateListResponse": {
+        "properties": {
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/SiteCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "scope_id",
+          "candidates"
+        ],
+        "title": "SiteCandidateListResponse"
+      },
+      "SiteExistingDevelopmentEvidence": {
+        "properties": {
+          "building_reference_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Reference Status"
+          },
+          "building_reference_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Reference Count"
+          },
+          "building_reference_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Reference Overlap Acres"
+          },
+          "building_reference_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Reference Fraction"
+          },
+          "redevelopment_burden_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redevelopment Burden Class"
+          },
+          "building_geometry_survey_grade": {
+            "type": "boolean",
+            "title": "Building Geometry Survey Grade",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SiteExistingDevelopmentEvidence"
+      },
+      "SiteFeasibilityEvidence": {
+        "properties": {
+          "site_feasibility_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Feasibility Class"
+          },
+          "site_candidate_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Candidate Score"
+          },
+          "candidate_eligible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Eligible"
+          },
+          "candidate_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Status"
+          },
+          "candidate_status_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Status Reason"
+          },
+          "base_development_envelope_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Development Envelope Acres"
+          },
+          "final_site_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Site Area Acres"
+          },
+          "final_site_fraction_of_base_envelope": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Site Fraction Of Base Envelope"
+          },
+          "largest_contiguous_site_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Largest Contiguous Site Acres"
+          },
+          "site_component_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Component Count"
+          },
+          "terrain": {
+            "$ref": "#/components/schemas/SiteTerrainEvidence"
+          },
+          "wetlands": {
+            "$ref": "#/components/schemas/SiteWetlandsEvidence"
+          },
+          "road_access": {
+            "$ref": "#/components/schemas/SiteRoadAccessEvidence"
+          },
+          "existing_development": {
+            "$ref": "#/components/schemas/SiteExistingDevelopmentEvidence"
+          },
+          "safeguards": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Safeguards"
+          },
+          "warning": {
+            "type": "string",
+            "title": "Warning"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "terrain",
+          "wetlands",
+          "road_access",
+          "existing_development",
+          "safeguards",
+          "warning"
+        ],
+        "title": "SiteFeasibilityEvidence"
+      },
+      "SiteRoadAccessEvidence": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "nearest_road_distance_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nearest Road Distance M"
+          },
+          "nearest_road_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nearest Road Name"
+          },
+          "nearest_road_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nearest Road Class"
+          },
+          "nearest_primary_road_distance_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nearest Primary Road Distance M"
+          },
+          "nearest_accessible_road_distance_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nearest Accessible Road Distance M"
+          },
+          "frontage_proxy_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frontage Proxy M"
+          },
+          "limited_access_adjacency_proxy_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limited Access Adjacency Proxy M"
+          },
+          "site_envelope_to_road_distance_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Envelope To Road Distance M"
+          },
+          "legal_access_confirmed": {
+            "type": "boolean",
+            "title": "Legal Access Confirmed",
+            "default": false
+          },
+          "driveway_approval_confirmed": {
+            "type": "boolean",
+            "title": "Driveway Approval Confirmed",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SiteRoadAccessEvidence"
+      },
+      "SiteTerrainEvidence": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "elevation_minimum_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elevation Minimum M"
+          },
+          "elevation_maximum_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elevation Maximum M"
+          },
+          "elevation_mean_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elevation Mean M"
+          },
+          "elevation_range_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elevation Range M"
+          },
+          "slope_mean_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Mean Percent"
+          },
+          "slope_median_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope Median Percent"
+          },
+          "slope_p90_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slope P90 Percent"
+          },
+          "steep_slope_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steep Slope Overlap Acres"
+          },
+          "steep_slope_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steep Slope Fraction"
+          },
+          "severe_slope_pixel_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severe Slope Pixel Fraction"
+          },
+          "engineering_complete": {
+            "type": "boolean",
+            "title": "Engineering Complete",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SiteTerrainEvidence"
+      },
+      "SiteWetlandsEvidence": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "mapped_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapped Overlap Acres"
+          },
+          "mapped_overlap_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapped Overlap Fraction"
+          },
+          "special_state_concern_screening_overlap_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Special State Concern Screening Overlap Acres"
+          },
+          "field_delineation_confirmed": {
+            "type": "boolean",
+            "title": "Field Delineation Confirmed",
+            "default": false
+          },
+          "permitting_complete": {
+            "type": "boolean",
+            "title": "Permitting Complete",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SiteWetlandsEvidence"
       },
       "StatewideAuditSummary": {
         "properties": {

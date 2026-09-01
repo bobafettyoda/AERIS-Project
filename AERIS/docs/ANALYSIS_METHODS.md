@@ -96,3 +96,58 @@ AERIS uses descriptive confidence/status fields rather than hiding missing evide
 - manual verification required.
 
 No AERIS output by itself confirms parcel availability, buildability, utility capacity, permitted use, entitlement clearance, or project approval.
+
+## v0.7 physical site feasibility
+
+AERIS starts from the v0.4 preliminary development envelope and applies
+additional scoped physical-screening evidence.
+
+### Terrain
+
+A scoped DEM is exported in EPSG:26985 at a resolution selected from the
+configured target pixel size and total-pixel budget. Slope percent is
+calculated from the elevation gradient in projected meters. Parcel-level
+zonal statistics and configured slope-threshold polygons are derived
+locally.
+
+### Wetlands
+
+Configured statewide wetland polygons are normalized and dissolved for
+the selected scope. Mapped wetland geometry and configured special-concern
+screening geometry are intersected with parcel development envelopes.
+
+### Final site geometry
+
+```text
+v0.4 development envelope
+- mapped wetland constraints
+- configured steep-slope geometry
+= final preliminary site envelope
+```
+
+The pipeline records total final site area, the largest contiguous
+polygon, retained fraction, and component count.
+
+### Road access proxy
+
+Distances are exact planar distances in EPSG:26985. Frontage is estimated
+from non-interstate road-centerline length inside a configured parcel-edge
+tolerance. Interstate adjacency is measured separately and never treated
+as direct access. The result is a proximity/frontage proxy and never a
+legal access finding.
+
+### Candidate classification and comparison
+
+Transparent configured rules classify parcel physical feasibility from
+largest contiguous acreage, mapped slope and wetland fractions, reference
+building burden, and road-access status. Separate gates keep public or
+institutional parcels, statewide hard-excluded parcels, and parcels below
+the minimum physical area out of the top comparison shortlist. A bounded
+candidate score is used only to order remaining preliminary parcel and
+assemblage comparisons.
+
+### Assemblages
+
+Adjacent parcel site envelopes are grouped using a configurable spatial
+gap. Aggregated geometry and weighted evidence are calculated for each
+group. Ownership control and acquisition feasibility remain false.

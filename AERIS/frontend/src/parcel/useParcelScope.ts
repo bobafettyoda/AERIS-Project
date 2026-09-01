@@ -14,6 +14,7 @@ import {
   type ParcelFeatureCollection,
   type ParcelGridEvidenceCollection,
   type ParcelPlanningEvidenceCollection,
+  type ParcelSiteEvidenceCollection,
 } from "../parcelApi";
 
 
@@ -66,6 +67,7 @@ export type ParcelScopeState = {
   constraints: ParcelEnvelopeCollection | null;
   gridEvidence: ParcelGridEvidenceCollection | null;
   planningEvidence: ParcelPlanningEvidenceCollection | null;
+  siteEvidence: ParcelSiteEvidenceCollection | null;
   artifacts: Record<string, ArtifactStatus>;
   job: ParcelBuildJob | null;
   loading: boolean;
@@ -79,6 +81,7 @@ const EMPTY_STATE: ParcelScopeState = {
   constraints: null,
   gridEvidence: null,
   planningEvidence: null,
+  siteEvidence: null,
   artifacts: {},
   job: null,
   loading: false,
@@ -186,6 +189,8 @@ export function useParcelScope() {
             bundle.grid,
           planningEvidence:
             bundle.planning,
+          siteEvidence:
+            bundle.site,
           artifacts:
             bundle.artifacts,
           job: finishedJob,

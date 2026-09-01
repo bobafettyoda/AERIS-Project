@@ -13,6 +13,7 @@ from analysis.parcels.grid_feasibility_api_service import (
 )
 from analysis.parcels.pipeline import scope_from_bbox, scope_from_zone
 from analysis.planning.planning_api_service import PlanningContextService
+from analysis.site_feasibility.api_service import SiteFeasibilityService
 from app.config import get_build_token
 from app.schemas.parcels import (
     BuildBBoxRequest,
@@ -22,6 +23,9 @@ from app.schemas.parcels import (
     ParcelDetailResponse,
     PlanningRegistrySummary,
     ScopeBundle,
+    SiteCandidateComparisonRequest,
+    SiteCandidateComparisonResponse,
+    SiteCandidateListResponse,
 )
 
 
@@ -37,6 +41,9 @@ GRID_FEASIBILITY_CONFIG_PATH = (
 PLANNING_CONFIG_PATH = (
     PROJECT_DIRECTORY / "configs" / "planning" / "statewide_planning.yaml"
 )
+SITE_FEASIBILITY_CONFIG_PATH = (
+    PROJECT_DIRECTORY / "configs" / "parcels" / "site_feasibility.yaml"
+)
 
 router = APIRouter(prefix="/analysis/parcels", tags=["parcels"])
 
@@ -46,11 +53,13 @@ grid_feasibility_service = ParcelGridFeasibilityService(
     GRID_FEASIBILITY_CONFIG_PATH
 )
 planning_service = PlanningContextService(PLANNING_CONFIG_PATH)
+site_feasibility_service = SiteFeasibilityService(SITE_FEASIBILITY_CONFIG_PATH)
 build_coordinator = ScopeBuildCoordinator(
     parcel_service=service,
     envelope_service=envelope_service,
     grid_service=grid_feasibility_service,
     planning_service=planning_service,
+    site_service=site_feasibility_service,
     runtime_directory=PROJECT_DIRECTORY / "data" / "runtime" / "parcel_builds",
 )
 
@@ -253,6 +262,14 @@ def parcel_detail(scope_id: str, parcel_id: str) -> dict[str, Any]:
             )
         except KeyError:
             result["planning_context"] = None
+
+        try:
+            result["site_feasibility"] = site_feasibility_service.parcel_metrics(
+                scope_id=scope_id,
+                parcel_id=parcel_id,
+            )
+        except KeyError:
+            result["site_feasibility"] = None
         return result
     except KeyError as error:
         raise HTTPException(
@@ -340,3 +357,56 @@ def planning_evidence(scope_id: str, response: Response) -> dict[str, Any]:
         raise build_required(scope_id) from error
     cache_response(response)
     return payload
+
+@router.get(
+    "/scopes/{scope_id}/site-evidence",
+    response_model=GeoJSONFeatureCollection,
+)
+def parcel_site_evidence(scope_id: str, response: Response) -> dict[str, Any]:
+    try:
+        payload = site_feasibility_service.site_evidence(scope_id=scope_id)
+    except KeyError as error:
+        raise build_required(scope_id) from error
+    cache_response(response)
+    return payload
+
+
+@router.get(
+    "/scopes/{scope_id}/site-candidates",
+    response_model=SiteCandidateListResponse,
+)
+def parcel_site_candidates(
+    scope_id: str,
+    response: Response,
+    limit: int = Query(default=25, ge=1, le=100),
+) -> dict[str, Any]:
+    try:
+        candidates = site_feasibility_service.top_candidates(
+            scope_id=scope_id,
+            limit=limit,
+        )
+    except KeyError as error:
+        raise build_required(scope_id) from error
+    cache_response(response)
+    return {"scope_id": scope_id, "candidates": candidates}
+
+
+@router.post(
+    "/scopes/{scope_id}/compare-site-candidates",
+    response_model=SiteCandidateComparisonResponse,
+)
+def compare_site_candidates(
+    scope_id: str,
+    request: SiteCandidateComparisonRequest,
+) -> dict[str, Any]:
+    try:
+        candidates = site_feasibility_service.compare_candidates(
+            scope_id=scope_id,
+            candidate_ids=request.candidate_ids,
+        )
+    except KeyError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=f"One or more site candidates were not found: {error}",
+        ) from error
+    return {"scope_id": scope_id, "candidates": candidates}

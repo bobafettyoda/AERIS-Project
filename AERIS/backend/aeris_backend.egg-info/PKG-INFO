@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: aeris-backend
-Version: 0.6.1
+Version: 0.7.0
 Summary: AERIS Maryland geospatial screening and parcel diligence backend
 Requires-Python: <3.14,>=3.12
 Description-Content-Type: text/markdown
@@ -14,6 +14,7 @@ Requires-Dist: pyproj<4,>=3.7
 Requires-Dist: python-dotenv<2,>=1.0
 Requires-Dist: PyYAML<7,>=6
 Requires-Dist: requests<3,>=2.32
+Requires-Dist: rasterio<2,>=1.4
 Requires-Dist: shapely<3,>=2.1
 Requires-Dist: uvicorn[standard]<1,>=0.34
 Provides-Extra: dev

@@ -33,12 +33,15 @@ function scoreLabel(
   if (typeof value !== "number") {
     return "UNKNOWN";
   }
+
   if (value >= 0.8) {
     return "HIGH";
   }
+
   if (value >= 0.7) {
     return "MODERATE";
   }
+
   return "LOW";
 }
 
@@ -49,6 +52,175 @@ function scoreDetail(
   return typeof value === "number"
     ? `${Math.round(value * 100)}% technical suitability`
     : "Regional score unavailable";
+}
+
+
+function humanize(
+  value: string | null | undefined,
+): string {
+  return value
+    ?.replaceAll("_", " ")
+    ?? "UNKNOWN";
+}
+
+
+function physicalSection(
+  parcel: ParcelDetail,
+): {
+  value: string;
+  detail: string;
+  level: SummaryLevel;
+  largest: number | null;
+} {
+  const site = parcel.site_feasibility;
+
+  if (site) {
+    const className =
+      site.site_feasibility_class;
+
+    const largest =
+      typeof site.largest_contiguous_site_acres
+      === "number"
+        ? site.largest_contiguous_site_acres
+        : null;
+
+    const finalArea =
+      typeof site.final_site_area_acres
+      === "number"
+        ? site.final_site_area_acres
+        : null;
+
+    const detail = [
+      finalArea !== null
+        ? `${finalArea.toFixed(1)} final preliminary site acres`
+        : null,
+      largest !== null
+        ? `${largest.toFixed(1)}-acre largest contiguous site`
+        : null,
+      site.road_access.status
+        ? humanize(site.road_access.status)
+        : null,
+    ]
+      .filter(
+        (value): value is string =>
+          value !== null,
+      )
+      .join("; ");
+
+    if (
+      className
+      === "STRONG_PRELIMINARY_SITE_FEASIBILITY"
+    ) {
+      return {
+        value: "STRONG",
+        detail,
+        level: "positive",
+        largest,
+      };
+    }
+
+    if (
+      className
+      === "PROMISING_PRELIMINARY_SITE_FEASIBILITY"
+    ) {
+      return {
+        value: "PROMISING",
+        detail,
+        level: "positive",
+        largest,
+      };
+    }
+
+    if (
+      className
+      === "LIMITED_PHYSICAL_SITE_FEASIBILITY"
+    ) {
+      return {
+        value: "LIMITED",
+        detail,
+        level: "blocked",
+        largest,
+      };
+    }
+
+    return {
+      value: "REVIEW REQUIRED",
+      detail:
+        detail
+        || "Physical site evidence requires review",
+      level: "caution",
+      largest,
+    };
+  }
+
+  const envelope =
+    parcel.development_envelope;
+
+  const largest =
+    typeof envelope
+      ?.largest_contiguous_unconstrained_acres
+    === "number"
+      ? envelope
+        .largest_contiguous_unconstrained_acres
+      : null;
+
+  const unconstrained =
+    typeof envelope
+      ?.preliminary_unconstrained_area_acres
+    === "number"
+      ? envelope
+        .preliminary_unconstrained_area_acres
+      : null;
+
+  if (
+    largest === null
+    || unconstrained === null
+  ) {
+    return {
+      value: "NOT BUILT",
+      detail:
+        "Physical site evidence unavailable",
+      level: "unknown",
+      largest,
+    };
+  }
+
+  if (
+    largest >= 40
+    && unconstrained >= 50
+  ) {
+    return {
+      value: "PROMISING",
+      detail:
+        `${unconstrained.toFixed(1)} preliminary unconstrained acres; `
+        + `${largest.toFixed(1)}-acre largest contiguous area`,
+      level: "positive",
+      largest,
+    };
+  }
+
+  if (
+    largest >= 15
+    && unconstrained >= 20
+  ) {
+    return {
+      value: "CONSTRAINED",
+      detail:
+        `${unconstrained.toFixed(1)} preliminary unconstrained acres; `
+        + `${largest.toFixed(1)}-acre largest contiguous area`,
+      level: "caution",
+      largest,
+    };
+  }
+
+  return {
+    value: "LIMITED",
+    detail:
+      `${unconstrained.toFixed(1)} preliminary unconstrained acres; `
+      + `${largest.toFixed(1)}-acre largest contiguous area`,
+    level: "blocked",
+    largest,
+  };
 }
 
 
@@ -79,50 +251,9 @@ export function summarizeParcel(
             ? "caution"
             : "blocked";
 
-  const envelope =
-    parcel.development_envelope;
-
-  const largest =
-    envelope
-      ?.largest_contiguous_unconstrained_acres;
-
-  const unconstrained =
-    envelope
-      ?.preliminary_unconstrained_area_acres;
-
-  let physicalValue = "NOT BUILT";
-  let physicalDetail =
-    "Mapped development envelope unavailable";
-  let physicalLevel:
-  SummaryLevel = "unknown";
-
-  if (
-    typeof largest === "number"
-    && typeof unconstrained === "number"
-  ) {
-    if (
-      largest >= 40
-      && unconstrained >= 50
-    ) {
-      physicalValue = "PROMISING";
-      physicalLevel = "positive";
-    }
-    else if (
-      largest >= 15
-      && unconstrained >= 20
-    ) {
-      physicalValue = "CONSTRAINED";
-      physicalLevel = "caution";
-    }
-    else {
-      physicalValue = "LIMITED";
-      physicalLevel = "blocked";
-    }
-
-    physicalDetail =
-      `${unconstrained.toFixed(1)} preliminary unconstrained acres; `
-      + `${largest.toFixed(1)}-acre largest contiguous area`;
-  }
+  const physical = physicalSection(
+    parcel,
+  );
 
   const gridClass =
     parcel.grid_feasibility
@@ -183,17 +314,50 @@ export function summarizeParcel(
   }
 
   if (
-    typeof largest === "number"
-    && largest >= 40
+    typeof physical.largest === "number"
+    && physical.largest >= 40
   ) {
     strengths.push(
-      "Meaningful contiguous mapped land area",
+      "Meaningful contiguous preliminary site area",
+    );
+  }
+
+  const site = parcel.site_feasibility;
+
+  if (
+    site?.road_access.status
+    === "DIRECT_MAPPED_ROAD_FRONTAGE_PROXY"
+  ) {
+    strengths.push(
+      "Mapped road-frontage proxy is present",
     );
   }
 
   if (
-    gridLevel === "positive"
+    typeof site?.wetlands
+      .mapped_overlap_fraction
+    === "number"
+    && site.wetlands
+      .mapped_overlap_fraction <= 0.05
   ) {
+    strengths.push(
+      "Low mapped wetland overlap in the preliminary site envelope",
+    );
+  }
+
+  if (
+    typeof site?.terrain
+      .steep_slope_fraction
+    === "number"
+    && site.terrain
+      .steep_slope_fraction <= 0.10
+  ) {
+    strengths.push(
+      "Limited mapped steep-slope overlap",
+    );
+  }
+
+  if (gridLevel === "positive") {
     strengths.push(
       "Strong public mapped-grid context",
     );
@@ -205,7 +369,7 @@ export function summarizeParcel(
     === false
   ) {
     unresolved.push(
-      "Ownership and availability are unconfirmed",
+      "Ownership, parcel control, and availability are unconfirmed",
     );
   }
 
@@ -230,9 +394,52 @@ export function summarizeParcel(
     );
   }
 
-  unresolved.push(
-    "Wetlands, terrain, road access, title, and engineering remain outside the current model",
-  );
+  if (site) {
+    if (
+      site.wetlands
+        .field_delineation_confirmed
+      === false
+    ) {
+      unresolved.push(
+        "Mapped wetlands require field delineation and permitting review",
+      );
+    }
+
+    if (
+      site.road_access
+        .legal_access_confirmed
+      === false
+    ) {
+      unresolved.push(
+        "Legal road access and driveway approval are unconfirmed",
+      );
+    }
+
+    if (
+      site.terrain
+        .engineering_complete
+      === false
+    ) {
+      unresolved.push(
+        "Grading, geotechnical, drainage, and detailed terrain engineering remain outstanding",
+      );
+    }
+
+    if (
+      site.existing_development
+        .building_geometry_survey_grade
+      === false
+    ) {
+      unresolved.push(
+        "Building-footprint evidence is reference-only and requires site verification",
+      );
+    }
+  }
+  else {
+    unresolved.push(
+      "Terrain, wetlands, road access, and redevelopment evidence are unavailable",
+    );
+  }
 
   const blocked =
     parcel.statewide_context
@@ -240,9 +447,10 @@ export function summarizeParcel(
     || parcel.classification
       .availability_status
       === "PUBLIC_OR_INSTITUTIONAL"
+    || physical.level === "blocked"
     || (
-      typeof largest === "number"
-      && largest < 5
+      typeof physical.largest === "number"
+      && physical.largest < 5
     );
 
   return {
@@ -254,10 +462,10 @@ export function summarizeParcel(
         level: regionalLevel,
       },
       {
-        label: "Physical feasibility",
-        value: physicalValue,
-        detail: physicalDetail,
-        level: physicalLevel,
+        label: "Physical site feasibility",
+        value: physical.value,
+        detail: physical.detail,
+        level: physical.level,
       },
       {
         label: "Public grid context",
@@ -281,8 +489,10 @@ export function summarizeParcel(
     strengths,
     unresolved,
     nextAction: blocked
-      ? "Resolve blocking parcel or land constraints before further diligence"
-      : "Continue preliminary diligence",
+      ? "Resolve blocking parcel or physical-site constraints before further diligence"
+      : site
+        ? "Compare top parcel and assemblage candidates, then continue preliminary diligence"
+        : "Continue preliminary diligence",
     nextActionLevel: blocked
       ? "blocked"
       : "positive",

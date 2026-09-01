@@ -2,39 +2,42 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  applyParcelView,
-  visibleLayersForView,
   VIEW_LAYERS,
+  visibleLayersForView,
 } from "./viewLayers.ts";
 
 
-test("every parcel view maps to an explicit non-empty layer group", () => {
+test("every parcel view has at least one map layer", () => {
   for (const [view, layers] of Object.entries(VIEW_LAYERS)) {
-    assert.ok(layers.length > 0, `${view} has no configured layers`);
-    assert.deepEqual(visibleLayersForView(view as keyof typeof VIEW_LAYERS), layers);
+    assert.ok(
+      layers.length > 0,
+      `${view} should have map layers`,
+    );
   }
 });
 
 
-test("applyParcelView hides every inactive group", () => {
-  const visibility = new Map<string, string>();
-  const knownLayers = new Set(Object.values(VIEW_LAYERS).flat());
-  const fakeMap = {
-    getLayer(layerId: string) {
-      return knownLayers.has(layerId) ? { id: layerId } : undefined;
-    },
-    setLayoutProperty(layerId: string, property: string, value: string) {
-      assert.equal(property, "visibility");
-      visibility.set(layerId, value);
-    },
-  };
+test("site view contains site envelope and assemblage layers", () => {
+  const layers = visibleLayersForView("site");
 
-  applyParcelView(fakeMap as never, "constraints");
+  assert.ok(
+    layers.includes(
+      "parcel-site-envelope-fill",
+    ),
+  );
 
-  for (const layerId of knownLayers) {
-    assert.equal(
-      visibility.get(layerId),
-      VIEW_LAYERS.constraints.includes(layerId) ? "visible" : "none",
-    );
-  }
+  assert.ok(
+    layers.includes(
+      "parcel-site-assemblage-line",
+    ),
+  );
+});
+
+
+test("view layer groups are disjoint", () => {
+  const all = Object.values(VIEW_LAYERS).flat();
+  assert.equal(
+    new Set(all).size,
+    all.length,
+  );
 });

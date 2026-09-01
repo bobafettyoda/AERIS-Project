@@ -59,6 +59,14 @@ export function addParcelMapLayers(
     },
   );
 
+  map.addSource(
+    "parcel-site-evidence",
+    {
+      type: "geojson",
+      data: emptyCollection,
+    },
+  );
+
   map.addLayer({
     id: "parcel-zone-fill",
     type: "fill",
@@ -241,6 +249,214 @@ export function addParcelMapLayers(
   });
 
   map.addLayer({
+    id: "parcel-site-envelope-fill",
+    type: "fill",
+    source: "parcel-site-evidence",
+    filter: [
+      "==",
+      ["get", "evidence_kind"],
+      "SITE_ENVELOPE",
+    ],
+    layout: {
+      visibility: "none",
+    },
+    paint: {
+      "fill-color": [
+        "case",
+        [
+          "==",
+          ["get", "candidate_eligible"],
+          false,
+        ],
+        "#64748b",
+        [
+          "match",
+          ["get", "site_feasibility_class"],
+          "STRONG_PRELIMINARY_SITE_FEASIBILITY",
+          "#047857",
+          "PROMISING_PRELIMINARY_SITE_FEASIBILITY",
+          "#0f766e",
+          "PHYSICAL_SITE_REVIEW_REQUIRED",
+          "#d97706",
+          "LIMITED_PHYSICAL_SITE_FEASIBILITY",
+          "#b91c1c",
+          "#64748b",
+        ],
+      ],
+      "fill-opacity": 0.5,
+    },
+  });
+
+  map.addLayer({
+    id: "parcel-site-envelope-line",
+    type: "line",
+    source: "parcel-site-evidence",
+    filter: [
+      "==",
+      ["get", "evidence_kind"],
+      "SITE_ENVELOPE",
+    ],
+    layout: {
+      visibility: "none",
+    },
+    paint: {
+      "line-color": "#064e3b",
+      "line-width": 2.2,
+      "line-opacity": 0.95,
+    },
+  });
+
+  map.addLayer({
+    id: "parcel-site-largest-line",
+    type: "line",
+    source: "parcel-site-evidence",
+    filter: [
+      "==",
+      ["get", "evidence_kind"],
+      "LARGEST_SITE_COMPONENT",
+    ],
+    layout: {
+      visibility: "none",
+    },
+    paint: {
+      "line-color": "#f8fafc",
+      "line-width": 3.2,
+      "line-opacity": 0.95,
+    },
+  });
+
+  map.addLayer({
+    id: "parcel-site-constraint-fill",
+    type: "fill",
+    source: "parcel-site-evidence",
+    filter: [
+      "any",
+      [
+        "==",
+        ["get", "evidence_kind"],
+        "SITE_CONSTRAINT",
+      ],
+      [
+        "==",
+        ["get", "evidence_kind"],
+        "SITE_CONSTRAINT_REVIEW",
+      ],
+    ],
+    layout: {
+      visibility: "none",
+    },
+    paint: {
+      "fill-color": [
+        "match",
+        ["get", "constraint_id"],
+        "wetlands_dnr_polygon",
+        "#2563eb",
+        "wetlands_national_wetlands_inventory",
+        "#0891b2",
+        "wetlands_special_state_concern",
+        "#7c3aed",
+        "steep_slope",
+        "#b45309",
+        "severe_slope",
+        "#dc2626",
+        "#64748b",
+      ],
+      "fill-opacity": [
+        "match",
+        ["get", "evidence_kind"],
+        "SITE_CONSTRAINT_REVIEW",
+        0.24,
+        0.42,
+      ],
+    },
+  });
+
+  map.addLayer({
+    id: "parcel-site-road-line",
+    type: "line",
+    source: "parcel-site-evidence",
+    filter: [
+      "==",
+      ["get", "evidence_kind"],
+      "ROAD_CENTERLINE",
+    ],
+    layout: {
+      visibility: "none",
+    },
+    paint: {
+      "line-color": [
+        "interpolate",
+        ["linear"],
+        ["coalesce", ["get", "road_rank"], 4],
+        1,
+        "#7c2d12",
+        2,
+        "#c2410c",
+        3,
+        "#ea580c",
+        4,
+        "#64748b",
+      ],
+      "line-width": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        9,
+        0.8,
+        15,
+        3.2,
+      ],
+      "line-opacity": 0.9,
+    },
+  });
+
+  map.addLayer({
+    id: "parcel-site-assemblage-fill",
+    type: "fill",
+    source: "parcel-site-evidence",
+    filter: [
+      "==",
+      ["get", "evidence_kind"],
+      "SITE_ASSEMBLAGE",
+    ],
+    layout: {
+      visibility: "none",
+    },
+    paint: {
+      "fill-color": "#14b8a6",
+      "fill-opacity": 0.13,
+    },
+  });
+
+  map.addLayer({
+    id: "parcel-site-assemblage-line",
+    type: "line",
+    source: "parcel-site-evidence",
+    filter: [
+      "==",
+      ["get", "evidence_kind"],
+      "SITE_ASSEMBLAGE",
+    ],
+    layout: {
+      visibility: "none",
+    },
+    paint: {
+      "line-color": "#0f766e",
+      "line-width": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        9,
+        1.8,
+        15,
+        4.2,
+      ],
+      "line-dasharray": [3, 1.5],
+      "line-opacity": 0.95,
+    },
+  });
+
+  map.addLayer({
     id: "parcel-grid-transmission",
     type: "line",
     source: "parcel-grid-evidence",
@@ -418,6 +634,34 @@ export function addParcelMapLayers(
 
   map.moveLayer(
     "parcel-zone-fill"
+  );
+
+  map.moveLayer(
+    "parcel-site-assemblage-fill"
+  );
+
+  map.moveLayer(
+    "parcel-site-envelope-fill"
+  );
+
+  map.moveLayer(
+    "parcel-site-constraint-fill"
+  );
+
+  map.moveLayer(
+    "parcel-site-road-line"
+  );
+
+  map.moveLayer(
+    "parcel-site-assemblage-line"
+  );
+
+  map.moveLayer(
+    "parcel-site-envelope-line"
+  );
+
+  map.moveLayer(
+    "parcel-site-largest-line"
   );
 
   map.moveLayer(

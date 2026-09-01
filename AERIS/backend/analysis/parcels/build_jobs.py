@@ -20,11 +20,13 @@ from analysis.parcels.pipeline import (
     scope_from_zone,
 )
 from analysis.planning.planning_api_service import PlanningContextService
+from analysis.site_feasibility.api_service import SiteFeasibilityService
 
 
 ARTIFACT_NAMES = (
     "parcels",
     "envelopes",
+    "site",
     "grid",
     "planning",
 )
@@ -52,6 +54,7 @@ class ScopeBuildCoordinator:
         envelope_service: ParcelEnvelopeService,
         grid_service: ParcelGridFeasibilityService,
         planning_service: PlanningContextService,
+        site_service: SiteFeasibilityService,
         runtime_directory: Path,
         max_workers: int = 2,
     ) -> None:
@@ -59,6 +62,7 @@ class ScopeBuildCoordinator:
         self.envelope_service = envelope_service
         self.grid_service = grid_service
         self.planning_service = planning_service
+        self.site_service = site_service
         self.runtime_directory = runtime_directory.resolve()
         self.jobs_directory = self.runtime_directory / "jobs"
         self.locks_directory = self.runtime_directory / "locks"
@@ -253,46 +257,72 @@ class ScopeBuildCoordinator:
                     self._write(job)
                     return
 
-                optional_builders: list[tuple[str, float, Callable[[], Any]]] = [
-                    (
-                        "envelopes",
-                        0.35,
-                        lambda: self.envelope_service.build(
+                envelope_ok = self._run_builder(
+                    job,
+                    "envelopes",
+                    progress=0.32,
+                    builder=lambda: self.envelope_service.build(
+                        scope_id=scope_id,
+                        refresh=refresh,
+                    ),
+                )
+
+                if envelope_ok:
+                    def site_progress(stage: str, fraction: float) -> None:
+                        job["current_stage"] = f"site:{stage}"
+                        job["progress"] = round(
+                            0.52 + 0.16 * min(max(float(fraction), 0.0), 1.0),
+                            3,
+                        )
+                        self._write(job)
+
+                    site_ok = self._run_builder(
+                        job,
+                        "site",
+                        progress=0.52,
+                        builder=lambda: self.site_service.build(
                             scope_id=scope_id,
                             refresh=refresh,
+                            progress_callback=site_progress,
                         ),
+                    )
+                else:
+                    self._update_artifact(
+                        job,
+                        "site",
+                        state="failed",
+                        error="DependencyError: development envelopes are unavailable.",
+                    )
+                    site_ok = False
+
+                grid_ok = self._run_builder(
+                    job,
+                    "grid",
+                    progress=0.70,
+                    builder=lambda: self.grid_service.build(
+                        scope_id=scope_id,
+                        refresh=refresh,
                     ),
-                    (
-                        "grid",
-                        0.62,
-                        lambda: self.grid_service.build(
-                            scope_id=scope_id,
-                            refresh=refresh,
-                        ),
+                )
+                planning_ok = self._run_builder(
+                    job,
+                    "planning",
+                    progress=0.86,
+                    builder=lambda: self.planning_service.build(
+                        scope_id=scope_id,
+                        refresh=refresh,
                     ),
-                    (
-                        "planning",
-                        0.82,
-                        lambda: self.planning_service.build(
-                            scope_id=scope_id,
-                            refresh=refresh,
-                        ),
-                    ),
-                ]
+                )
 
                 optional_results = [
-                    self._run_builder(
-                        job,
-                        name,
-                        progress=progress,
-                        builder=builder,
-                    )
-                    for name, progress, builder in optional_builders
+                    envelope_ok,
+                    site_ok,
+                    grid_ok,
+                    planning_ok,
                 ]
-
                 failed_optional = [
                     name
-                    for name in ("envelopes", "grid", "planning")
+                    for name in ("envelopes", "site", "grid", "planning")
                     if job["artifacts"][name]["state"] == "failed"
                 ]
                 job["warnings"] = [
@@ -323,12 +353,14 @@ class ScopeBuildCoordinator:
         envelope_paths = self.envelope_service._paths(scope_id)
         grid_paths = self.grid_service._paths(scope_id)
         planning_output, planning_manifest = self.planning_service._paths(scope_id)
+        site_paths = self.site_service._paths(scope_id)
 
         readiness = {
             "parcels": parcel_paths.normalized_output.exists()
             and parcel_paths.manifest_output.exists(),
             "envelopes": envelope_paths.output.exists()
             and envelope_paths.manifest.exists(),
+            "site": site_paths.output.exists() and site_paths.manifest.exists(),
             "grid": grid_paths.output.exists() and grid_paths.manifest.exists(),
             "planning": planning_output.exists() and planning_manifest.exists(),
         }
@@ -360,6 +392,7 @@ class ScopeBuildCoordinator:
             ),
             "envelopes": None,
             "constraints": None,
+            "site": None,
             "grid": None,
             "planning": None,
         }
@@ -373,6 +406,7 @@ class ScopeBuildCoordinator:
                 scope_id=scope_id,
                 layer="scope_constraints",
             ),
+            "site": lambda: self.site_service.site_evidence(scope_id=scope_id),
             "grid": lambda: self.grid_service.grid_evidence(scope_id=scope_id),
             "planning": lambda: self.planning_service.overlays(scope_id=scope_id),
         }
