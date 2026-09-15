@@ -1,0 +1,71 @@
+services:
+  api:
+    container_name: aeris-api
+    image: aeris/api:${AERIS_RELEASE_ID:?AERIS_RELEASE_ID is required}
+    build:
+      context: ../..
+      dockerfile: deploy/geonode/Dockerfile.api
+    restart: unless-stopped
+    environment:
+      AERIS_PROJECT_ROOT: /opt/aeris/AERIS
+      AERIS_CORS_ORIGINS: ${AERIS_PUBLIC_ORIGIN:-}
+      AERIS_DEPLOYMENT_RELEASE_ID: ${AERIS_RELEASE_ID}
+      AERIS_DATA_SNAPSHOT_ID: ${AERIS_DATA_SNAPSHOT_ID:-unknown}
+      AERIS_DATA_MANIFEST_SHA256: ${AERIS_DATA_MANIFEST_SHA256:-unknown}
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      OMP_NUM_THREADS: "2"
+      OPENBLAS_NUM_THREADS: "2"
+      NUMEXPR_NUM_THREADS: "2"
+      GDAL_CACHEMAX: "256"
+    volumes:
+      - ${AERIS_DATA_DIR:?AERIS_DATA_DIR is required}:/opt/aeris/AERIS/data
+    networks:
+      - geonode
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import json, urllib.request;
+          p=json.load(urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=10));
+          assert p.get('ok') is True;
+          assert p.get('deployment_release_id')
+      interval: 20s
+      timeout: 15s
+      retries: 6
+      start_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+  web:
+    container_name: aeris-web
+    image: aeris/web:${AERIS_RELEASE_ID:?AERIS_RELEASE_ID is required}
+    build:
+      context: ../..
+      dockerfile: deploy/geonode/Dockerfile.web
+    restart: unless-stopped
+    networks:
+      - geonode
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1/healthz >/dev/null || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 6
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+
+networks:
+  geonode:
+    external: true
+    name: ${GEONODE_NETWORK:?GEONODE_NETWORK is required}

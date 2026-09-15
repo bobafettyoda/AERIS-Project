@@ -1,9 +1,9 @@
 {
   "name": "AERIS",
   "full_name": "Assessment of Environmental Risk and Incident Siting",
-  "version": "0.7.0",
-  "release_label": "v0.7.0",
-  "release_stage": "physical-site-feasibility",
+  "version": "0.8.0",
+  "release_label": "v0.8.0",
+  "release_stage": "release-data-stability",
   "snapshot_catalog": {
     "statewide_foundations": "2025-07-24",
     "statewide_infrastructure": "2026-07-30",

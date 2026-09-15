@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 
 from app.config import get_cors_origins
-from app.release import release_metadata
+from app.release import release_metadata, runtime_release_metadata
 from app.routers import analysis, decision_models, gis, parcels, statewide
 
 
@@ -48,13 +48,15 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, object]:
-    return {
+    payload: dict[str, object] = {
         "ok": True,
         "project": release["name"],
         "version": app.version,
         "release_label": release["release_label"],
         "release_stage": release["release_stage"],
     }
+    payload.update(runtime_release_metadata())
+    return payload
 
 
 app.include_router(analysis.router)

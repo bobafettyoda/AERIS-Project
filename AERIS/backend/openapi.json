@@ -3,7 +3,7 @@
   "info": {
     "title": "AERIS Backend",
     "description": "Maryland statewide site screening, scoped parcel investigation, mapped physical constraints, public grid context, and planning context.",
-    "version": "0.7.0"
+    "version": "0.8.0"
   },
   "paths": {
     "/health": {

@@ -1,0 +1,14 @@
+# Paths are relative to AERIS/data. These files are the stable baseline needed
+# for Site Evaluator/Statewide/Parcel module smoke tests. Runtime parcel outputs
+# are intentionally not part of the immutable baseline snapshot.
+derived/maryland_grid_1km_final.gpkg
+derived/maryland_grid_1km_final_points.geojson
+derived/maryland_candidate_zones_auto.gpkg
+derived/maryland_candidate_zones_exploration.gpkg
+derived/maryland_candidate_zones_top5.geojson
+derived/maryland_candidate_zone_membership.csv
+manifests/statewide_climate_final.json
+manifests/statewide_candidate_zones.json
+manifests/statewide_bias_audit.json
+manifests/statewide_score_band_summary.json
+manifests/parcel_source_audit.json
