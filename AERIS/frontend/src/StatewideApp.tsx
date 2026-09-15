@@ -192,9 +192,26 @@ export default function StatewideApp() {
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style:
-        "https://tiles.openfreemap.org/"
-        + "styles/liberty",
+      style: {
+        version: 8,
+        sources: {
+          osm: {
+            type: "raster",
+            tiles: [
+              "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            ],
+            tileSize: 256,
+            attribution: "© OpenStreetMap contributors",
+          },
+        },
+        layers: [
+          {
+            id: "osm-basemap",
+            type: "raster",
+            source: "osm",
+          },
+        ],
+      },
       center: [-76.7, 39],
       zoom: 6.5,
     });
@@ -228,11 +245,6 @@ export default function StatewideApp() {
         type: "heatmap",
         source: "statewide-grid",
         maxzoom: 10,
-        filter: [
-          "==",
-          ["get", "hard_excluded"],
-          false,
-        ],
         paint: {
           "heatmap-weight": [
             "interpolate",
@@ -293,6 +305,37 @@ export default function StatewideApp() {
             1,
             "#0f766e",
           ],
+        },
+      });
+
+      map.addLayer({
+        id: "statewide-grid-fill",
+        type: "fill",
+        source: "statewide-grid",
+        paint: {
+          "fill-color": [
+            "interpolate",
+            ["linear"],
+            [
+              "coalesce",
+              ["get", "display_score"],
+              0,
+            ],
+            0,
+            "#7f1d1d",
+            0.25,
+            "#c2410c",
+            0.50,
+            "#d97706",
+            0.65,
+            "#ca8a04",
+            0.80,
+            "#65a30d",
+            1,
+            "#0f766e",
+          ],
+          "fill-opacity": 0.48,
+          "fill-outline-color": "#334155",
         },
       });
 
@@ -376,8 +419,8 @@ export default function StatewideApp() {
         type: "fill",
         source: "statewide-zones",
         paint: {
-          "fill-color": "#7c3aed",
-          "fill-opacity": 0.2,
+          "fill-color": "#ff00ff",
+          "fill-opacity": 0.45,
         },
       });
 
@@ -386,7 +429,7 @@ export default function StatewideApp() {
         type: "line",
         source: "statewide-zones",
         paint: {
-          "line-color": "#6d28d9",
+          "line-color": "#ff00ff",
           "line-width": [
             "interpolate",
             ["linear"],

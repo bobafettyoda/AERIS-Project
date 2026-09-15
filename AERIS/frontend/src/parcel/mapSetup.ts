@@ -102,10 +102,7 @@ export function addParcelMapLayers(
     paint: {
       "fill-color": [
         "match",
-        [
-          "get",
-          "availability_status",
-        ],
+        ["get", "availability_status"],
         "PUBLIC_OR_INSTITUTIONAL",
         "#be123c",
         "EXISTING_USE_REVIEW_REQUIRED",
@@ -116,28 +113,7 @@ export function addParcelMapLayers(
         "#64748b",
         "#64748b",
       ],
-      "fill-opacity": [
-        "interpolate",
-        ["linear"],
-        [
-          "coalesce",
-          [
-            "get",
-            "scope_overlap_fraction",
-          ],
-          0,
-        ],
-        0,
-        0.05,
-        0.05,
-        0.10,
-        0.25,
-        0.20,
-        0.50,
-        0.30,
-        1,
-        0.42,
-      ],
+      "fill-opacity": 0.38,
     },
   });
 
@@ -148,10 +124,7 @@ export function addParcelMapLayers(
     paint: {
       "line-color": [
         "match",
-        [
-          "get",
-          "availability_status",
-        ],
+        ["get", "availability_status"],
         "PUBLIC_OR_INSTITUTIONAL",
         "#9f1239",
         "EXISTING_USE_REVIEW_REQUIRED",
@@ -160,38 +133,8 @@ export function addParcelMapLayers(
         "#166534",
         "#475569",
       ],
-      "line-width": [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        10,
-        0.45,
-        16,
-        2.2,
-      ],
-
-      "line-opacity": [
-        "interpolate",
-        ["linear"],
-        [
-          "coalesce",
-          [
-            "get",
-            "scope_overlap_fraction",
-          ],
-          0,
-        ],
-        0,
-        0.10,
-        0.05,
-        0.20,
-        0.25,
-        0.55,
-        0.50,
-        0.78,
-        1,
-        1,
-      ],
+      "line-width": 1.6,
+      "line-opacity": 0.95,
     },
   });
 
