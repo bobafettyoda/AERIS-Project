@@ -966,7 +966,7 @@ function App() {
         id,
         label,
         name:
-          `Candidate ${label}`,
+          `Exploratory point ${label}`,
         point: selectedPoint,
         evaluation,
         equity,
@@ -1140,7 +1140,7 @@ function App() {
 
           <div className="map-message">
             Click inside Maryland to
-            evaluate a candidate location.
+            evaluate an exploratory location.
           </div>
 
           {evidenceLoading && (
@@ -1169,7 +1169,7 @@ function App() {
                 {
                   savedCandidates.length
                 }
-                /5 candidates saved
+                /5 exploratory points saved
               </small>
             </div>
 
@@ -1201,11 +1201,11 @@ function App() {
                 }
               >
                 {alreadySaved
-                  ? "Candidate saved"
+                  ? "Point saved"
                   : savedCandidates
                       .length >= 5
                     ? "Maximum saved"
-                    : "Save candidate"}
+                    : "Save point"}
               </button>
             </div>
           </section>

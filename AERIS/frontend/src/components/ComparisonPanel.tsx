@@ -110,11 +110,11 @@ export function ComparisonPanel({
       <div className="comparison-heading">
         <div>
           <p className="section-label">
-            Saved analysis
+            Exploratory analysis
           </p>
 
           <h2>
-            Candidate comparison
+            Exploratory point comparison
           </h2>
         </div>
 
@@ -132,7 +132,7 @@ export function ComparisonPanel({
           <strong>
             Highest technical score:
             {" "}
-            Candidate {
+            Point {
               bestCandidate.label
             }
           </strong>
@@ -201,7 +201,7 @@ export function ComparisonPanel({
 
       {candidates.length < 2 ? (
         <p className="comparison-empty">
-          Save one more evaluated location
+          Save one more exploratory location
           to activate side-by-side comparison.
         </p>
       ) : (

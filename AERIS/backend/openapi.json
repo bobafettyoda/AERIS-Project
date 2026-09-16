@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "AERIS Backend",
-    "description": "Maryland statewide site screening, scoped parcel investigation, mapped physical constraints, public grid context, and planning context.",
-    "version": "0.8.0"
+    "description": "Maryland statewide site screening, scoped parcel investigation, mapped physical constraints, public grid context, planning context, and ordered viability screening.",
+    "version": "0.8.1"
   },
   "paths": {
     "/health": {
@@ -2289,6 +2289,296 @@
           }
         }
       }
+    },
+    "/analysis/viability/methodology": {
+      "get": {
+        "tags": [
+          "viability"
+        ],
+        "summary": "Viability Methodology",
+        "operationId": "viability_methodology_analysis_viability_methodology_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViabilityMethodologyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/viability/search-areas": {
+      "get": {
+        "tags": [
+          "viability"
+        ],
+        "summary": "Viability Search Areas",
+        "operationId": "viability_search_areas_analysis_viability_search_areas_get",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "auto",
+                "exploration"
+              ],
+              "type": "string",
+              "default": "auto",
+              "title": "Mode"
+            }
+          },
+          {
+            "name": "minimum_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Minimum Score"
+            }
+          },
+          {
+            "name": "maximum_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maximum Score"
+            }
+          },
+          {
+            "name": "county",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "County"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/viability/search-areas/{zone_id}/evaluate": {
+      "post": {
+        "tags": [
+          "viability"
+        ],
+        "summary": "Evaluate Search Area",
+        "operationId": "evaluate_search_area_analysis_viability_search_areas__zone_id__evaluate_post",
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Zone Id"
+            }
+          },
+          {
+            "name": "X-AERIS-Build-Token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aeris-Build-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchAreaBuildRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildJob"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/viability/scopes/{scope_id}": {
+      "get": {
+        "tags": [
+          "viability"
+        ],
+        "summary": "Viability Scope",
+        "operationId": "viability_scope_analysis_viability_scopes__scope_id__get",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          },
+          {
+            "name": "include_all",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include All"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViabilityScopeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis/viability/scopes/{scope_id}/compare": {
+      "post": {
+        "tags": [
+          "viability"
+        ],
+        "summary": "Compare Viability Candidates",
+        "operationId": "compare_viability_candidates_analysis_viability_scopes__scope_id__compare_post",
+        "parameters": [
+          {
+            "name": "scope_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Scope Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ViabilityCompareRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViabilityCompareResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4366,6 +4656,18 @@
         ],
         "title": "ScopeBundle"
       },
+      "SearchAreaBuildRequest": {
+        "properties": {
+          "refresh": {
+            "type": "boolean",
+            "title": "Refresh",
+            "default": false
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SearchAreaBuildRequest"
+      },
       "SiteCandidate": {
         "properties": {
           "candidate_id": {
@@ -5870,6 +6172,476 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "ViabilityCandidate": {
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id"
+          },
+          "candidate_kind": {
+            "type": "string",
+            "title": "Candidate Kind"
+          },
+          "parcel_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Id"
+          },
+          "parcel_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Count"
+          },
+          "parcel_ids": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parcel Ids"
+          },
+          "assemblage_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assemblage Status"
+          },
+          "candidate_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Score"
+          },
+          "viability_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Viability Score"
+          },
+          "viability_status": {
+            "type": "string",
+            "title": "Viability Status"
+          },
+          "comparison_eligible": {
+            "type": "boolean",
+            "title": "Comparison Eligible"
+          },
+          "rejection_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rejection Reasons"
+          },
+          "hold_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hold Reasons"
+          },
+          "review_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Review Reasons"
+          },
+          "site_feasibility_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Site Feasibility Class"
+          },
+          "final_site_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Site Area Acres"
+          },
+          "total_site_area_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Site Area Acres"
+          },
+          "largest_contiguous_site_acres": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Largest Contiguous Site Acres"
+          },
+          "road_access_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Access Status"
+          },
+          "mapped_wetland_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapped Wetland Fraction"
+          },
+          "steep_slope_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steep Slope Fraction"
+          },
+          "building_reference_fraction": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Building Reference Fraction"
+          },
+          "redevelopment_burden_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Redevelopment Burden Class"
+          },
+          "regional_technical_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regional Technical Score"
+          },
+          "regional_effective_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regional Effective Score"
+          },
+          "grid_context_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grid Context Class"
+          },
+          "grid_data_confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grid Data Confidence"
+          },
+          "capacity_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity Status"
+          },
+          "planning_review_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planning Review Status"
+          },
+          "planning_data_confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planning Data Confidence"
+          },
+          "availability_confirmed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availability Confirmed"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "candidate_kind",
+          "viability_status",
+          "comparison_eligible"
+        ],
+        "title": "ViabilityCandidate"
+      },
+      "ViabilityCompareRequest": {
+        "properties": {
+          "candidate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 2,
+            "title": "Candidate Ids"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "candidate_ids"
+        ],
+        "title": "ViabilityCompareRequest"
+      },
+      "ViabilityCompareResponse": {
+        "properties": {
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ViabilityCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "scope_id",
+          "candidates"
+        ],
+        "title": "ViabilityCompareResponse"
+      },
+      "ViabilityCounts": {
+        "properties": {
+          "evaluated": {
+            "type": "integer",
+            "title": "Evaluated",
+            "default": 0
+          },
+          "comparison_eligible": {
+            "type": "integer",
+            "title": "Comparison Eligible",
+            "default": 0
+          },
+          "evidence_hold": {
+            "type": "integer",
+            "title": "Evidence Hold",
+            "default": 0
+          },
+          "rejected": {
+            "type": "integer",
+            "title": "Rejected",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "ViabilityCounts"
+      },
+      "ViabilityMethodologyResponse": {
+        "properties": {
+          "methodology": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Methodology"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "methodology"
+        ],
+        "title": "ViabilityMethodologyResponse"
+      },
+      "ViabilityScopeResponse": {
+        "properties": {
+          "scope_id": {
+            "type": "string",
+            "title": "Scope Id"
+          },
+          "scope_status": {
+            "type": "string",
+            "title": "Scope Status"
+          },
+          "artifact_readiness": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Artifact Readiness"
+          },
+          "missing_artifacts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Artifacts"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/ViabilityCounts"
+          },
+          "rejection_reason_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Rejection Reason Counts"
+          },
+          "hold_reason_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Hold Reason Counts"
+          },
+          "review_reason_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Review Reason Counts"
+          },
+          "comparison_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ViabilityCandidate"
+            },
+            "type": "array",
+            "title": "Comparison Candidates"
+          },
+          "evaluated_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/ViabilityCandidate"
+            },
+            "type": "array",
+            "title": "Evaluated Candidates"
+          },
+          "safeguards": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Safeguards"
+          },
+          "interpretation": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Interpretation"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "scope_id",
+          "scope_status",
+          "counts"
+        ],
+        "title": "ViabilityScopeResponse"
       },
       "ZoneMemberSummary": {
         "properties": {

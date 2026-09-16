@@ -52,6 +52,15 @@ import {
   SiteCandidateComparison,
 } from "./components/SiteCandidateComparison";
 
+import {
+  ViabilitySummary,
+} from "./components/ViabilitySummary";
+
+import {
+  fetchViabilityScope,
+  type ViabilityScopeEvaluation,
+} from "./viabilityApi";
+
 
 const EMPTY_COLLECTION:
 FeatureCollection = {
@@ -221,6 +230,21 @@ export default function ParcelExplorerApp() {
     setLoadingDetail,
   ] = useState(false);
 
+  const [
+    viability,
+    setViability,
+  ] = useState<ViabilityScopeEvaluation | null>(null);
+
+  const [
+    viabilityLoading,
+    setViabilityLoading,
+  ] = useState(false);
+
+  const [
+    viabilityError,
+    setViabilityError,
+  ] = useState<string | null>(null);
+
   const {
     parcels,
     envelopes,
@@ -246,7 +270,50 @@ export default function ParcelExplorerApp() {
 
 
   useEffect(() => {
-    fetchStatewideZones("top")
+    const scopeId = parcels?.metadata.scope.scope_id ?? null;
+
+    if (!scopeId) {
+      setViability(null);
+      setViabilityError(null);
+      setViabilityLoading(false);
+      return;
+    }
+
+    let active = true;
+    setViabilityLoading(true);
+    setViabilityError(null);
+
+    fetchViabilityScope(scopeId)
+      .then((result) => {
+        if (active) {
+          setViability(result);
+        }
+      })
+      .catch((caughtError: unknown) => {
+        if (!active) {
+          return;
+        }
+        setViability(null);
+        setViabilityError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Viability evaluation could not be loaded.",
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setViabilityLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [parcels]);
+
+
+  useEffect(() => {
+    fetchStatewideZones("auto")
       .then((result) => {
         setZones(result);
 
@@ -304,7 +371,7 @@ export default function ParcelExplorerApp() {
           caughtError instanceof Error
             ? caughtError.message
             : (
-              "Candidate zones could "
+              "Regional search areas could "
               + "not be loaded."
             ),
         );
@@ -921,13 +988,19 @@ export default function ParcelExplorerApp() {
             onViewChange={setParcelView}
           />
 
+          <ViabilitySummary
+            evaluation={viability}
+            loading={viabilityLoading}
+            error={viabilityError}
+          />
+
           <SiteCandidateComparison
             scopeId={
               parcels?.metadata.scope.scope_id
               ?? null
             }
             candidates={
-              siteEvidence?.metadata.top_candidates
+              viability?.comparison_candidates
               ?? []
             }
           />

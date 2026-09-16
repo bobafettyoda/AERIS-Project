@@ -32,7 +32,7 @@ export function ParcelOverviewEvidence({ parcel }: { parcel: ParcelDetail }) {
         <div><span>Regional effective score</span><strong>{score(parcel.statewide_context.effective_score)}</strong></div>
         <div><span>Equity gate</span><strong>{value(parcel.statewide_context.equity_gate)}</strong></div>
         <div><span>Statewide cell</span><strong>{value(parcel.statewide_context.cell_id)}</strong></div>
-        <div><span>Inside candidate zone</span><strong>{numberValue(parcel.scope.overlap_area_acres)} ac</strong></div>
+        <div><span>Inside regional search area</span><strong>{numberValue(parcel.scope.overlap_area_acres)} ac</strong></div>
         <div><span>Zone overlap</span><strong>{percentage(parcel.scope.overlap_fraction)}</strong></div>
       </div>
 

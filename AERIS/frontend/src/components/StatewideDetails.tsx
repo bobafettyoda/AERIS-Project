@@ -88,7 +88,7 @@ export function StatewideDetails({
 
             <p>
               Reading the selected grid cell
-              or candidate zone.
+              or search area.
             </p>
           </div>
         </div>
@@ -103,7 +103,7 @@ export function StatewideDetails({
     return (
       <section className="statewide-detail-card">
         <span className="statewide-kicker">
-          Regional screening candidate zone
+          Regional screening search area
         </span>
 
         <div className="statewide-detail-title">
@@ -546,7 +546,7 @@ export function StatewideDetails({
       </span>
 
       <h2>
-        Select a heatmap cell or candidate zone
+        Select a heatmap cell or search area
       </h2>
 
       <p className="statewide-muted-copy">

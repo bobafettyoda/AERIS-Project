@@ -64,13 +64,13 @@ export function ParcelControls({
   return (
     <section className="parcel-control-card">
       <span className="parcel-kicker">
-        Candidate-zone drill-down
+        Search-area investigation
       </span>
 
       <h2>Open parcel investigation</h2>
 
       <label>
-        <span>Candidate zone</span>
+        <span>Regional search area</span>
 
         <select
           value={selectedZoneId}

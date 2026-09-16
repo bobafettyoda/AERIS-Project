@@ -27,7 +27,6 @@ export type StatewideEligibility =
 
 
 export type StatewideZoneMode =
-  | "top"
   | "auto"
   | "exploration";
 
@@ -148,17 +147,11 @@ export async function fetchStatewideZones(
       mode,
     });
 
-  if (mode === "top") {
-    parameters.set(
-      "top_n",
-      "5",
-    );
-  }
 
   return fetchJson<StatewideFeatureCollection>(
     (
-      "/analysis/statewide/"
-      + "candidate-zones?"
+      "/analysis/viability/"
+      + "search-areas?"
       + parameters.toString()
     ),
   );

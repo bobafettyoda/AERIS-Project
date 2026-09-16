@@ -1133,3 +1133,75 @@
 .site-swatch.ineligible {
   background: #64748b;
 }
+
+
+.viability-card {
+  margin-top: 13px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 5px 18px rgb(16 42 61 / 6%);
+}
+
+.viability-card h2 {
+  margin: 4px 0 0;
+  font-size: 1rem;
+}
+
+.viability-warning {
+  color: #7c2d12;
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
+.viability-counts {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.viability-counts > div {
+  padding: 9px 7px;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.viability-counts strong,
+.viability-counts span {
+  display: block;
+}
+
+.viability-counts strong {
+  color: #0f766e;
+  font-size: 1rem;
+}
+
+.viability-counts span {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.viability-reasons {
+  margin-top: 11px;
+  display: grid;
+  gap: 4px;
+}
+
+.viability-reasons > strong {
+  color: #334155;
+  font-size: 0.68rem;
+}
+
+.viability-reasons > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #475569;
+  font-size: 0.64rem;
+}

@@ -1,0 +1,77 @@
+schema_version: 1
+engine_version: "0.8.1"
+model_name: maryland_data_center_viability
+
+methodology:
+  sequence:
+    - hard_constraints
+    - regional_suitability
+    - parcel_site_feasibility
+    - infrastructure_and_planning_gates
+    - comparison_shortlist
+  notes:
+    - Hard exclusions are evaluated before candidates receive a viability score.
+    - Regional search areas come from coherent auto-screen or exploration clusters, not a fixed Top-5 list.
+    - Unknown utility capacity, acquisition, and local entitlement status remain due-diligence warnings and are never presented as confirmed.
+
+search_areas:
+  default_mode: auto
+  allowed_modes:
+    - auto
+    - exploration
+  minimum_regional_score: 0.70
+  maximum_regional_score: 1.00
+  require_hard_exclusion_screen: true
+  terminology: search_area
+
+parcel_gates:
+  # AERIS operational thresholds. These are configurable screening values,
+  # not universal literature requirements.
+  minimum_contiguous_usable_acres: 25.0
+  minimum_total_site_acres: 25.0
+  maximum_mapped_wetland_fraction: 0.10
+  maximum_steep_slope_fraction: 0.25
+  reject_public_land: true
+  reject_institutional_use: true
+  reject_statewide_hard_excluded: true
+  allowed_road_access:
+    - DIRECT_MAPPED_ROAD_FRONTAGE_PROXY
+    - NEAR_MAPPED_PUBLIC_ROAD
+  road_access_hold_values:
+    - ROAD_DATA_UNAVAILABLE
+
+infrastructure_gates:
+  accepted_grid_context:
+    - VERY_STRONG_MAPPED_GRID_CONTEXT
+    - STRONG_MAPPED_GRID_CONTEXT
+    - MODERATE_MAPPED_GRID_CONTEXT
+  hold_grid_context:
+    - INSUFFICIENT_MAPPED_GRID_DATA
+  reject_grid_context:
+    - LIMITED_MAPPED_GRID_CONTEXT
+  capacity_confirmation_required: true
+  interconnection_study_required: true
+
+planning_gates:
+  hold_when_statewide_zoning_unavailable: true
+  manual_local_verification_required: true
+  known_blocking_statuses: []
+
+ranking:
+  # Calculated only after hard/feasibility gates pass.
+  physical_site_weight: 0.60
+  regional_suitability_weight: 0.40
+  maximum_comparison_candidates: 25
+
+comparison:
+  minimum_candidates: 2
+  maximum_selected_candidates: 5
+
+safeguards:
+  utility_capacity_confirmed: false
+  local_zoning_approval_confirmed: false
+  permitted_use_confirmed: false
+  wetland_delineation_confirmed: false
+  legal_road_access_confirmed: false
+  acquisition_control_confirmed: false
+  development_ready_claim_allowed: false

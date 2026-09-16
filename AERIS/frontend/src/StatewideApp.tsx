@@ -104,7 +104,7 @@ export default function StatewideApp() {
   const [
     zoneMode,
     setZoneMode,
-  ] = useState<StatewideZoneMode>("top");
+  ] = useState<StatewideZoneMode>("auto");
 
   const [
     showExcluded,
@@ -643,7 +643,7 @@ export default function StatewideApp() {
         setError(
           caughtError instanceof Error
             ? caughtError.message
-            : "Unable to load candidate zones.",
+            : "Unable to load regional search areas.",
         );
       });
 
@@ -721,7 +721,7 @@ export default function StatewideApp() {
       ...DEFAULT_FILTERS,
     });
 
-    setZoneMode("top");
+    setZoneMode("auto");
     setShowExcluded(true);
   }
 
@@ -751,7 +751,7 @@ export default function StatewideApp() {
             {zoneData.features.length
               .toLocaleString()}
             {" "}
-            candidate zones
+            search areas
           </span>
 
           <span
@@ -800,7 +800,7 @@ export default function StatewideApp() {
             <span className="zone-swatch" />
 
             <span>
-              Regional screening candidate zones
+              Regional screening search areas
             </span>
           </div>
 

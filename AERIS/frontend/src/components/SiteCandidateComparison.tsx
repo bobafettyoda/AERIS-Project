@@ -5,9 +5,9 @@ import {
 } from "react";
 
 import {
-  compareSiteCandidates,
-  type SiteCandidate,
-} from "../parcelApi";
+  compareViabilityCandidates,
+  type ViabilityCandidate,
+} from "../viabilityApi";
 
 import {
   numberValue,
@@ -18,12 +18,12 @@ import {
 
 type SiteCandidateComparisonProps = {
   scopeId: string | null;
-  candidates: SiteCandidate[];
+  candidates: ViabilityCandidate[];
 };
 
 
 function candidateLabel(
-  candidate: SiteCandidate,
+  candidate: ViabilityCandidate,
 ): string {
   if (candidate.candidate_kind
     === "MULTI_PARCEL_ASSEMBLAGE") {
@@ -38,7 +38,7 @@ function candidateLabel(
 
 
 function siteArea(
-  candidate: SiteCandidate,
+  candidate: ViabilityCandidate,
 ): number | null {
   if (
     typeof candidate.total_site_area_acres
@@ -67,7 +67,7 @@ export function SiteCandidateComparison({
     useState<string[]>([]);
 
   const [comparison, setComparison] =
-    useState<SiteCandidate[]>([]);
+    useState<ViabilityCandidate[]>([]);
 
   const [loading, setLoading] =
     useState(false);
@@ -128,7 +128,7 @@ export function SiteCandidateComparison({
     setError(null);
 
     try {
-      const result = await compareSiteCandidates(
+      const result = await compareViabilityCandidates(
         scopeId,
         selected,
       );
@@ -150,16 +150,16 @@ export function SiteCandidateComparison({
   return (
     <section className="site-candidate-card">
       <span className="parcel-kicker">
-        Preliminary physical candidates
+        Viability-screened candidates
       </span>
 
       <h2>
-        Compare parcels and assemblages
+        Compare viable sites
       </h2>
 
       <p className="parcel-muted">
-        Choose up to three top candidates. The ranking is a transparent
-        physical-screening aid, not an acquisition or approval decision.
+        Choose two or three candidates that passed the configured viability gates.
+        Utility capacity, local entitlement, and acquisition control remain unconfirmed.
       </p>
 
       <div className="site-candidate-list">
@@ -203,9 +203,9 @@ export function SiteCandidateComparison({
                   )}
                   {" ac contiguous · "}
                   {
-                    typeof candidate.candidate_score
+                    typeof (candidate.viability_score ?? candidate.candidate_score)
                     === "number"
-                      ? `${Math.round(candidate.candidate_score * 100)}% screen`
+                      ? `${Math.round((candidate.viability_score ?? candidate.candidate_score ?? 0) * 100)}% viability`
                       : "score unavailable"
                   }
                 </small>
@@ -262,13 +262,13 @@ export function SiteCandidateComparison({
               </tr>
 
               <tr>
-                <th>Candidate score</th>
+                <th>Viability score</th>
                 {comparison.map((candidate) => (
                   <td key={candidate.candidate_id}>
                     {
-                      typeof candidate.candidate_score
+                      typeof (candidate.viability_score ?? candidate.candidate_score)
                       === "number"
-                        ? `${Math.round(candidate.candidate_score * 100)}%`
+                        ? `${Math.round((candidate.viability_score ?? candidate.candidate_score ?? 0) * 100)}%`
                         : "—"
                     }
                   </td>
@@ -300,6 +300,24 @@ export function SiteCandidateComparison({
                 {comparison.map((candidate) => (
                   <td key={candidate.candidate_id}>
                     {value(candidate.road_access_status)}
+                  </td>
+                ))}
+              </tr>
+
+              <tr>
+                <th>Grid context</th>
+                {comparison.map((candidate) => (
+                  <td key={candidate.candidate_id}>
+                    {value(candidate.grid_context_class)}
+                  </td>
+                ))}
+              </tr>
+
+              <tr>
+                <th>Planning review</th>
+                {comparison.map((candidate) => (
+                  <td key={candidate.candidate_id}>
+                    {value(candidate.planning_review_status)}
                   </td>
                 ))}
               </tr>

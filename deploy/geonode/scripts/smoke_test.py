@@ -131,15 +131,34 @@ def run(args: argparse.Namespace) -> list[CheckResult]:
         if grid.get("type") != "FeatureCollection" or not grid.get("features"):
             raise AssertionError("statewide grid did not return a feature")
         _, zones = request_json(
-            api_url(origin, "/analysis/statewide/candidate-zones?mode=top&top_n=1", args.api_prefix),
+            api_url(origin, "/analysis/viability/search-areas?mode=auto", args.api_prefix),
             args.host_header,
             args.timeout,
         )
         if zones.get("type") != "FeatureCollection":
-            raise AssertionError("candidate zones response is not GeoJSON")
-        return f"grid_feature=ok; candidate_zones={len(zones.get('features', []))}"
+            raise AssertionError("viability search areas response is not GeoJSON")
+        metadata = zones.get("metadata", {})
+        if metadata.get("fixed_top_n") is not False:
+            raise AssertionError("viability search areas unexpectedly use a fixed top_n")
+        return f"grid_feature=ok; search_areas={len(zones.get('features', []))}"
 
     check("statewide-screening", statewide)
+
+    def viability() -> str:
+        _, methodology = request_json(
+            api_url(origin, "/analysis/viability/methodology", args.api_prefix),
+            args.host_header,
+            args.timeout,
+        )
+        active = methodology.get("methodology")
+        if not isinstance(active, dict):
+            raise AssertionError("viability methodology is missing")
+        search = active.get("search_areas", {})
+        if search.get("default_mode") != "auto":
+            raise AssertionError(f"unexpected viability default mode: {search}")
+        return "methodology=ok; fixed_top_n=false"
+
+    check("viability-engine", viability)
 
     def parcels() -> str:
         _, health_payload = request_json(

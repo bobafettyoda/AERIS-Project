@@ -12,7 +12,7 @@ from starlette.middleware.gzip import GZipMiddleware
 
 from app.config import get_cors_origins
 from app.release import release_metadata, runtime_release_metadata
-from app.routers import analysis, decision_models, gis, parcels, statewide
+from app.routers import analysis, decision_models, gis, parcels, statewide, viability
 
 
 @asynccontextmanager
@@ -28,7 +28,8 @@ app = FastAPI(
     version=str(release["version"]),
     description=(
         "Maryland statewide site screening, scoped parcel investigation, "
-        "mapped physical constraints, public grid context, and planning context."
+        "mapped physical constraints, public grid context, planning context, "
+        "and ordered viability screening."
     ),
     lifespan=lifespan,
 )
@@ -64,3 +65,4 @@ app.include_router(decision_models.router)
 app.include_router(gis.router)
 app.include_router(statewide.router)
 app.include_router(parcels.router)
+app.include_router(viability.router)

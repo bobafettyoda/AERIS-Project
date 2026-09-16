@@ -252,12 +252,11 @@ export function StatewideFilters({
       </label>
 
       <div className="statewide-field">
-        <span>Candidate-zone layer</span>
+        <span>Search-area layer</span>
 
         <div className="statewide-segmented">
           {(
             [
-              "top",
               "auto",
               "exploration",
             ] as StatewideZoneMode[]
@@ -274,11 +273,9 @@ export function StatewideFilters({
                 onZoneModeChange(mode);
               }}
             >
-              {mode === "top"
-                ? "Top 5"
-                : mode === "auto"
-                  ? "Auto"
-                  : "70–90"}
+              {mode === "auto"
+                ? "Auto search areas"
+                : "Exploration"}
             </button>
           ))}
         </div>
