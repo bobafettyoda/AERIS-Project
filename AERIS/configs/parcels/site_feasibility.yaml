@@ -43,6 +43,7 @@ inputs:
       dnr_polygon:
         id: 1
         name: Maryland DNR Wetlands Polygon
+        where: "Type IN ('Estuarine', 'Lacustrine', 'Marine', 'Palustrine', 'Riverine')"
         fields:
           - OBJECTID
           - Type

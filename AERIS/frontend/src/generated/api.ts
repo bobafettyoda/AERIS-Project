@@ -320,6 +320,11 @@ export type ScopeBundle = {
   [key: string]: unknown;
 };
 
+export type SearchAreaBuildRequest = {
+  refresh?: boolean;
+  [key: string]: unknown;
+};
+
 export type SiteCandidate = {
   candidate_id: string;
   candidate_kind: string;
@@ -595,6 +600,94 @@ export type ValidationError = {
   input?: unknown;
   ctx?: {
 };
+};
+
+export type ViabilityCandidate = {
+  candidate_id: string;
+  candidate_kind: string;
+  parcel_id?: string | null;
+  parcel_count?: number | null;
+  parcel_ids?: string | null;
+  assemblage_status?: string | null;
+  candidate_score?: number | null;
+  viability_score?: number | null;
+  viability_status: string;
+  comparison_eligible: boolean;
+  rejection_reasons?: Array<string>;
+  hold_reasons?: Array<string>;
+  review_reasons?: Array<string>;
+  site_feasibility_class?: string | null;
+  final_site_area_acres?: number | null;
+  total_site_area_acres?: number | null;
+  largest_contiguous_site_acres?: number | null;
+  road_access_status?: string | null;
+  mapped_wetland_fraction?: number | null;
+  steep_slope_fraction?: number | null;
+  building_reference_fraction?: number | null;
+  redevelopment_burden_class?: string | null;
+  regional_technical_score?: number | null;
+  regional_effective_score?: number | null;
+  grid_context_class?: string | null;
+  grid_data_confidence?: string | null;
+  capacity_status?: string | null;
+  planning_review_status?: string | null;
+  planning_data_confidence?: string | null;
+  availability_confirmed?: boolean | null;
+  [key: string]: unknown;
+};
+
+export type ViabilityCompareRequest = {
+  candidate_ids: Array<string>;
+  [key: string]: unknown;
+};
+
+export type ViabilityCompareResponse = {
+  scope_id: string;
+  candidates: Array<ViabilityCandidate>;
+  [key: string]: unknown;
+};
+
+export type ViabilityCounts = {
+  evaluated?: number;
+  comparison_eligible?: number;
+  evidence_hold?: number;
+  rejected?: number;
+  [key: string]: unknown;
+};
+
+export type ViabilityMethodologyResponse = {
+  methodology: {
+  [key: string]: unknown;
+};
+  [key: string]: unknown;
+};
+
+export type ViabilityScopeResponse = {
+  scope_id: string;
+  scope_status: string;
+  artifact_readiness?: {
+  [key: string]: boolean;
+};
+  missing_artifacts?: Array<string>;
+  counts: ViabilityCounts;
+  rejection_reason_counts?: {
+  [key: string]: number;
+};
+  hold_reason_counts?: {
+  [key: string]: number;
+};
+  review_reason_counts?: {
+  [key: string]: number;
+};
+  comparison_candidates?: Array<ViabilityCandidate>;
+  evaluated_candidates?: Array<ViabilityCandidate>;
+  safeguards?: {
+  [key: string]: boolean;
+};
+  interpretation?: {
+  [key: string]: unknown;
+};
+  [key: string]: unknown;
 };
 
 export type ZoneMemberSummary = {

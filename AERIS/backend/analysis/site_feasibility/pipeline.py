@@ -924,6 +924,7 @@ def build_site_feasibility(
                     cache_root=paths.cache_scope / "vectors",
                     page_size=int(wetlands_config["page_size"]),
                     timeout_seconds=int(wetlands_config["timeout_seconds"]),
+                    where=str(layer_config.get("where", "1=1")),
                     refresh=refresh,
                 )
                 frame = result.frame.copy()
