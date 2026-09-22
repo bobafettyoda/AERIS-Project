@@ -1,6 +1,11 @@
 schema_version: 1
-pipeline_version: "0.7.0"
+pipeline_version: "0.8.4"
 snapshot_label: "2026-08-31"
+
+fast_path:
+  enabled: true
+  viability_config_path: configs/viability/data_center_maryland.yaml
+  methodology: authoritative_rejection_before_expensive_site_analysis
 
 inputs:
   parcel_config:
@@ -38,8 +43,6 @@ inputs:
       dnr_polygon:
         id: 1
         name: Maryland DNR Wetlands Polygon
-        where: >-
-          Type IN ('Estuarine', 'Lacustrine', 'Marine', 'Palustrine', 'Riverine')
         fields:
           - OBJECTID
           - Type

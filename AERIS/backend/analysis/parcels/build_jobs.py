@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -56,7 +57,7 @@ class ScopeBuildCoordinator:
         planning_service: PlanningContextService,
         site_service: SiteFeasibilityService,
         runtime_directory: Path,
-        max_workers: int = 2,
+        max_workers: int = 1,
     ) -> None:
         self.parcel_service = parcel_service
         self.envelope_service = envelope_service
@@ -110,6 +111,7 @@ class ScopeBuildCoordinator:
                 name: artifact_entry() for name in ARTIFACT_NAMES
             },
             "warnings": [],
+            "timings_seconds": {},
             "error": None,
         }
         self._write(job)
@@ -202,9 +204,14 @@ class ScopeBuildCoordinator:
         job["current_stage"] = artifact
         job["progress"] = progress
         self._update_artifact(job, artifact, state="running")
+        started = time.monotonic()
         try:
             builder()
         except Exception as error:  # noqa: BLE001 - persisted as artifact failure
+            job.setdefault("timings_seconds", {})[artifact] = round(
+                time.monotonic() - started,
+                3,
+            )
             self._update_artifact(
                 job,
                 artifact,
@@ -212,8 +219,33 @@ class ScopeBuildCoordinator:
                 error=f"{type(error).__name__}: {error}",
             )
             return False
+        job.setdefault("timings_seconds", {})[artifact] = round(
+            time.monotonic() - started,
+            3,
+        )
         self._update_artifact(job, artifact, state="ready")
         return True
+
+    def _site_fast_path(self, scope_id: str) -> dict[str, Any]:
+        try:
+            paths = self.site_service._paths(scope_id)
+            if not paths.manifest.exists():
+                return {}
+            manifest = read_json(paths.manifest)
+            value = manifest.get("fast_path", {})
+            return value if isinstance(value, dict) else {}
+        except Exception:  # noqa: BLE001 - readiness helper must remain conservative
+            return {}
+
+    def _downstream_evidence_required(self, scope_id: str) -> bool:
+        fast_path = self._site_fast_path(scope_id)
+        count = fast_path.get("downstream_evidence_required_count")
+        if count is None:
+            return True
+        try:
+            return int(count) > 0
+        except (TypeError, ValueError):
+            return True
 
     def _run(self, job_id: str) -> None:
         job = self.get(job_id)
@@ -295,24 +327,41 @@ class ScopeBuildCoordinator:
                     )
                     site_ok = False
 
-                grid_ok = self._run_builder(
-                    job,
-                    "grid",
-                    progress=0.70,
-                    builder=lambda: self.grid_service.build(
-                        scope_id=scope_id,
-                        refresh=refresh,
-                    ),
+                downstream_required = (
+                    site_ok
+                    and self._downstream_evidence_required(scope_id)
                 )
-                planning_ok = self._run_builder(
-                    job,
-                    "planning",
-                    progress=0.86,
-                    builder=lambda: self.planning_service.build(
-                        scope_id=scope_id,
-                        refresh=refresh,
-                    ),
-                )
+                if site_ok and not downstream_required:
+                    job["current_stage"] = "downstream:not_required"
+                    job["progress"] = 0.96
+                    job.setdefault("timings_seconds", {})["grid"] = 0.0
+                    job.setdefault("timings_seconds", {})["planning"] = 0.0
+                    self._update_artifact(job, "grid", state="ready")
+                    self._update_artifact(job, "planning", state="ready")
+                    grid_ok = True
+                    planning_ok = True
+                    job.setdefault("warnings", []).append(
+                        "Grid and planning calculations were skipped because every candidate already had an authoritative land/site rejection."
+                    )
+                else:
+                    grid_ok = self._run_builder(
+                        job,
+                        "grid",
+                        progress=0.70,
+                        builder=lambda: self.grid_service.build(
+                            scope_id=scope_id,
+                            refresh=refresh,
+                        ),
+                    )
+                    planning_ok = self._run_builder(
+                        job,
+                        "planning",
+                        progress=0.86,
+                        builder=lambda: self.planning_service.build(
+                            scope_id=scope_id,
+                            refresh=refresh,
+                        ),
+                    )
 
                 optional_results = [
                     envelope_ok,
@@ -325,7 +374,8 @@ class ScopeBuildCoordinator:
                     for name in ("envelopes", "site", "grid", "planning")
                     if job["artifacts"][name]["state"] == "failed"
                 ]
-                job["warnings"] = [
+                existing_warnings = list(job.get("warnings", []))
+                job["warnings"] = existing_warnings + [
                     f"{name} evidence is unavailable; other completed domains remain usable."
                     for name in failed_optional
                 ]
@@ -355,14 +405,24 @@ class ScopeBuildCoordinator:
         planning_output, planning_manifest = self.planning_service._paths(scope_id)
         site_paths = self.site_service._paths(scope_id)
 
+        site_ready = site_paths.output.exists() and site_paths.manifest.exists()
+        downstream_required = (
+            True
+            if not site_ready
+            else self._downstream_evidence_required(scope_id)
+        )
         readiness = {
             "parcels": parcel_paths.normalized_output.exists()
             and parcel_paths.manifest_output.exists(),
             "envelopes": envelope_paths.output.exists()
             and envelope_paths.manifest.exists(),
-            "site": site_paths.output.exists() and site_paths.manifest.exists(),
-            "grid": grid_paths.output.exists() and grid_paths.manifest.exists(),
-            "planning": planning_output.exists() and planning_manifest.exists(),
+            "site": site_ready,
+            "grid": (
+                grid_paths.output.exists() and grid_paths.manifest.exists()
+            ) or (site_ready and not downstream_required),
+            "planning": (
+                planning_output.exists() and planning_manifest.exists()
+            ) or (site_ready and not downstream_required),
         }
         return {
             name: {
@@ -397,6 +457,19 @@ class ScopeBuildCoordinator:
             "planning": None,
         }
 
+        downstream_required = self._downstream_evidence_required(scope_id)
+        if not downstream_required and status["site"]["state"] == "ready":
+            skipped_payload = {
+                "type": "FeatureCollection",
+                "features": [],
+                "metadata": {
+                    "scope_id": scope_id,
+                    "analysis_status": "NOT_REQUIRED_AFTER_AUTHORITATIVE_REJECTION",
+                },
+            }
+            bundle["grid"] = dict(skipped_payload)
+            bundle["planning"] = dict(skipped_payload)
+
         readers = {
             "envelopes": lambda: self.envelope_service.feature_collection(
                 scope_id=scope_id,
@@ -413,6 +486,11 @@ class ScopeBuildCoordinator:
 
         for name, reader in readers.items():
             artifact_name = "envelopes" if name == "constraints" else name
+            if (
+                not downstream_required
+                and artifact_name in {"grid", "planning"}
+            ):
+                continue
             if status[artifact_name]["state"] != "ready":
                 continue
             try:

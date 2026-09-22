@@ -1,7 +1,7 @@
 // Generated from AERIS/configs/application.json. Do not edit.
-export const AERIS_VERSION = "0.8.1" as const;
-export const AERIS_RELEASE_LABEL = "v0.8.1" as const;
-export const AERIS_RELEASE_STAGE = "viability-engine" as const;
+export const AERIS_VERSION = "0.8.4" as const;
+export const AERIS_RELEASE_LABEL = "v0.8.4" as const;
+export const AERIS_RELEASE_STAGE = "fast-viability-path" as const;
 export const AERIS_SNAPSHOT_CATALOG = {
   "statewide_foundations": "2025-07-24",
   "statewide_infrastructure": "2026-07-30",

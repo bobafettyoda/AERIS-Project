@@ -11,7 +11,7 @@ from typing import Any, Callable
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-from shapely import GeometryCollection, make_valid, set_precision, union_all
+from shapely import GeometryCollection, STRtree, make_valid, set_precision, union_all
 
 from analysis.common.geometry import repair_invalid_geometries
 from analysis.common.geopackage import write_geopackage_atomic
@@ -34,7 +34,6 @@ from analysis.site_feasibility.assemblages import (
     classify_site,
     largest_component,
     polygon_components,
-    right_of_way_indicator,
     transparent_candidate_score,
 )
 from analysis.site_feasibility.raster import (
@@ -47,6 +46,12 @@ from analysis.site_feasibility.sources import (
     ScopedSourceResult,
     download_scoped_layer,
     stable_hash,
+)
+from analysis.fast_viability import (
+    detailed_analysis_ids,
+    downstream_evidence_required_ids,
+    parcel_fast_path_decision,
+    potential_assemblage_member_ids,
 )
 
 
@@ -108,6 +113,54 @@ def clean_polygonal(geometry, precision_m: float):
     if precision_m > 0:
         result = set_precision(result, precision_m)
     return make_valid(result)
+
+
+def constraint_components(geometry) -> list:
+    """Return polygon components suitable for localized spatial queries."""
+    return [
+        component
+        for component in polygon_components(geometry)
+        if component is not None and not component.is_empty
+    ]
+
+
+class LocalConstraintIndex:
+    """Spatial index that limits overlay work to constraints near one site."""
+
+    def __init__(self, geometry, *, precision_m: float) -> None:
+        self.precision_m = precision_m
+        self.parts = constraint_components(geometry)
+        self.tree = STRtree(self.parts) if self.parts else None
+
+    def intersection_geometry(self, geometry):
+        if (
+            self.tree is None
+            or geometry is None
+            or geometry.is_empty
+        ):
+            return GeometryCollection()
+
+        indexes = self.tree.query(geometry, predicate="intersects")
+        if len(indexes) == 0:
+            return GeometryCollection()
+
+        nearby = [self.parts[int(index)] for index in indexes]
+        if len(nearby) == 1:
+            return nearby[0]
+        return clean_polygonal(union_all(nearby), self.precision_m)
+
+
+def polygonal_geometry(geometry):
+    """Return only polygonal components for parcel boundary calculations."""
+    parts = constraint_components(geometry)
+
+    if not parts:
+        return GeometryCollection()
+
+    if len(parts) == 1:
+        return parts[0]
+
+    return make_valid(union_all(parts))
 
 
 def empty_layer(*, crs: str, columns: list[str]) -> gpd.GeoDataFrame:
@@ -218,8 +271,13 @@ def road_metrics(
     direct_frontage_excluded_classes: tuple[str, ...],
     near_road_threshold_m: float,
     remote_road_threshold_m: float,
-    frontage_clip_geometry: Any | None = None,
+    frontage_clip_geometry=None,
+    progress_callback: Callable[[str, float], None] | None = None,
 ) -> pd.DataFrame:
+    def progress(stage: str, fraction: float) -> None:
+        if progress_callback is not None:
+            progress_callback(stage, min(max(float(fraction), 0.0), 1.0))
+
     result = pd.DataFrame({"parcel_id": parcels["parcel_id"].astype(str)})
     if roads.empty:
         result["nearest_road_distance_m"] = np.nan
@@ -234,25 +292,13 @@ def road_metrics(
         result["road_access_confirmed"] = False
         return result
 
-    road_parcel_geometries = gpd.GeoSeries(
-        [
-            union_all(components)
-            if (components := polygon_components(geometry))
-            else GeometryCollection()
-            for geometry in parcels.geometry
-        ],
-        index=parcels.index,
-        crs=parcels.crs,
-    )
-    geometry_available = ~road_parcel_geometries.is_empty
-
-    left = parcels[["parcel_id"]].copy()
+    progress("nearest_roads", 0.05)
+    left = parcels[["parcel_id", "geometry"]].copy()
+    left["geometry"] = [
+        polygonal_geometry(geometry)
+        for geometry in left.geometry
+    ]
     left["_parcel_index"] = parcels.index
-    left = gpd.GeoDataFrame(
-        left,
-        geometry=road_parcel_geometries,
-        crs=parcels.crs,
-    )
     nearest = gpd.sjoin_nearest(
         left,
         roads,
@@ -269,6 +315,7 @@ def road_metrics(
         .set_index("_parcel_index")
     )
 
+    progress("primary_roads", 0.20)
     primary = roads.loc[roads["road_rank"].le(3)].copy()
     if primary.empty:
         primary_distance = pd.Series(np.nan, index=parcels.index)
@@ -288,6 +335,7 @@ def road_metrics(
             .set_index("_parcel_index")["nearest_primary_road_distance_m"]
         )
 
+    progress("accessible_roads", 0.32)
     excluded_classes = {
         str(value).strip().upper()
         for value in direct_frontage_excluded_classes
@@ -323,42 +371,44 @@ def road_metrics(
             .set_index("_parcel_index")["nearest_accessible_road_distance_m"]
         )
 
+    progress("frontage", 0.45)
     frontage_values: list[float] = []
     limited_access_values: list[float] = []
     accessible_index = accessible_roads.sindex if not accessible_roads.empty else None
     limited_index = limited_access_roads.sindex if not limited_access_roads.empty else None
-    for _, parcel_geometry in road_parcel_geometries.items():
-        if parcel_geometry is None or parcel_geometry.is_empty:
-            frontage_values.append(np.nan)
-            limited_access_values.append(np.nan)
-            continue
-
-        boundary = parcel_geometry.boundary
-        if boundary is None or boundary.is_empty:
-            frontage_values.append(np.nan)
-            limited_access_values.append(np.nan)
-            continue
+    total_frontage = max(len(parcels), 1)
+    frontage_interval = max(25, min(250, total_frontage // 30 or 25))
+    for frontage_position, (_, parcel_geometry) in enumerate(
+        parcels.geometry.items(),
+        start=1,
+    ):
+        frontage_geometry = polygonal_geometry(
+            parcel_geometry
+        )
 
         if (
             frontage_clip_geometry is not None
-            and not frontage_clip_geometry.is_empty
+            and not frontage_geometry.is_empty
         ):
-            boundary = boundary.intersection(
-                frontage_clip_geometry.buffer(
-                    frontage_tolerance_m
+            frontage_geometry = polygonal_geometry(
+                frontage_geometry.intersection(
+                    frontage_clip_geometry
                 )
             )
 
-            if boundary.is_empty:
-                frontage_values.append(0.0)
-                limited_access_values.append(0.0)
-                continue
-
-        boundary_zone = boundary.buffer(
-            frontage_tolerance_m
+        boundary_zone = (
+            frontage_geometry.boundary.buffer(
+                frontage_tolerance_m
+            )
+            if not frontage_geometry.is_empty
+            else GeometryCollection()
         )
+
         frontage = 0.0
-        if accessible_index is not None:
+        if (
+            accessible_index is not None
+            and not boundary_zone.is_empty
+        ):
             candidate_indices = list(
                 accessible_index.query(
                     boundary_zone,
@@ -366,23 +416,18 @@ def road_metrics(
                 )
             )
             if candidate_indices:
-                frontage_geometry = union_all(
-                    list(
-                        accessible_roads.geometry.iloc[
-                            candidate_indices
-                        ].intersection(
-                            boundary_zone
-                        )
-                    )
-                )
-
                 frontage = float(
-                    frontage_geometry.length
+                    accessible_roads.geometry.iloc[candidate_indices]
+                    .intersection(boundary_zone)
+                    .length.sum()
                 )
         frontage_values.append(frontage)
 
         limited_access = 0.0
-        if limited_index is not None:
+        if (
+            limited_index is not None
+            and not boundary_zone.is_empty
+        ):
             limited_indices = list(
                 limited_index.query(
                     boundary_zone,
@@ -390,21 +435,23 @@ def road_metrics(
                 )
             )
             if limited_indices:
-                limited_geometry = union_all(
-                    list(
-                        limited_access_roads.geometry.iloc[
-                            limited_indices
-                        ].intersection(
-                            boundary_zone
-                        )
-                    )
-                )
-
                 limited_access = float(
-                    limited_geometry.length
+                    limited_access_roads.geometry.iloc[limited_indices]
+                    .intersection(boundary_zone)
+                    .length.sum()
                 )
         limited_access_values.append(limited_access)
 
+        if (
+            frontage_position == total_frontage
+            or frontage_position % frontage_interval == 0
+        ):
+            progress(
+                f"frontage_{frontage_position}_of_{total_frontage}",
+                0.45 + 0.30 * (frontage_position / total_frontage),
+            )
+
+    progress("site_to_road", 0.80)
     site_frame = gpd.GeoDataFrame(
         {
             "_parcel_index": parcels.index,
@@ -444,29 +491,22 @@ def road_metrics(
     nearest_accessible_distance = accessible_distance.reindex(parcels.index)
     frontage_series = pd.Series(frontage_values, index=parcels.index)
     limited_access_series = pd.Series(limited_access_values, index=parcels.index)
-    status = pd.Series(
-        np.select(
-            [
-                nearest_accessible_distance.le(frontage_tolerance_m)
-                & frontage_series.ge(minimum_frontage_proxy_m),
-                nearest_accessible_distance.le(near_road_threshold_m),
-                nearest_accessible_distance.le(remote_road_threshold_m),
-                limited_access_series.ge(minimum_frontage_proxy_m),
-            ],
-            [
-                "DIRECT_MAPPED_ROAD_FRONTAGE_PROXY",
-                "NEAR_MAPPED_PUBLIC_ROAD",
-                "DISTANT_MAPPED_PUBLIC_ROAD",
-                "LIMITED_ACCESS_ROAD_ADJACENCY_REVIEW_REQUIRED",
-            ],
-            default="REMOTE_FROM_MAPPED_PUBLIC_ROAD",
-        ),
-        index=parcels.index,
-        dtype="object",
+    status = np.select(
+        [
+            nearest_accessible_distance.le(frontage_tolerance_m)
+            & frontage_series.ge(minimum_frontage_proxy_m),
+            nearest_accessible_distance.le(near_road_threshold_m),
+            nearest_accessible_distance.le(remote_road_threshold_m),
+            limited_access_series.ge(minimum_frontage_proxy_m),
+        ],
+        [
+            "DIRECT_MAPPED_ROAD_FRONTAGE_PROXY",
+            "NEAR_MAPPED_PUBLIC_ROAD",
+            "DISTANT_MAPPED_PUBLIC_ROAD",
+            "LIMITED_ACCESS_ROAD_ADJACENCY_REVIEW_REQUIRED",
+        ],
+        default="REMOTE_FROM_MAPPED_PUBLIC_ROAD",
     )
-    status.loc[
-        ~geometry_available
-    ] = "PARCEL_GEOMETRY_UNAVAILABLE"
 
     result["nearest_road_distance_m"] = nearest_distance.to_numpy()
     result["nearest_road_name"] = nearest["road_name"].reindex(parcels.index).to_numpy()
@@ -476,8 +516,9 @@ def road_metrics(
     result["road_frontage_proxy_m"] = frontage_series.to_numpy()
     result["limited_access_adjacency_proxy_m"] = limited_access_series.to_numpy()
     result["site_envelope_to_road_distance_m"] = site_distance.to_numpy()
-    result["road_access_status"] = status.to_numpy()
+    result["road_access_status"] = status
     result["road_access_confirmed"] = False
+    progress("complete", 1.0)
     return result
 
 
@@ -487,7 +528,12 @@ def building_metrics(
     buildings: gpd.GeoDataFrame,
     square_meters_per_acre: float,
     source_available: bool,
+    progress_callback: Callable[[str, float], None] | None = None,
 ) -> pd.DataFrame:
+    def progress(stage: str, fraction: float) -> None:
+        if progress_callback is not None:
+            progress_callback(stage, min(max(float(fraction), 0.0), 1.0))
+
     result = pd.DataFrame({"parcel_id": parcels["parcel_id"].astype(str)})
     result["building_reference_count"] = 0
     result["building_reference_overlap_acres"] = np.nan
@@ -502,6 +548,7 @@ def building_metrics(
             )
         return result
 
+    progress("spatial_join", 0.10)
     parcel_shapes = parcels[["parcel_id", "geometry"]].copy()
     parcel_shapes["_parcel_index"] = parcels.index
     joined = gpd.sjoin(
@@ -516,14 +563,23 @@ def building_metrics(
         result["building_reference_status"] = "REFERENCE_SOURCE_AVAILABLE"
         return result
 
+    progress("overlap_metrics", 0.35)
     counts = joined.groupby("_parcel_index").size()
     areas: dict[int, float] = {}
-    for parcel_index, group in joined.groupby("_parcel_index"):
+    grouped = list(joined.groupby("_parcel_index"))
+    total_groups = max(len(grouped), 1)
+    group_interval = max(10, min(100, total_groups // 20 or 10))
+    for group_position, (parcel_index, group) in enumerate(grouped, start=1):
         geometry = union_all(list(group.geometry))
         parcel_geometry = parcels.geometry.loc[int(parcel_index)]
         areas[int(parcel_index)] = float(
             geometry.intersection(parcel_geometry).area / square_meters_per_acre
         )
+        if group_position == total_groups or group_position % group_interval == 0:
+            progress(
+                f"overlap_{group_position}_of_{total_groups}",
+                0.35 + 0.55 * (group_position / total_groups),
+            )
 
     result = result.set_index(parcels.index)
     result.loc[counts.index, "building_reference_count"] = counts.astype(int)
@@ -532,17 +588,12 @@ def building_metrics(
     result["building_reference_overlap_acres"] = result[
         "building_reference_overlap_acres"
     ].fillna(0.0)
-    parcel_area = (
-        parcels.geometry.area
-        / square_meters_per_acre
-    ).replace(
-        0,
-        np.nan,
-    )
+    parcel_area = pd.to_numeric(parcels["geometry_area_acres"], errors="coerce").replace(0, np.nan)
     result["building_reference_fraction"] = (
         result["building_reference_overlap_acres"] / parcel_area
     ).clip(0, 1)
     result["building_reference_status"] = "REFERENCE_SOURCE_AVAILABLE"
+    progress("complete", 1.0)
     return result.reset_index(drop=True)
 
 
@@ -595,10 +646,51 @@ def build_site_feasibility(
     progress_callback: Callable[[str, float], None] | None = None,
 ) -> dict[str, Any]:
     started = time.monotonic()
+    stage_timings_seconds: dict[str, float] = {}
+    timing_stage: str | None = None
+    timing_started = started
+
+    def timing_key(stage: str) -> str:
+        if stage.startswith("site_envelopes_"):
+            return "site_envelopes"
+        if stage.startswith("site_metrics:roads"):
+            return "road_metrics"
+        if stage.startswith("site_metrics:buildings"):
+            return "building_metrics"
+        if stage.startswith("fast_gate_"):
+            return "fast_gate"
+        return stage
 
     def report(stage: str, progress: float) -> None:
+        nonlocal timing_stage, timing_started
+        now = time.monotonic()
+        key = timing_key(stage)
+        if timing_stage is None:
+            timing_stage = key
+            timing_started = now
+        elif key != timing_stage:
+            stage_timings_seconds[timing_stage] = round(
+                stage_timings_seconds.get(timing_stage, 0.0)
+                + (now - timing_started),
+                3,
+            )
+            timing_stage = key
+            timing_started = now
         if progress_callback is not None:
             progress_callback(stage, min(max(float(progress), 0.0), 1.0))
+
+    def finish_timing() -> None:
+        nonlocal timing_stage, timing_started
+        if timing_stage is None:
+            return
+        now = time.monotonic()
+        stage_timings_seconds[timing_stage] = round(
+            stage_timings_seconds.get(timing_stage, 0.0)
+            + (now - timing_started),
+            3,
+        )
+        timing_stage = None
+        timing_started = now
 
     report("loading_inputs", 0.02)
     config_path = config_path.resolve()
@@ -638,41 +730,20 @@ def build_site_feasibility(
         )
 
     config_checksum = file_sha256(config_path)
-    parcel_checksum = file_sha256(
-        parcel_paths.normalized_output
-    )
-    envelope_checksum = file_sha256(
-        envelope_output.output
-    )
-
-    implementation_root = (
-        Path(__file__).resolve().parent
-    )
-
-    implementation_checksum = stable_hash(
-        {
-            source.name: file_sha256(source)
-            for source
-            in sorted(
-                implementation_root.glob("*.py")
-            )
-        }
-    )
-    if not refresh and paths.output.exists() and paths.manifest.exists():
-        current = read_json(paths.manifest)
+    parcel_checksum = file_sha256(parcel_paths.normalized_output)
+    envelope_checksum = file_sha256(envelope_output.output)
+    previous_manifest: dict[str, Any] | None = None
+    if paths.manifest.exists():
+        try:
+            previous_manifest = read_json(paths.manifest)
+        except Exception:  # noqa: BLE001 - previous timing is diagnostic only
+            previous_manifest = None
+    if not refresh and paths.output.exists() and previous_manifest is not None:
+        current = previous_manifest
         if (
-            current.get(
-                "config_checksum"
-            ) == config_checksum
-            and current.get(
-                "parcel_scope_checksum"
-            ) == parcel_checksum
-            and current.get(
-                "envelope_checksum"
-            ) == envelope_checksum
-            and current.get(
-                "implementation_checksum"
-            ) == implementation_checksum
+            current.get("config_checksum") == config_checksum
+            and current.get("parcel_scope_checksum") == parcel_checksum
+            and current.get("envelope_checksum") == envelope_checksum
         ):
             print(f"[Site feasibility] Using current scope {scope_id}", flush=True)
             return current
@@ -703,36 +774,129 @@ def build_site_feasibility(
         index=parcels.index,
         crs=target_crs,
     )
-    analysis_scope_parts = [
-        geometry
-        for geometry in base_geometries
-        if (
-            geometry is not None
-            and not geometry.is_empty
-        )
-    ]
-
-    scope_geometry = (
-        clean_polygonal(
-            union_all(
-                analysis_scope_parts
-            ),
-            precision_m,
-        )
-        if analysis_scope_parts
-        else clean_polygonal(
-            union_all(
-                list(
-                    parcels.geometry
-                )
-            ),
-            precision_m,
-        )
+    base_area_acres_all = base_geometries.area / square_meters_per_acre
+    base_largest_geometries_all = gpd.GeoSeries(
+        [largest_component(geometry) for geometry in base_geometries],
+        index=parcels.index,
+        crs=target_crs,
+    )
+    base_largest_area_acres_all = (
+        base_largest_geometries_all.area / square_meters_per_acre
     )
 
-    scope_bounds = tuple(
-        float(value)
-        for value in scope_geometry.bounds
+    report("fast_gate", 0.06)
+    fast_path_config = config.get("fast_path", {})
+    fast_path_requested = bool(
+        fast_path_config.get("enabled", True)
+    )
+
+    viability_config_path = resolve_path(
+        project_directory,
+        fast_path_config.get(
+            "viability_config_path",
+            "configs/viability/data_center_maryland.yaml",
+        ),
+    )
+
+    viability_config = (
+        load_yaml(viability_config_path)
+        if (
+            fast_path_requested
+            and viability_config_path.exists()
+        )
+        else None
+    )
+
+    fast_path_enabled = viability_config is not None
+
+    if fast_path_enabled:
+        parcel_records = (
+            parcels
+            .drop(columns="geometry")
+            .to_dict(orient="records")
+        )
+
+        fast_decisions = [
+            parcel_fast_path_decision(
+                record=record,
+                base_total_acres=float(
+                    base_area_acres_all.iloc[position]
+                ),
+                base_largest_contiguous_acres=float(
+                    base_largest_area_acres_all.iloc[
+                        position
+                    ]
+                ),
+                viability_config=viability_config,
+            )
+            for position, record
+            in enumerate(parcel_records)
+        ]
+    else:
+        fast_decisions = []
+
+    assemblage_config = config["analysis"]["assemblages"]
+    if fast_path_enabled:
+        potential_assemblage_ids = potential_assemblage_member_ids(
+            parcel_ids=parcels["parcel_id"].astype(str),
+            base_geometries=base_geometries,
+            base_area_acres=base_area_acres_all,
+            public_land=parcels.get(
+                "public_land_flag",
+                pd.Series(False, index=parcels.index),
+            ),
+            institutional_use=parcels.get(
+                "institutional_use_flag",
+                pd.Series(False, index=parcels.index),
+            ),
+            statewide_hard_excluded=parcels.get(
+                "statewide_hard_excluded",
+                pd.Series(False, index=parcels.index),
+            ),
+            adjacency_gap_m=float(assemblage_config["adjacency_gap_m"]),
+            minimum_parcel_site_acres=float(
+                assemblage_config["minimum_parcel_site_acres"]
+            ),
+            minimum_viable_total_acres=float(
+                viability_config["parcel_gates"]["minimum_total_site_acres"]
+            ),
+            minimum_parcel_count=int(assemblage_config["minimum_parcel_count"]),
+        )
+        detailed_ids = detailed_analysis_ids(
+            decisions=fast_decisions,
+            potential_assemblage_ids=potential_assemblage_ids,
+        )
+    else:
+        potential_assemblage_ids = set()
+        detailed_ids = set(parcels["parcel_id"].astype(str))
+
+    detailed_mask = parcels["parcel_id"].astype(str).isin(detailed_ids)
+    detailed_parcels = parcels.loc[detailed_mask].copy().reset_index(drop=True)
+    detailed_base_geometries = gpd.GeoSeries(
+        list(base_geometries.loc[detailed_mask]),
+        index=detailed_parcels.index,
+        crs=target_crs,
+    )
+    detailed_count = len(detailed_parcels)
+    skipped_count = len(parcels) - detailed_count
+    fast_reasons_by_id = {
+        decision.parcel_id: decision.rejection_reasons
+        for decision in fast_decisions
+    }
+
+    if detailed_count > 0:
+        scope_geometry = clean_polygonal(
+            union_all(list(detailed_parcels.geometry)),
+            precision_m,
+        )
+        scope_bounds = tuple(float(value) for value in scope_geometry.bounds)
+    else:
+        scope_geometry = GeometryCollection()
+        scope_bounds = (0.0, 0.0, 0.0, 0.0)
+
+    report(
+        f"fast_gate_{skipped_count}_skipped_{detailed_count}_detailed",
+        0.09,
     )
     paths.raw_scope.mkdir(parents=True, exist_ok=True)
     paths.cache_scope.mkdir(parents=True, exist_ok=True)
@@ -746,7 +910,7 @@ def build_site_feasibility(
     wetland_union = GeometryCollection()
     wssc_buffer_union = GeometryCollection()
     wetlands_config = config["inputs"]["wetlands"]
-    if bool(wetlands_config.get("enabled", False)):
+    if bool(wetlands_config.get("enabled", False)) and detailed_count > 0:
         try:
             scope_with_buffer = scope_geometry.buffer(float(wetlands_config["scope_buffer_m"]))
             for source_id, layer_config in wetlands_config["layers"].items():
@@ -760,12 +924,6 @@ def build_site_feasibility(
                     cache_root=paths.cache_scope / "vectors",
                     page_size=int(wetlands_config["page_size"]),
                     timeout_seconds=int(wetlands_config["timeout_seconds"]),
-                    where=str(
-                        layer_config.get(
-                            "where",
-                            "1=1",
-                        )
-                    ),
                     refresh=refresh,
                 )
                 frame = result.frame.copy()
@@ -796,6 +954,12 @@ def build_site_feasibility(
                 "state": "failed",
                 "error": f"{type(error).__name__}: {error}",
             }
+    elif bool(wetlands_config.get("enabled", False)):
+        domain_status["wetlands"] = {
+            "state": "skipped",
+            "error": None,
+            "reason": "NO_DETAILED_CANDIDATES_AFTER_FAST_GATE",
+        }
     else:
         domain_status["wetlands"] = {"state": "disabled", "error": None}
 
@@ -804,7 +968,7 @@ def build_site_feasibility(
     roads = empty_layer(crs=target_crs, columns=["evidence_kind", "geometry"])
     roads_config = config["inputs"]["roads"]
     road_results: list[tuple[str, int, ScopedSourceResult]] = []
-    if bool(roads_config.get("enabled", False)):
+    if bool(roads_config.get("enabled", False)) and detailed_count > 0:
         try:
             road_scope = scope_geometry.buffer(float(roads_config["scope_buffer_m"]))
             for road_class, layer_config in roads_config["layers"].items():
@@ -829,6 +993,12 @@ def build_site_feasibility(
                 "state": "failed",
                 "error": f"{type(error).__name__}: {error}",
             }
+    elif bool(roads_config.get("enabled", False)):
+        domain_status["roads"] = {
+            "state": "skipped",
+            "error": None,
+            "reason": "NO_DETAILED_CANDIDATES_AFTER_FAST_GATE",
+        }
     else:
         domain_status["roads"] = {"state": "disabled", "error": None}
 
@@ -836,7 +1006,7 @@ def build_site_feasibility(
     # --- Building reference -----------------------------------------
     buildings = empty_layer(crs=target_crs, columns=["evidence_kind", "geometry"])
     buildings_config = config["inputs"]["buildings"]
-    if bool(buildings_config.get("enabled", False)):
+    if bool(buildings_config.get("enabled", False)) and detailed_count > 0:
         try:
             result = download_scoped_layer(
                 source_id="buildings_reference",
@@ -862,6 +1032,12 @@ def build_site_feasibility(
                 "state": "failed",
                 "error": f"{type(error).__name__}: {error}",
             }
+    elif bool(buildings_config.get("enabled", False)):
+        domain_status["buildings"] = {
+            "state": "skipped",
+            "error": None,
+            "reason": "NO_DETAILED_CANDIDATES_AFTER_FAST_GATE",
+        }
     else:
         domain_status["buildings"] = {"state": "disabled", "error": None}
 
@@ -873,7 +1049,7 @@ def build_site_feasibility(
     severe_polygons = empty_layer(crs=target_crs, columns=["threshold", "geometry"])
     terrain_config = config["inputs"]["terrain"]
     terrain_metadata: dict[str, Any] | None = None
-    if bool(terrain_config.get("enabled", False)):
+    if bool(terrain_config.get("enabled", False)) and detailed_count > 0:
         try:
             terrain_fingerprint = stable_hash(
                 {
@@ -900,14 +1076,14 @@ def build_site_feasibility(
                 refresh=refresh,
             )
             dem_stats = zonal_raster_statistics(
-                geometries=base_geometries,
+                geometries=detailed_base_geometries,
                 raster_path=paths.terrain.dem,
                 quantiles=(0.5,),
             )
             steep_threshold = float(terrain_config["steep_slope_threshold_percent"])
             severe_threshold = float(terrain_config["severe_slope_threshold_percent"])
             slope_stats = zonal_raster_statistics(
-                geometries=base_geometries,
+                geometries=detailed_base_geometries,
                 raster_path=paths.terrain.slope,
                 quantiles=(0.5, 0.9),
                 thresholds=(steep_threshold, severe_threshold),
@@ -932,6 +1108,12 @@ def build_site_feasibility(
                 "state": "failed",
                 "error": f"{type(error).__name__}: {error}",
             }
+    elif bool(terrain_config.get("enabled", False)):
+        domain_status["terrain"] = {
+            "state": "skipped",
+            "error": None,
+            "reason": "NO_DETAILED_CANDIDATES_AFTER_FAST_GATE",
+        }
     else:
         domain_status["terrain"] = {"state": "disabled", "error": None}
 
@@ -945,64 +1127,106 @@ def build_site_feasibility(
 
     report("site_envelopes", 0.74)
     # --- Final site envelopes ---------------------------------------
-    subtractive_geometries = [geometry for geometry in (wetland_union, steep_union) if not geometry.is_empty]
-    subtractive_union = (
-        clean_polygonal(union_all(subtractive_geometries), precision_m)
-        if subtractive_geometries
-        else GeometryCollection()
-    )
-    final_geometries = gpd.GeoSeries(
-        [
-            clean_polygonal(
-                geometry.difference(subtractive_union)
-                if not subtractive_union.is_empty and geometry is not None and not geometry.is_empty
-                else geometry,
-                precision_m,
+    # A statewide/search-area union can contain thousands of disconnected
+    # polygons. Passing that full union to every parcel difference/intersection
+    # forces GEOS to repeatedly inspect unrelated geometry. Build spatial
+    # indexes once, then union only the constraint components that intersect
+    # each parcel envelope. This preserves the analytical result while keeping
+    # overlay work local to each site.
+    wetland_index = LocalConstraintIndex(wetland_union, precision_m=precision_m)
+    wssc_index = LocalConstraintIndex(wssc_buffer_union, precision_m=precision_m)
+    steep_index = LocalConstraintIndex(steep_union, precision_m=precision_m)
+
+    final_geometry_values = []
+    wetland_overlap_values: list[float] = []
+    wssc_overlap_values: list[float] = []
+    steep_overlap_values: list[float] = []
+
+    total_site_geometries = max(len(detailed_base_geometries), 1)
+    progress_interval = max(25, min(250, total_site_geometries // 40 or 25))
+
+    for position, geometry in enumerate(detailed_base_geometries, start=1):
+        if geometry is None or geometry.is_empty:
+            final_geometry_values.append(GeometryCollection())
+            wetland_overlap_values.append(0.0)
+            wssc_overlap_values.append(0.0)
+            steep_overlap_values.append(0.0)
+        else:
+            local_wetlands = wetland_index.intersection_geometry(geometry)
+            local_wssc = wssc_index.intersection_geometry(geometry)
+            local_steep = steep_index.intersection_geometry(geometry)
+
+            local_subtractive = [
+                constraint
+                for constraint in (local_wetlands, local_steep)
+                if constraint is not None and not constraint.is_empty
+            ]
+            if len(local_subtractive) == 1:
+                subtractive_geometry = local_subtractive[0]
+            elif local_subtractive:
+                subtractive_geometry = clean_polygonal(
+                    union_all(local_subtractive),
+                    precision_m,
+                )
+            else:
+                subtractive_geometry = GeometryCollection()
+
+            final_geometry_values.append(
+                clean_polygonal(
+                    geometry.difference(subtractive_geometry)
+                    if not subtractive_geometry.is_empty
+                    else geometry,
+                    precision_m,
+                )
             )
-            for geometry in base_geometries
-        ],
-        index=parcels.index,
+            wetland_overlap_values.append(
+                float(geometry.intersection(local_wetlands).area / square_meters_per_acre)
+                if not local_wetlands.is_empty
+                else 0.0
+            )
+            wssc_overlap_values.append(
+                float(geometry.intersection(local_wssc).area / square_meters_per_acre)
+                if not local_wssc.is_empty
+                else 0.0
+            )
+            steep_overlap_values.append(
+                float(geometry.intersection(local_steep).area / square_meters_per_acre)
+                if not local_steep.is_empty
+                else 0.0
+            )
+
+        if (
+            position == total_site_geometries
+            or position % progress_interval == 0
+        ):
+            completed_fraction = position / total_site_geometries
+            report(
+                f"site_envelopes_{position}_of_{total_site_geometries}",
+                0.74 + 0.09 * completed_fraction,
+            )
+
+    final_geometries = gpd.GeoSeries(
+        final_geometry_values,
+        index=detailed_parcels.index,
         crs=target_crs,
     )
     largest_geometries = gpd.GeoSeries(
         [largest_component(geometry) for geometry in final_geometries],
-        index=parcels.index,
+        index=detailed_parcels.index,
         crs=target_crs,
     )
-    base_area_acres = base_geometries.area / square_meters_per_acre
+    base_area_acres = detailed_base_geometries.area / square_meters_per_acre
     final_area_acres = final_geometries.area / square_meters_per_acre
     largest_area_acres = largest_geometries.area / square_meters_per_acre
 
-    wetland_overlap_acres = pd.Series(
-        [
-            float(geometry.intersection(wetland_union).area / square_meters_per_acre)
-            if not wetland_union.is_empty and geometry is not None and not geometry.is_empty
-            else 0.0
-            for geometry in base_geometries
-        ],
-        index=parcels.index,
-    )
-    wssc_overlap_acres = pd.Series(
-        [
-            float(geometry.intersection(wssc_buffer_union).area / square_meters_per_acre)
-            if not wssc_buffer_union.is_empty and geometry is not None and not geometry.is_empty
-            else 0.0
-            for geometry in base_geometries
-        ],
-        index=parcels.index,
-    )
-    steep_overlap_acres = pd.Series(
-        [
-            float(geometry.intersection(steep_union).area / square_meters_per_acre)
-            if not steep_union.is_empty and geometry is not None and not geometry.is_empty
-            else 0.0
-            for geometry in base_geometries
-        ],
-        index=parcels.index,
-    )
+    wetland_overlap_acres = pd.Series(wetland_overlap_values, index=detailed_parcels.index)
+    wssc_overlap_acres = pd.Series(wssc_overlap_values, index=detailed_parcels.index)
+    steep_overlap_acres = pd.Series(steep_overlap_values, index=detailed_parcels.index)
+
+    report("site_metrics:roads", 0.84)
 
     road_data = road_metrics(
-        parcels=parcels,
+        parcels=detailed_parcels,
         site_geometries=final_geometries,
         roads=roads,
         frontage_tolerance_m=float(roads_config["frontage_tolerance_m"]),
@@ -1015,29 +1239,29 @@ def build_site_feasibility(
             )
         ),
         near_road_threshold_m=float(roads_config["near_road_threshold_m"]),
-        remote_road_threshold_m=float(
-            roads_config[
-                "remote_road_threshold_m"
-            ]
-        ),
+        remote_road_threshold_m=float(roads_config["remote_road_threshold_m"]),
         frontage_clip_geometry=scope_geometry,
+        progress_callback=lambda stage, fraction: report(
+            f"site_metrics:roads_{stage}",
+            0.84 + 0.035 * fraction,
+        ),
     )
-
-    building_parcels = parcels.copy()
-    building_parcels.geometry = (
-        base_geometries
-    )
-
+    report("site_metrics:buildings", 0.875)
     building_data = building_metrics(
-        parcels=building_parcels,
+        parcels=detailed_parcels,
         buildings=buildings,
         square_meters_per_acre=square_meters_per_acre,
         source_available=(
             domain_status["buildings"]["state"] == "ready"
         ),
+        progress_callback=lambda stage, fraction: report(
+            f"site_metrics:buildings_{stage}",
+            0.875 + 0.02 * fraction,
+        ),
     )
 
-    parcel_analysis = parcels.copy()
+    report("site_metrics:classification", 0.90)
+    parcel_analysis = detailed_parcels.copy()
     parcel_analysis["base_development_envelope_acres"] = base_area_acres.round(6)
     parcel_analysis["mapped_wetland_overlap_acres"] = wetland_overlap_acres.round(6)
     parcel_analysis["mapped_wetland_fraction"] = (
@@ -1147,69 +1371,62 @@ def build_site_feasibility(
         )
         for _, row in parcel_analysis.iterrows()
     ]
-    parcel_analysis[
-        "right_of_way_flag"
-    ] = [
-        right_of_way_indicator(
-            account_id=row.get(
-                "account_id",
-                "",
+    # Candidate eligibility must use the authoritative parcel-source
+    # classification flags. Do not depend on those flags surviving every
+    # intermediate detailed-analysis transformation unchanged.
+    source_eligibility_flags = {
+        str(row["parcel_id"]): (
+            safe_bool(
+                row.get("public_land_flag", False)
             ),
-            parcel_id=row.get(
-                "parcel_id",
-                "",
-            ),
-        )
-        for _, row
-        in parcel_analysis.iterrows()
-    ]
-
-    right_of_way_mask = (
-        parcel_analysis[
-            "right_of_way_flag"
-        ].fillna(False).astype(bool)
-    )
-
-    parcel_analysis.loc[
-        right_of_way_mask,
-        [
-            "road_frontage_proxy_m",
-            "limited_access_adjacency_proxy_m",
-            "site_envelope_to_road_distance_m",
-        ],
-    ] = np.nan
-
-    parcel_analysis.loc[
-        right_of_way_mask,
-        "road_access_status",
-    ] = "RIGHT_OF_WAY_NOT_EVALUATED"
-
-    eligibility = [
-        candidate_eligibility(
-            public_land_flag=safe_bool(row.get("public_land_flag", False)),
-            institutional_use_flag=safe_bool(
+            safe_bool(
                 row.get("institutional_use_flag", False)
             ),
-            statewide_hard_excluded=safe_bool(
-                row.get(
-                    "statewide_hard_excluded",
-                    False,
-                )
-            ),
-            site_feasibility_class=str(
-                row[
-                    "site_feasibility_class"
-                ]
-            ),
-            right_of_way_flag=safe_bool(
-                row.get(
-                    "right_of_way_flag",
-                    False,
-                )
+            safe_bool(
+                row.get("statewide_hard_excluded", False)
             ),
         )
-        for _, row in parcel_analysis.iterrows()
-    ]
+        for _, row in parcels.iterrows()
+    }
+
+    eligibility = []
+
+    for _, row in parcel_analysis.iterrows():
+        parcel_id = str(row["parcel_id"])
+
+        fallback_flags = (
+            safe_bool(
+                row.get("public_land_flag", False)
+            ),
+            safe_bool(
+                row.get("institutional_use_flag", False)
+            ),
+            safe_bool(
+                row.get("statewide_hard_excluded", False)
+            ),
+        )
+
+        (
+            public_land_flag,
+            institutional_use_flag,
+            statewide_hard_excluded,
+        ) = source_eligibility_flags.get(
+            parcel_id,
+            fallback_flags,
+        )
+
+        eligibility.append(
+            candidate_eligibility(
+                public_land_flag=public_land_flag,
+                institutional_use_flag=institutional_use_flag,
+                statewide_hard_excluded=(
+                    statewide_hard_excluded
+                ),
+                site_feasibility_class=str(
+                    row["site_feasibility_class"]
+                ),
+            )
+        )
     parcel_analysis["candidate_eligible"] = [value[0] for value in eligibility]
     parcel_analysis["candidate_status"] = [value[1] for value in eligibility]
     parcel_analysis["candidate_status_reason"] = [value[2] for value in eligibility]
@@ -1226,9 +1443,23 @@ def build_site_feasibility(
     ]
     parcel_analysis["candidate_kind"] = "PARCEL"
     parcel_analysis["candidate_id"] = parcel_analysis["parcel_id"].astype(str)
+    parcel_analysis["fast_path_rejected"] = False
+    parcel_analysis["fast_path_rejection_reasons"] = ""
+    parcel_analysis["fast_path_analysis_status"] = "DETAILED_ANALYSIS"
+    base_largest_lookup = dict(
+        zip(
+            parcels["parcel_id"].astype(str),
+            base_largest_area_acres_all.astype(float),
+        )
+    )
+    parcel_analysis["base_largest_contiguous_upper_bound_acres"] = [
+        base_largest_lookup.get(str(parcel_id))
+        for parcel_id in parcel_analysis["parcel_id"]
+    ]
+    detailed_parcel_analysis = parcel_analysis.copy()
 
     site_envelopes = gpd.GeoDataFrame(
-        parcel_analysis.drop(columns="geometry").copy(),
+        detailed_parcel_analysis.drop(columns="geometry").copy(),
         geometry=final_geometries,
         crs=target_crs,
     )
@@ -1240,7 +1471,7 @@ def build_site_feasibility(
     site_envelopes["evidence_kind"] = "SITE_ENVELOPE"
 
     largest_components = gpd.GeoDataFrame(
-        parcel_analysis.drop(columns="geometry").copy(),
+        detailed_parcel_analysis.drop(columns="geometry").copy(),
         geometry=largest_geometries,
         crs=target_crs,
     )
@@ -1279,11 +1510,11 @@ def build_site_feasibility(
         else empty_layer(crs=target_crs, columns=["evidence_kind", "constraint_id", "geometry"])
     )
 
-    report("assemblages", 0.87)
+    report("assemblages", 0.93)
     assemblage_config = config["analysis"]["assemblages"]
     assemblages = (
         build_assemblages(
-            parcel_analysis=parcel_analysis,
+            parcel_analysis=detailed_parcel_analysis,
             site_envelopes=site_envelopes[["parcel_id", "geometry"]],
             square_meters_per_acre=square_meters_per_acre,
             adjacency_gap_m=float(assemblage_config["adjacency_gap_m"]),
@@ -1298,7 +1529,164 @@ def build_site_feasibility(
         else empty_layer(crs=target_crs, columns=["assemblage_id", "geometry"])
     )
 
-    report("writing_outputs", 0.95)
+    report("fast_gate_finalize", 0.95)
+    fast_rows = parcels.loc[~detailed_mask].copy()
+    if not fast_rows.empty:
+        fast_rows["base_development_envelope_acres"] = [
+            float(base_area_acres_all.loc[index])
+            for index in parcels.index[~detailed_mask]
+        ]
+        fast_rows["base_largest_contiguous_upper_bound_acres"] = [
+            float(base_largest_area_acres_all.loc[index])
+            for index in parcels.index[~detailed_mask]
+        ]
+        for column in (
+            "mapped_wetland_overlap_acres",
+            "mapped_wetland_fraction",
+            "wssc_screening_overlap_acres",
+            "steep_slope_overlap_acres",
+            "steep_slope_fraction",
+            "final_site_area_acres",
+            "final_site_fraction_of_base_envelope",
+            "largest_contiguous_site_acres",
+            "site_component_count",
+            "terrain_sample_count",
+            "elevation_minimum_m",
+            "elevation_maximum_m",
+            "elevation_mean_m",
+            "elevation_range_m",
+            "slope_mean_percent",
+            "slope_median_percent",
+            "slope_p90_percent",
+            "terrain_steep_pixel_fraction",
+            "terrain_severe_pixel_fraction",
+            "nearest_road_distance_m",
+            "nearest_primary_road_distance_m",
+            "nearest_accessible_road_distance_m",
+            "road_frontage_proxy_m",
+            "limited_access_adjacency_proxy_m",
+            "site_envelope_to_road_distance_m",
+            "building_reference_overlap_acres",
+            "building_reference_fraction",
+            "site_candidate_score",
+        ):
+            fast_rows[column] = np.nan
+        fast_rows["nearest_road_name"] = None
+        fast_rows["nearest_road_class"] = None
+        fast_rows["building_reference_count"] = 0
+        fast_rows["building_reference_status"] = (
+            "NOT_EVALUATED_AFTER_AUTHORITATIVE_REJECTION"
+        )
+        fast_rows["redevelopment_burden_class"] = (
+            "NOT_EVALUATED_AFTER_AUTHORITATIVE_REJECTION"
+        )
+        fast_rows["terrain_data_status"] = (
+            "NOT_EVALUATED_AFTER_AUTHORITATIVE_REJECTION"
+        )
+        fast_rows["wetland_data_status"] = (
+            "NOT_EVALUATED_AFTER_AUTHORITATIVE_REJECTION"
+        )
+        fast_rows["road_data_status"] = (
+            "NOT_EVALUATED_AFTER_AUTHORITATIVE_REJECTION"
+        )
+        fast_rows["building_reference_data_status"] = (
+            "NOT_EVALUATED_AFTER_AUTHORITATIVE_REJECTION"
+        )
+        fast_rows["road_access_status"] = (
+            "NOT_EVALUATED_AFTER_AUTHORITATIVE_REJECTION"
+        )
+        fast_rows["road_access_confirmed"] = False
+        fast_rows["wetland_delineation_confirmed"] = False
+        fast_rows["legal_buildability_confirmed"] = False
+        fast_rows["site_feasibility_class"] = "EARLY_REJECTED_FAST_PATH"
+        fast_rows["candidate_eligible"] = False
+        fast_rows["candidate_status"] = "FAST_PATH_AUTHORITATIVE_REJECTION"
+        fast_rows["fast_path_rejected"] = True
+        fast_rows["fast_path_analysis_status"] = (
+            "DETAILED_EVIDENCE_SKIPPED_AFTER_AUTHORITATIVE_REJECTION"
+        )
+        fast_rows["fast_path_rejection_reasons"] = [
+            ";".join(fast_reasons_by_id.get(str(parcel_id), ()))
+            for parcel_id in fast_rows["parcel_id"].astype(str)
+        ]
+        fast_rows["candidate_status_reason"] = [
+            "Detailed site evidence was skipped because authoritative early gates already reject the parcel: "
+            + ", ".join(fast_reasons_by_id.get(str(parcel_id), ()))
+            for parcel_id in fast_rows["parcel_id"].astype(str)
+        ]
+        fast_rows["candidate_kind"] = "PARCEL"
+        fast_rows["candidate_id"] = fast_rows["parcel_id"].astype(str)
+
+    if fast_rows.empty:
+        parcel_analysis = detailed_parcel_analysis.copy()
+    else:
+        parcel_analysis = gpd.GeoDataFrame(
+            pd.concat(
+                [
+                    detailed_parcel_analysis,
+                    fast_rows,
+                ],
+                ignore_index=True,
+                sort=False,
+            ),
+            geometry="geometry",
+            crs=parcels.crs,
+        )
+
+    # Preserve real boolean types across the fast/detailed merge.
+    # Concatenating with an empty frame can otherwise promote bool
+    # columns to object, which may serialize False as the string
+    # "False" in GeoPackage output.
+    for column in (
+        "candidate_eligible",
+        "fast_path_rejected",
+        "road_access_confirmed",
+        "wetland_delineation_confirmed",
+        "legal_buildability_confirmed",
+    ):
+        if column in parcel_analysis.columns:
+            parcel_analysis[column] = (
+                parcel_analysis[column]
+                .map(
+                    lambda value: safe_bool(
+                        value,
+                        default=False,
+                    )
+                )
+                .astype(bool)
+            )
+    parcel_order = {
+        str(parcel_id): position
+        for position, parcel_id in enumerate(parcels["parcel_id"].astype(str))
+    }
+    parcel_analysis["_fast_path_order"] = (
+        parcel_analysis["parcel_id"].astype(str).map(parcel_order)
+    )
+    parcel_analysis = (
+        parcel_analysis.sort_values("_fast_path_order")
+        .drop(columns="_fast_path_order")
+        .reset_index(drop=True)
+    )
+
+    if viability_config is not None:
+        downstream_candidate_ids = (
+            downstream_evidence_required_ids(
+                records=(
+                    parcel_analysis
+                    .drop(columns="geometry")
+                    .to_dict(orient="records")
+                ),
+                viability_config=viability_config,
+            )
+        )
+    else:
+        downstream_candidate_ids = set(
+            parcel_analysis[
+                "candidate_id"
+            ].astype(str)
+        )
+
+    report("writing_outputs", 0.97)
     layer_names = config["layers"]
     written_layers = write_geopackage_atomic(
         path=paths.output,
@@ -1358,6 +1746,37 @@ def build_site_feasibility(
         na_position="last",
     ).head(int(config["api"]["maximum_top_candidates"]))
 
+    finish_timing()
+    elapsed_seconds = round(time.monotonic() - started, 3)
+    previous_elapsed_seconds = None
+    previous_pipeline_version = None
+    previous_detailed_count = None
+    if previous_manifest is not None:
+        try:
+            previous_elapsed_seconds = float(previous_manifest.get("elapsed_seconds"))
+        except (TypeError, ValueError):
+            previous_elapsed_seconds = None
+        previous_pipeline_version = previous_manifest.get("pipeline_version")
+        previous_fast_path = previous_manifest.get("fast_path")
+        if isinstance(previous_fast_path, dict):
+            previous_detailed_count = previous_fast_path.get("detailed_analysis_count")
+        if previous_detailed_count is None:
+            previous_counts = previous_manifest.get("counts", {})
+            if isinstance(previous_counts, dict):
+                previous_detailed_count = previous_counts.get("parcel_count")
+
+    speedup_vs_previous = None
+    if (
+        previous_elapsed_seconds is not None
+        and previous_elapsed_seconds > 0
+        and elapsed_seconds > 0
+        and previous_pipeline_version != config["pipeline_version"]
+    ):
+        speedup_vs_previous = round(
+            previous_elapsed_seconds / elapsed_seconds,
+            3,
+        )
+
     manifest = {
         "schema_version": 1,
         "pipeline": "parcel_site_feasibility",
@@ -1368,6 +1787,9 @@ def build_site_feasibility(
         "domain_status": domain_status,
         "counts": {
             "parcel_count": len(parcel_analysis),
+            "fast_path_rejected_parcel_count": int(skipped_count),
+            "detailed_site_analysis_parcel_count": int(detailed_count),
+            "potential_assemblage_member_count": int(len(potential_assemblage_ids)),
             "site_envelope_count": len(site_envelopes),
             "site_constraint_feature_count": len(site_constraints),
             "road_feature_count": len(roads),
@@ -1403,6 +1825,40 @@ def build_site_feasibility(
             },
         },
         "source_metadata": source_metadata,
+        "fast_path": {
+            "enabled": fast_path_enabled,
+            "viability_config": str(viability_config_path.relative_to(project_directory)),
+            "parcel_count": len(parcels),
+            "fast_rejected_count": int(skipped_count),
+            "detailed_analysis_count": int(detailed_count),
+            "potential_assemblage_member_count": int(len(potential_assemblage_ids)),
+            "downstream_evidence_required_count": int(len(downstream_candidate_ids)),
+            "downstream_candidate_ids": sorted(downstream_candidate_ids),
+            "rejection_reason_counts": {
+                reason: sum(
+                    reason in decision.rejection_reasons
+                    for decision in fast_decisions
+                    if decision.parcel_id not in detailed_ids
+                )
+                for reason in sorted(
+                    {
+                        reason
+                        for decision in fast_decisions
+                        if decision.parcel_id not in detailed_ids
+                        for reason in decision.rejection_reasons
+                    }
+                )
+            },
+        },
+        "stage_timings_seconds": stage_timings_seconds,
+        "performance_comparison": {
+            "previous_pipeline_version": previous_pipeline_version,
+            "previous_elapsed_seconds": previous_elapsed_seconds,
+            "previous_detailed_analysis_count": previous_detailed_count,
+            "current_elapsed_seconds": elapsed_seconds,
+            "current_detailed_analysis_count": int(detailed_count),
+            "speedup_vs_previous": speedup_vs_previous,
+        },
         "top_candidates": json.loads(top_candidates.to_json(orient="records")),
         "safeguards": config["safeguards"],
         "interpretation": {
@@ -1427,23 +1883,24 @@ def build_site_feasibility(
             "assemblages": (
                 "Assemblages identify spatially contiguous parcel groups. Ownership control and acquisition feasibility are unconfirmed."
             ),
+            "fast_path": (
+                "Detailed wetlands, terrain, road, building, grid, and planning evidence may be skipped only after an authoritative gate already proves a parcel cannot advance. Preliminary development-envelope acreage is used only as an upper bound; later constraint subtraction cannot increase usable acreage."
+            ),
         },
         "config_checksum": config_checksum,
         "parcel_scope_checksum": parcel_checksum,
         "envelope_checksum": envelope_checksum,
-        "implementation_checksum": (
-            implementation_checksum
-        ),
         "written_layers": written_layers,
         "outputs": {"geopackage": str(paths.output.relative_to(project_directory))},
         "output_checksums": {"geopackage": file_sha256(paths.output)},
-        "elapsed_seconds": round(time.monotonic() - started, 3),
+        "elapsed_seconds": elapsed_seconds,
     }
     paths.manifest.parent.mkdir(parents=True, exist_ok=True)
     atomic_write_json(paths.manifest, manifest)
     report("complete", 1.0)
     print(
         f"[Site feasibility] Complete | {len(parcel_analysis):,} parcels | "
+        f"{skipped_count:,} fast-rejected | {detailed_count:,} detailed | "
         f"{len(assemblages):,} assemblages | {manifest['elapsed_seconds']:.1f}s",
         flush=True,
     )
